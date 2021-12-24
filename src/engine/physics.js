@@ -17,6 +17,12 @@ export class Rect {
 
     x = 0;
     y = 0;
+
+    x_v = 0;
+    y_v = 0;
+
+    rotation = 0;
+    
     width = 1;
     height = 1;
 
@@ -25,6 +31,9 @@ export class Rect {
         this.origin = [0, 0];
         this.x = x;
         this.y = y;
+        this.x_v = 0;
+        this.y_v = 0;
+        this.rotation = 0;
         this.width = width;
         this.height = height;
     }
@@ -33,19 +42,12 @@ export class Rect {
         this.x = x;
         this.y = y;
     }
-}
 
-export class Cirlcle {
+    getMidPoint_x() {
+        return this.x + (this.width / 2);  
+    }
 
-    x = 0;
-    y = 0;
-    radius = 1;
-
-    constructor(x, y, radius) {
-        this.type = 'circle';
-        this.origin = [0, 0];
-        this.x = x;
-        this.y = y;
-        this.radius = radius;
+    getMidPoint_y() {
+        return this.y + (this.height / 2);  
     }
 }
