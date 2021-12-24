@@ -4,12 +4,7 @@ export default class Physics {
     }
 
     doCollides(rect_a, rect_b) {
-        // rect_a.x + width
-        // return (rect_a.x > rect_b.x && rect_a.x < rect_b.x + rect_b.width) ||
-        //     (rect_a.x + width > rect_b.x && rect_a.x + width < rect_b.x + rect_b.width)
-            
-        //     rect_a.y > rect_b.y &&
-        //     rect_a.y < rect_b.y + rect_y.width;
+        
     }
 }
 
