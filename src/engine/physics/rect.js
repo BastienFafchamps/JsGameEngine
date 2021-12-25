@@ -1,13 +1,3 @@
-
-export default class Physics {
-    constructor() {
-    }
-
-    doCollides(rect_a, rect_b) {
-        
-    }
-}
-
 export class Rect {
 
     x = 0;

@@ -6,6 +6,18 @@ export default class Engine {
         this.audioPlayer = audioPlayer;
     }
 
+    start(update, draw) {
+        this.interval = setInterval(() => {
+            update();
+            this.renderer.clear();
+            draw();
+        }, 10);
+    }
+
+    stop() {
+        clearInterval(this.interval); // Needed for Chrome to end game
+    }
+
     drawPixel(x, y, color) {
         this.renderer.drawPixel(x, y, color);
     }
@@ -20,17 +32,5 @@ export default class Engine {
 
     drawEclipse(x, y, radius, color) {
         this.renderer.drawEclipse(x, y, radius, color);
-    }
-
-    start(update, draw) {
-        this.interval = setInterval(() => {
-            update();
-            this.renderer.clear();
-            draw();
-        }, 10);
-    }
-
-    stop() {
-        clearInterval(this.interval); // Needed for Chrome to end game
     }
 }
