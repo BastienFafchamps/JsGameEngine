@@ -9,5 +9,8 @@
   },
   "author": "B. Fafchamps",
   "keywords": [],
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "parcel": "^2.0.1"
+  }
 }
