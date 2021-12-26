@@ -2,6 +2,8 @@ import HtmlInputManager from "../engine/html/inputManager";
 import HtmlRenderer from "../engine/html/renderer";;
 
 const canvas = document.getElementById("main-canvas");
+canvas.style.backgroundColor = 'rgba(255, 255, 0, 255)';
+
 const renderer = new HtmlRenderer(canvas);
 const inputManager = new HtmlInputManager(document);
 
@@ -40,17 +42,23 @@ let colors = [
     "#0095DD",
 ]
 
+
 renderer.canvas.width = 128
 renderer.canvas.height = 96
 renderer.upscaleCanvas(128 * 4, 96 * 4);
 renderer.setCripsPixel();
 
-
 function draw() {
     renderer.clear();
 
     bricks.forEach(brick => {
-        drawBrick(brick.x, brick.y, brickWidth, brickHeight, brickPadding, colors[brick.life - 1]);
+        renderer.drawRect(
+            brick.x + brickPadding, 
+            brick.y + brickPadding, 
+            brickWidth - (2 * brickPadding), 
+            brickHeight - (2 * brickPadding), 
+            colors[brick.life - 1]
+        );
     });
 
     renderer.drawEclipse(ball.x, ball.y, ball.radius, "#0095DD");
@@ -58,6 +66,10 @@ function draw() {
 
     ball.x += ball.dx;
     ball.y += ball.dy;
+
+    function isBallOnPaddle() {
+        return ball.y + ball.radius > canvas.height - paddle.height - 5 && ball.x > paddle.x && ball.x < paddle.x + paddle.width;
+    }
 
     if (ball.y < ball.radius || isBallOnPaddle())
         ball.dy = -ball.dy;
@@ -86,14 +98,6 @@ function draw() {
         }
         return true;
     });
-}
-
-function drawBrick(x, y, width, height, padding, color) {
-    renderer.drawRect(x + padding, y + padding, width - (2 * padding), height - (2 * padding), color);
-}
-
-function isBallOnPaddle() {
-    return ball.y + ball.radius > canvas.height - paddle.height - 5 && ball.x > paddle.x && ball.x < paddle.x + paddle.width;
 }
 
 var interval = setInterval(draw, 10);

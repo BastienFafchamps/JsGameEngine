@@ -1,44 +1,33 @@
-import HtmlInputManager from "../engine/html/inputManager";
-import HtmlRenderer from "../engine/html/renderer";
-import Engine from "../engine/engine";
-
-const canvas = document.getElementById("main-canvas");
-
-const renderer = new HtmlRenderer(canvas);
-// renderer.canvas.width = 128
-// renderer.canvas.height = 96
-// renderer.upscaleCanvas(128 * 4, 96 * 4);
-// renderer.setCripsPixel();
-
-const engine = new Engine(renderer, null);
-const inputManager = new HtmlInputManager(document);
-
 let ball = {
     radius: 10,
     x: 20,
     y: 60,
-    dx: -0.5,
-    dy: -0.5,
+    dx: -2,
+    dy: -2,
 }
 
 let paddle = {
     height: 20,
     width: 100,
     x: 10,
-    speed: 1,
+    speed: 3,
 }
 
-let brickWidth = 10;
-let brickHeight = 5;
-let brickPadding = 1;
+let brickWidth = 50;
+let brickHeight = 20;
+let brickSpacing = 10;
 let bricks = [];
 
-let bricks_x_start = 3;
-let bricks_y_start = 2;
+let bricks_x_start = 50;
+let bricks_y_start = 50;
 
-for (let i = 0 + bricks_x_start; i < 10 + bricks_x_start; i++) {
-    for (let j = 0 + bricks_y_start; j < 10 + bricks_y_start; j++) {
-        bricks.push({x: brickWidth * i, y: brickHeight * j, life: 3});
+for (let i = 0; i < 10; i++) {
+    for (let j = 0; j < 10; j++) {
+        bricks.push({
+            x: ((brickWidth + brickSpacing) * i) + bricks_x_start, 
+            y: ((brickHeight + brickSpacing) * j) + bricks_y_start, 
+            life: 3
+        });
     }
 }
 
@@ -52,11 +41,15 @@ function update() {
     ball.x += ball.dx;
     ball.y += ball.dy;
 
+    function isBallOnPaddle() {
+        return ball.y + ball.radius > canvas.height - paddle.height - 5 && ball.x > paddle.x && ball.x < paddle.x + paddle.width;
+    }
+
     if (ball.y < ball.radius || isBallOnPaddle())
         ball.dy = -ball.dy;
     else if(ball.y > canvas.height + ball.radius) {
-        alert("GAME OVER");
-        document.location.reload();
+        // alert("GAME OVER");
+        // document.location.reload();
         engine.stop();
     }
 
@@ -81,19 +74,17 @@ function update() {
 
 function draw() {
     bricks.forEach(brick => {
-        drawBrick(brick.x, brick.y, brickWidth, brickHeight, brickPadding, colors[brick.life - 1]);
+        engine.drawRect(
+            brick.x, 
+            brick.y, 
+            brickWidth, 
+            brickHeight, 
+            colors[brick.life - 1]
+        );
     });
 
     engine.drawEclipse(ball.x, ball.y, ball.radius, "#0095DD");
     engine.drawRect(paddle.x, canvas.height - paddle.height - 5, paddle.width, paddle.height, "#0095DD");
-}
-
-function drawBrick(x, y, width, height, padding, color) {
-    engine.drawRect(x + padding, y + padding, width - (2 * padding), height - (2 * padding), color);
-}
-
-function isBallOnPaddle() {
-    return ball.y + ball.radius > canvas.height - paddle.height - 5 && ball.x > paddle.x && ball.x < paddle.x + paddle.width;
 }
 
 engine.start(update, draw);

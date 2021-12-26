@@ -117,88 +117,247 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"src/core/shader.js":[function(require,module,exports) {
+})({"src/engine/html/inputManager.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.initShaderProgram = initShaderProgram;
-exports.loadShader = loadShader;
+exports.default = void 0;
 
-//
-// Initialize a shader program, so WebGL knows how to draw our data
-//
-function initShaderProgram(gl, vsSource, fsSource) {
-  var vertexShader = loadShader(gl, gl.VERTEX_SHADER, vsSource);
-  var fragmentShader = loadShader(gl, gl.FRAGMENT_SHADER, fsSource); // Create the shader program
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-  var shaderProgram = gl.createProgram();
-  gl.attachShader(shaderProgram, vertexShader);
-  gl.attachShader(shaderProgram, fragmentShader);
-  gl.linkProgram(shaderProgram); // If creating the shader program failed, alert
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-  if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-    alert('Unable to initialize the shader program: ' + gl.getProgramInfoLog(shaderProgram));
-    return null;
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var HtmlInputManager = /*#__PURE__*/function () {
+  function HtmlInputManager(document) {
+    var _this = this;
+
+    _classCallCheck(this, HtmlInputManager);
+
+    this.keys = {};
+    document.addEventListener("keydown", function (event) {
+      return _this.__keyDownHandler(_this, event);
+    }, false);
+    document.addEventListener("keyup", function (event) {
+      return _this.__keyUpHandler(_this, event);
+    }, false);
+    document.addEventListener("keypress", function (event) {
+      return _this.__keyPressedHandler(_this, event);
+    }, false);
   }
 
-  return shaderProgram;
-} //
-// Creates a shader of the given type, uploads the source and
-// compiles it.
-//
+  _createClass(HtmlInputManager, [{
+    key: "isKeyDown",
+    value: function isKeyDown(key) {
+      return key in this.keys && this.keys[key] == 1;
+    }
+  }, {
+    key: "isKeyPressed",
+    value: function isKeyPressed(key) {
+      return key in this.keys && this.keys[key] == 2;
+    }
+  }, {
+    key: "isKeyUp",
+    value: function isKeyUp() {
+      return !(key in this.keys);
+    }
+  }, {
+    key: "__keyDownHandler",
+    value: function __keyDownHandler(inputManager, event) {
+      inputManager.keys[event.key] = 1;
+    }
+  }, {
+    key: "__keyPressedHandler",
+    value: function __keyPressedHandler(inputManager, event) {
+      inputManager.keys[event.key] = 2;
+    }
+  }, {
+    key: "__keyUpHandler",
+    value: function __keyUpHandler(inputManager, event) {
+      if (event.key in inputManager.keys) delete inputManager.keys[event.key];
+    }
+  }]);
 
+  return HtmlInputManager;
+}();
 
-function loadShader(gl, type, source) {
-  var shader = gl.createShader(type); // Send the source to the shader object
-
-  gl.shaderSource(shader, source); // Compile the shader program
-
-  gl.compileShader(shader); // See if it compiled successfully
-
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    alert('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-    return null;
-  }
-
-  return shader;
-}
-},{}],"src/core/core.js":[function(require,module,exports) {
+exports.default = HtmlInputManager;
+},{}],"src/engine/html/renderer.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = main;
+exports.default = void 0;
 
-var _shader = require("./shader.js");
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var vsSource = "\n    attribute vec4 aVertexPosition;\n\n    uniform mat4 uModelViewMatrix;\n    uniform mat4 uProjectionMatrix;\n\n    void main() {\n        gl_Position = uProjectionMatrix * uModelViewMatrix * aVertexPosition;\n    }\n";
-var fsSource = "\n    void main() {\n        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);\n    }\n";
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-function main() {
-  var canvas = document.getElementById('main-canvas');
-  var gl = canvas.getContext('webgl');
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-  if (!gl) {
-    alert("Your browser doesn't support WebGL, please use a more recent one.");
-    return;
+var HtmlRenderer = /*#__PURE__*/function () {
+  function HtmlRenderer(canvas) {
+    _classCallCheck(this, HtmlRenderer);
+
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.width = this.canvas.width;
+    this.height = this.canvas.height; // this.canvas = document.createElement('canvas');
+    // this.ctx = new CanvasRenderingContext2D();
   }
 
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-}
-},{"./shader.js":"src/core/shader.js"}],"index.js":[function(require,module,exports) {
+  _createClass(HtmlRenderer, [{
+    key: "upscaleCanvas",
+    value: function upscaleCanvas(width, height) {
+      this.canvas.style.width = width + 'px';
+      this.canvas.style.height = height + 'px';
+    }
+  }, {
+    key: "setCripsPixel",
+    value: function setCripsPixel() {
+      this.canvas.style.imageRendering = '-moz-crisp-edges';
+      this.canvas.style.imageRendering = '-webkit-crisp-edges';
+      this.canvas.style.imageRendering = 'pixelated';
+      this.canvas.style.imageRendering = 'crisp-edges';
+    }
+  }, {
+    key: "clear",
+    value: function clear() {
+      this.ctx.clearRect(0, 0, this.width, this.height);
+    }
+  }, {
+    key: "drawPixel",
+    value: function drawPixel(x, y, color) {
+      this.ctx.beginPath();
+      this.ctx.rect(x, y, 1, 1);
+      this.ctx.fillStyle = color;
+      this.ctx.fill();
+      this.ctx.closePath();
+    }
+  }, {
+    key: "drawImage",
+    value: function drawImage(x, y, image) {
+      this.ctx.drawImage(image, x, y);
+    }
+  }, {
+    key: "drawRect",
+    value: function drawRect(x, y, width, height, color) {
+      this.ctx.beginPath();
+      this.ctx.rect(x, y, width, height);
+      this.ctx.fillStyle = color;
+      this.ctx.fill();
+      this.ctx.closePath();
+    }
+  }, {
+    key: "drawEclipse",
+    value: function drawEclipse(x, y, radius, color) {
+      this.ctx.beginPath();
+      this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+      this.ctx.fillStyle = color;
+      this.ctx.fill();
+      this.ctx.closePath();
+    }
+  }]);
+
+  return HtmlRenderer;
+}();
+
+exports.default = HtmlRenderer;
+},{}],"src/engine/engine.js":[function(require,module,exports) {
 "use strict";
 
-var _core = _interopRequireDefault(require("./src/core/core.js"));
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
+
+var Engine = /*#__PURE__*/function () {
+  function Engine(renderer, audioPlayer) {
+    _classCallCheck(this, Engine);
+
+    this.renderer = renderer;
+    this.audioPlayer = audioPlayer;
+  }
+
+  _createClass(Engine, [{
+    key: "start",
+    value: function start(update, draw) {
+      var _this = this;
+
+      this.interval = setInterval(function () {
+        update();
+
+        _this.renderer.clear();
+
+        draw();
+      }, 10);
+    }
+  }, {
+    key: "stop",
+    value: function stop() {
+      clearInterval(this.interval); // Needed for Chrome to end game
+    }
+  }, {
+    key: "drawPixel",
+    value: function drawPixel(x, y, color) {
+      this.renderer.drawPixel(x, y, color);
+    }
+  }, {
+    key: "drawImage",
+    value: function drawImage(x, y, image) {
+      this.renderer.drawImage(image, x, y);
+    }
+  }, {
+    key: "drawRect",
+    value: function drawRect(x, y, width, height, color) {
+      this.renderer.drawRect(x, y, width, height, color);
+    }
+  }, {
+    key: "drawEclipse",
+    value: function drawEclipse(x, y, radius, color) {
+      this.renderer.drawEclipse(x, y, radius, color);
+    }
+  }]);
+
+  return Engine;
+}();
+
+exports.default = Engine;
+},{}],"index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = runCode;
+
+var _inputManager = _interopRequireDefault(require("./src/engine/html/inputManager"));
+
+var _renderer = _interopRequireDefault(require("./src/engine/html/renderer"));
+
+var _engine = _interopRequireDefault(require("./src/engine/engine"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-(0, _core.default)();
-},{"./src/core/core.js":"src/core/core.js"}],"C:/Users/pc/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+function runCode(code) {
+  try {
+    var f = new Function(code);
+    f();
+  } catch (error) {
+    console.error(error);
+  }
+}
+},{"./src/engine/html/inputManager":"src/engine/html/inputManager.js","./src/engine/html/renderer":"src/engine/html/renderer.js","./src/engine/engine":"src/engine/engine.js"}],"C:/Users/pc/AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -226,7 +385,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55818" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53498" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

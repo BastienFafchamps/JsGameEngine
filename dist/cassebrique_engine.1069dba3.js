@@ -290,6 +290,24 @@ var Engine = /*#__PURE__*/function () {
   }
 
   _createClass(Engine, [{
+    key: "start",
+    value: function start(update, draw) {
+      var _this = this;
+
+      this.interval = setInterval(function () {
+        update();
+
+        _this.renderer.clear();
+
+        draw();
+      }, 10);
+    }
+  }, {
+    key: "stop",
+    value: function stop() {
+      clearInterval(this.interval); // Needed for Chrome to end game
+    }
+  }, {
     key: "drawPixel",
     value: function drawPixel(x, y, color) {
       this.renderer.drawPixel(x, y, color);
@@ -309,24 +327,6 @@ var Engine = /*#__PURE__*/function () {
     value: function drawEclipse(x, y, radius, color) {
       this.renderer.drawEclipse(x, y, radius, color);
     }
-  }, {
-    key: "start",
-    value: function start(update, draw) {
-      var _this = this;
-
-      this.interval = setInterval(function () {
-        update();
-
-        _this.renderer.clear();
-
-        draw();
-      }, 10);
-    }
-  }, {
-    key: "stop",
-    value: function stop() {
-      clearInterval(this.interval); // Needed for Chrome to end game
-    }
   }]);
 
   return Engine;
@@ -345,38 +345,35 @@ var _engine = _interopRequireDefault(require("../engine/engine"));
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var canvas = document.getElementById("main-canvas");
-var renderer = new _renderer.default(canvas); // renderer.canvas.width = 128
-// renderer.canvas.height = 96
-// renderer.upscaleCanvas(128 * 4, 96 * 4);
-// renderer.setCripsPixel();
-
+canvas.style.backgroundColor = 'rgba(255, 255, 255)';
+var renderer = new _renderer.default(canvas);
 var engine = new _engine.default(renderer, null);
 var inputManager = new _inputManager.default(document);
 var ball = {
   radius: 10,
   x: 20,
   y: 60,
-  dx: -0.5,
-  dy: -0.5
+  dx: -2,
+  dy: -2
 };
 var paddle = {
   height: 20,
   width: 100,
   x: 10,
-  speed: 1
+  speed: 3
 };
-var brickWidth = 10;
-var brickHeight = 5;
-var brickPadding = 1;
+var brickWidth = 50;
+var brickHeight = 20;
+var brickSpacing = 10;
 var bricks = [];
-var bricks_x_start = 3;
-var bricks_y_start = 2;
+var bricks_x_start = 50;
+var bricks_y_start = 50;
 
-for (var i = 0 + bricks_x_start; i < 10 + bricks_x_start; i++) {
-  for (var j = 0 + bricks_y_start; j < 10 + bricks_y_start; j++) {
+for (var i = 0; i < 10; i++) {
+  for (var j = 0; j < 10; j++) {
     bricks.push({
-      x: brickWidth * i,
-      y: brickHeight * j,
+      x: (brickWidth + brickSpacing) * i + bricks_x_start,
+      y: (brickHeight + brickSpacing) * j + bricks_y_start,
       life: 3
     });
   }
@@ -387,9 +384,14 @@ var colors = ["#ade4ff", "#48bef7", "#0095DD"];
 function update() {
   ball.x += ball.dx;
   ball.y += ball.dy;
+
+  function isBallOnPaddle() {
+    return ball.y + ball.radius > canvas.height - paddle.height - 5 && ball.x > paddle.x && ball.x < paddle.x + paddle.width;
+  }
+
   if (ball.y < ball.radius || isBallOnPaddle()) ball.dy = -ball.dy;else if (ball.y > canvas.height + ball.radius) {
-    alert("GAME OVER");
-    document.location.reload();
+    // alert("GAME OVER");
+    // document.location.reload();
     engine.stop();
   }
   if (ball.x < ball.radius || ball.x + ball.radius > canvas.width) ball.dx = -ball.dx;
@@ -408,18 +410,10 @@ function update() {
 
 function draw() {
   bricks.forEach(function (brick) {
-    drawBrick(brick.x, brick.y, brickWidth, brickHeight, brickPadding, colors[brick.life - 1]);
+    engine.drawRect(brick.x, brick.y, brickWidth, brickHeight, colors[brick.life - 1]);
   });
   engine.drawEclipse(ball.x, ball.y, ball.radius, "#0095DD");
   engine.drawRect(paddle.x, canvas.height - paddle.height - 5, paddle.width, paddle.height, "#0095DD");
-}
-
-function drawBrick(x, y, width, height, padding, color) {
-  engine.drawRect(x + padding, y + padding, width - 2 * padding, height - 2 * padding, color);
-}
-
-function isBallOnPaddle() {
-  return ball.y + ball.radius > canvas.height - paddle.height - 5 && ball.x > paddle.x && ball.x < paddle.x + paddle.width;
 }
 
 engine.start(update, draw);
@@ -451,7 +445,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "57982" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53498" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

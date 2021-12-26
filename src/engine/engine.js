@@ -6,6 +6,10 @@ export default class Engine {
         this.audioPlayer = audioPlayer;
     }
 
+    clear() {
+        clearInterval(this.interval); 
+    }
+
     start(update, draw) {
         this.interval = setInterval(() => {
             update();
