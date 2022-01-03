@@ -5,54 +5,54 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Js Game Engine</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="/prism-dark.520b8bf5.css">
-    <link rel="stylesheet" type="text/css" media="screen" href="/main.af46ece4.css">
-<script src="/prism-dark.520b8bf5.js"></script><script src="/main.af46ece4.js"></script></head>
+    <link rel="stylesheet" type="text/css" href="/index.4cb1cfec.css">
+    <link rel="stylesheet" type="text/css" media="screen" href="/index.3b30eb03.css">
+</head>
 <body>
-    <div id="editor" class="panel">
-        <div class="code-editor">
-            <textarea id="code-area-input" spellcheck="false" oninput="update(this.value);" onscroll="sync_scroll(this);" onkeydown="check_tab(this, event);"></textarea>
-            <pre id="code-area" class="language-javascript" aria-hidden="true"><code id="code-area-content"></code></pre>
+    <div class="panel-container-horizontal">
+        <div id="editor" class="panel">
+            <div class="code-editor">
+                <textarea id="code-area-input" spellcheck="false" oninput="update(this.value);" onscroll="sync_scroll(this);" onkeydown="check_tab(this, event);"></textarea>
+                <pre id="code-area" class="language-javascript" aria-hidden="true"><code id="code-area-content"></code></pre>
+            </div>
+        </div>
+        <div id="main-canvas-container" class="panel">
+            <canvas id="main-canvas" width="840" height="580">
+                Your browser doesn't support WebGL, please use a more recent one.
+            </canvas>
         </div>
     </div>
-    <canvas id="main-canvas" class="panel" width="840" height="580">
-        Your browser doesn't support WebGL, please use a more recent one.
-    </canvas>
-    <script src="/prism.a98f8f68.js"></script>
-    <script src="/main.1e43358e.js"></script>
-    <script>var codeAreaContent = document.getElementById("code-area-content");
-var codeArea = document.querySelector("#code-area");
+    <script src="/index.3d55d471.js"></script>
+    <script src="/index.2cd1ebf7.js" defer=""></script>
+    <script src="/index.eb1c05f5.js" defer=""></script>
+    <!-- <script src="./src/main.js" ></script> -->
+    <script>let codeAreaContent = document.getElementById("code-area-content");
+let codeArea = document.querySelector("#code-area");
 codeAreaContent.innerHTML = "";
-
 function update(text) {
-  var code = text;
-
-  if (text[text.length - 1] == "\n") {
-    text += " ";
-  }
-
-  codeAreaContent.innerHTML = text.replace("&", "&amp;").replace("<", "&lt;");
-  Prism.highlightElement(codeAreaContent);
-  run(code);
+    let code = text;
+    if (text[text.length - 1] == "\n") text += " ";
+    codeAreaContent.innerHTML = text.replace("&", "&amp;").replace("<", "&lt;");
+    Prism.highlightElement(codeAreaContent);
+    run(code);
 }
-
 function sync_scroll(element) {
-  codeArea.scrollTop = element.scrollTop;
-  codeArea.scrollLeft = element.scrollLeft;
+    codeArea.scrollTop = element.scrollTop;
+    codeArea.scrollLeft = element.scrollLeft;
+}
+function check_tab(e, event) {
+    if (event.shiftKey && event.key == "Tab") event.preventDefault();
+    else if (event.key == "Tab") {
+        event.preventDefault();
+        let cursor_pos = e.selectionEnd + 1;
+        e.value = e.value.slice(0, e.selectionStart) + "\t" + e.value.slice(e.selectionEnd, e.value.length);
+        e.selectionStart = cursor_pos;
+        e.selectionEnd = cursor_pos;
+        update(e.value);
+    }
 }
 
-function check_tab(e, event) {
-  if (event.shiftKey && event.key == "Tab") {
-    event.preventDefault();
-  } else if (event.key == "Tab") {
-    event.preventDefault();
-    var cursor_pos = e.selectionEnd + 1;
-    e.value = e.value.slice(0, e.selectionStart) + "\t" + e.value.slice(e.selectionEnd, e.value.length);
-    e.selectionStart = cursor_pos;
-    e.selectionEnd = cursor_pos;
-    update(e.value);
-  }
-}</script>
+</script>
 </body>
 <!-- <script src='./src/game/cassebrique_engine.js'></script> -->
 </html>

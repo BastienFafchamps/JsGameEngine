@@ -1,20 +1,18 @@
-let ball = CREATE_CIRCLE({
+let ball = {
     x: 20,
     y: 60,
     radius: 10,
-    color: "#0095DD",
     dx: -2,
     dy: -2,
-});
+};
 
-let paddle = CREATE_RECT({
+let paddle = {
     x: 10,
     y: SCREEN_HEIGHT - 25,
     height: 20,
     width: 100,
-    color: "#0095DD",
     speed: 3,
-});
+};
 
 let brickWidth = 50;
 let brickHeight = 20;
@@ -32,14 +30,13 @@ let colors = [
 
 for (let i = 0; i < 10; i++) {
     for (let j = 0; j < 10; j++) {
-        let brick = CREATE_RECT({
+        let brick = {
             x: ((brickWidth + brickSpacing) * i) + bricks_x_start,
             y: ((brickHeight + brickSpacing) * j) + bricks_y_start,
             width: brickWidth,
             height: brickHeight,
             life: 3,
-            color: colors[2],
-        });
+        };
         bricks.push(brick);
     }
 }
@@ -55,6 +52,8 @@ function UPDATE() {
     if (ball.y < ball.radius || isBallOnPaddle())
         ball.dy = -ball.dy;
     else if(ball.y > SCREEN_HEIGHT + ball.radius) {
+        // alert("GAME OVER");
+        // document.location.reload();
         STOP();
     }
 
@@ -71,14 +70,22 @@ function UPDATE() {
         if (ball.y > brick.y && ball.y < brick.y + brickHeight && ball.x > brick.x && ball.x < brick.x + brickWidth) {
             ball.dy = -ball.dy;
             brick.life -= 1;
-            if (brick.life > 0) {
-                brick.color = colors[brick.life - 1];
-                return true;
-            } else {
-                REMOVE(brick);
-                return false;
-            }
+            return brick.life;
         }
         return true;
     });
+}
+
+function DRAW() {
+    bricks.forEach(brick => {
+        DRAW_RECT(
+            brick.x, 
+            brick.y, 
+            brickWidth, 
+            brickHeight, 
+            colors[brick.life - 1]
+        );
+    });
+    DRAW_CIRCLE(ball.x, ball.y, ball.radius, "#0095DD");
+    DRAW_RECT(paddle.x, paddle.y, paddle.width, paddle.height, "#0095DD");
 }

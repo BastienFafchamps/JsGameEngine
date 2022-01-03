@@ -17,7 +17,7 @@ export default class HtmlInputManager {
         return key in this.keys && this.keys[key] == 2;
     }
 
-    isKeyUp() {
+    isKeyUp(key) {
         return !(key in this.keys);
     }
 
