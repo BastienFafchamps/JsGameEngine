@@ -32,6 +32,17 @@ body {
   height: 100vh;
 }
 
+hr {
+  height: 1px;
+  background: var(--background-secondary);
+  border: none;
+  margin: .5rem 0;
+}
+
+button {
+  border: none;
+}
+
 .tab-panel {
   position: relative;
   margin: 0.5rem;
@@ -46,7 +57,7 @@ body {
 }
 .tab-buttons {
   padding: 0.5rem 0.5rem 0 0.5rem;
-  width: calc(100vh - 1rem);
+  width: auto;
   display: flex;
 }
 .btn {
@@ -55,15 +66,15 @@ body {
   cursor: pointer;
   border: none;
   background: var(--background);
-  width: 5rem;
   height: 2rem;
   color: var(--text-main);
   transition: 0.2s ease-in-out;
 }
 .btn.contained {
-  border: solid 1px var(--background-secondary);
+  border: solid 0.5px var(--background-secondary);
 }
 .btn:hover {
+  border: transparent;
   background: var(--background-highlight);
 }
 .btn.active, .btn:active {
@@ -71,6 +82,9 @@ body {
   background: var(--background-secondary);
 }
 
+.tab-btn {
+  width: 5rem;
+}
 .tab-select .select-list {
   display: none;
 }
@@ -198,4 +212,146 @@ input[type="file"] {
 .object-editor-collapsible.active:after {
   content: "\2212";
   color: var(--background);
+}
+
+#sprite-editor-tools {
+  display: flex;
+  flex-direction: column;
+  margin-right: 1rem;
+  height: 30rem;
+}
+.sprite-editor-tool {
+  margin-bottom: 0.25rem;
+}
+
+button.sprite-editor-tool {
+  text-align: center;
+}
+
+#sprite-editor-container {
+  --grid-color: rgb(0, 0, 0);
+  position: relative;
+  width: 30rem;
+  height: 30rem;
+  border: 3px solid var(--grid-color);
+}
+#sprite-editor-canvas, #sprite-editor-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+#sprite-editor-canvas {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+#sprite-editor-grid {
+  pointer-events: none;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  grid-template-rows: repeat(16, 1fr);
+}
+.sprite-editor-cell {
+  border: 0.5px solid var(--grid-color);
+}
+.sprite-editor-cell:active {
+	pointer-events: none;
+}
+.sprite-editor-cell:hover {
+  background: #000000;
+}
+#sprite-editor-color-picker-label {
+  width: 3rem;
+  height: 1rem;
+  background: white;
+  border-radius: 0.2rem;
+}
+#sprite-editor-color-picker {
+  visibility: hidden;
+}
+
+#audio-panel {
+  flex-direction: column;
+}
+#audio-keyboard {
+  display: flex;
+}
+.audio-key {
+  --border-height: 8px;
+  transition: 0.1s ease-in-out;
+}
+.audio-key.white {
+  width: 4rem;
+  height: 10rem;
+  margin: 0 0.2rem;
+  background-color: var(--background-secondary);
+  border-bottom: var(--border-height) solid rgb(189, 189, 189);
+}
+.audio-key.black {
+  width: 3rem;
+  height: 6rem;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  z-index: 2;
+  background-color: rgb(177, 177, 177);
+  border-bottom: var(--border-height) solid rgb(117, 117, 117);
+}
+.audio-key:hover {
+  filter: brightness(1.1);
+}
+.audio-key:active, .audio-key.active {
+  filter: brightness(0.9);
+}
+.audio-key.white.active {
+  border-bottom: 2px solid rgb(189, 189, 189);
+}
+.audio-key.audio-key.black.active.active {
+  border-bottom: 2px solid rgb(117, 117, 117);
+}
+
+.audio-node {
+  position: relative;
+  padding: 0.25rem 1rem;
+  margin: 1rem;
+  border: solid 1px var(--background-secondary);
+  background: var(--background);
+}
+.audio-node-label {
+  background: var(--background);
+  padding: 0 0.5rem;
+  position: absolute;
+  height: 1rem;
+  top: -0.5rem;
+  left: 0.5rem;
+}
+
+.audio-box {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 20rem;
+}
+
+.audio-box {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  width: 12rem;
+}
+.audio-box .slider {
+  width: 7rem;
+}
+.audio-box label {
+  text-align: left;
+}
+.audio-box p {
+  text-align: center;
 }

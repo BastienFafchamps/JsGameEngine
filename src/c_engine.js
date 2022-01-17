@@ -88,6 +88,66 @@ export class HtmlRenderer {
     }
 }
 
+export class Physics2D {
+
+    constructor() {
+    }
+
+    doRectsCollides(rect_a, rect_b) {
+        let a = { x1: rect_a.x, x2: rect_a.x + rect_a.width, y1: rect_a.y, y2: rect_a.y + rect_a.height };
+        let b = { x1: rect_b.x, x2: rect_b.x + rect_b.width, y1: rect_b.y, y2: rect_b.y + rect_b.height };
+        return this.contains(a, b) || this.overlaps(a, b);
+    }
+
+    // Check if rectangle a contains rectangle b
+    contains(a, b) {
+        return !(
+            b.x1 < a.x1 ||
+            b.y1 < a.y1 ||
+            b.x2 > a.x2 ||
+            b.y2 > a.y2
+        );
+    }
+
+    // Check if rectangle a overlaps rectangle b
+    overlaps(a, b) {
+        // no horizontal overlap
+        if (a.x1 >= b.x2 || b.x1 >= a.x2) return false;
+        // no vertical overlap
+        if (a.y1 >= b.y2 || b.y1 >= a.y2) return false;
+        return true;
+    }
+
+    // Check if rectangle a touches rectangle b
+    touches(a, b) {
+        // has horizontal gap
+        if (a.x1 > b.x2 || b.x1 > a.x2) return false;
+        // has vertical gap
+        if (a.y1 > b.y2 || b.y1 > a.y2) return false;
+        return true;
+    }
+
+    doRectCircleCollides(circle, rect) {
+        let x = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
+        let y = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
+        let dx = x - circle.x;
+        let dy = y - circle.y;
+        return (dx * dx + dy * dy) <= circle.radius * circle.radius;
+    }
+
+    doCirclesCollides(circle_a, circle_b) {
+        let max = circle_a.radius + circle_b.radius;
+        let dx = circle_a.x - circle_b.x;
+        let dy = circle_a.y - circle_b.y;
+        return ((dx * dx) + (dy * dy)) <= (max * max); 
+    }
+}
+
+export class HtmlSynth {
+
+    constructor() {}
+}
+
 export class Engine {
 
     constructor(renderer, inputManager, audioPlayer) {
@@ -109,7 +169,7 @@ export class Engine {
         this.renderer.clear();
     }
 
-    start(update, draw=null) {
+    start(update, draw = null) {
         if (draw != null) {
             this.gameLoop = setInterval(() => {
                 update();
@@ -159,6 +219,14 @@ export class Engine {
 
     isKeyUp(key) {
         return this.inputManager.isKeyUp(key);
+    }
+
+    random() {
+        return Math.random();
+    }
+
+    randomRange(min, max) {
+        return Math.random() * (max - min) + min;
     }
 
     createObjectRect(obj = { x, y, width, height, color }) {

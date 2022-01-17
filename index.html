@@ -19,8 +19,12 @@
         </div>
         <button class="btn tab-btn">Game</button>
         <button class="btn tab-btn">Code</button>
+        <button class="btn tab-btn">Sprites</button>
+        <button class="btn tab-btn">Audio</button>
         <button class="btn tab-btn">Settings</button>
         <button id="btn-reload" class="btn contained">Reload</button>
+        <button id="btn-host" class="btn contained">Host</button>
+        <button id="btn-connect" class="btn contained">Connect</button>
     </div>
     <div id="game-view-panel" class="tab-panel center">
         <canvas id="main-canvas" width="840" height="580">
@@ -36,11 +40,88 @@
             <pre id="code-area" class="language-javascript" aria-hidden="true"><code id="code-area-content"></code></pre>
         </div>
     </div>
+    <div id="sprites-panel" class="tab-panel center">
+        <div id="sprite-editor-tools">
+            <div class="sprite-editor-tool">
+                <label>Color</label>
+                <label id="sprite-editor-color-picker-label" for="sprite-editor-color-picker">
+                <input type="color" id="sprite-editor-color-picker" name="sprite-editor-color-picker">
+            </div>
+            <hr>
+            <button class="btn sprite-editor-tool" id="sprite-editor-pencil">Pencil</button>
+            <button class="btn sprite-editor-tool" id="sprite-editor-eraser">Eraser</button>
+            <button class="btn sprite-editor-tool" id="sprite-editor-bucket">Bucket</button>
+            <hr>
+            <button class="btn contained sprite-editor-tool" id="sprite-editor-download">Download</button>
+            <label class="btn contained sprite-editor-tool" for="sprite-editor-load">Load</label><input id="sprite-editor-load" type="file" />
+        </div>
+        <div id="sprite-editor-container">
+            <div id="sprite-editor-grid">
+            </div>
+            <canvas id="sprite-editor-canvas" width="16" height="16">
+                Your browser doesn't support WebGL, please use a more recent one.
+            </canvas>
+        </div>
+    </div>
+    <div id="audio-panel" class="tab-panel center">
+        <div class="audio-box">
+            <label>Volume</label>
+            <input type="range" class="slider" min="0" max="100" value="50" id="audio-volume">
+        </div>
+        <div class="audio-box">
+            <button id="audio-octave-minus" class="btn">-</button>
+            <p id="audio-octave">Octave: 0</p>
+            <button id="audio-octave-plus" class="btn">+</button>
+        </div>
+        <div class="audio-node">
+            <p class="audio-node-label">Oscilliator</p>
+            <div class="audio-box">
+                <button id="audio-type-minus" class="btn">-</button>
+                <p id="audio-type">Sine</p>
+                <button id="audio-type-plus" class="btn">+</button>
+            </div>
+            <div class="audio-box">
+                <label>Attack</label>
+                <input type="range" class="slider" min="0" max="100" value="50" id="audio-attack">
+            </div>
+            <div class="audio-box">
+                <label>Decay</label>
+                <input type="range" class="slider" min="0" max="100" value="50" id="audio-decay">
+            </div>
+            <div class="audio-box">
+                <label>Sustain</label>
+                <input type="range" class="slider" min="0" max="100" value="50" id="audio-sustain">
+            </div>
+            <div class="audio-box">
+                <label>Release</label>
+                <input type="range" class="slider" min="0" max="100" value="50" id="audio-release">
+            </div>
+        </div>
+        <div id="audio-keyboard">
+            <button data-note="C" class="audio-key white"></button>
+            <button data-note="C#" class="audio-key black"></button>
+            <button data-note="D" class="audio-key white"></button>
+            <button data-note="Eb" class="audio-key black"></button>
+            <button data-note="E" class="audio-key white"></button>
+            <button data-note="F" class="audio-key white"></button>
+            <button data-note="F#" class="audio-key black"></button>
+            <button data-note="G" class="audio-key white"></button>
+            <button data-note="G#" class="audio-key black"></button>
+            <button data-note="A" class="audio-key white"></button>
+            <button data-note="Bb" class="audio-key black"></button>
+            <button data-note="B" class="audio-key white"></button>
+        </div>
+        <div id="audio-melody">
+            <div class="audio-melody-row"></div>
+            <div class="audio-melody-row"></div>
+        </div>
+    </div>
     <div id="settings-panel" class="tab-panel">
         <div id="settings-editor" class="obj-editor">
         </div>
     </div>
     <script src="./editor/prism.js"></script>
+    <script src="./src/peerjs.min.js"></script>
     <script type="module" src="./src/c_engine.js"></script>
     <script type="module" src="./src/c_main.js"></script>
     <script type="module" src="./src/c_editor.js"></script>
