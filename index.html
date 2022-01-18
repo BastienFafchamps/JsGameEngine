@@ -64,56 +64,55 @@
         </div>
     </div>
     <div id="audio-panel" class="tab-panel center">
-        <div class="audio-box">
-            <label>Volume</label>
-            <input type="range" class="slider" min="0" max="100" value="50" id="audio-volume">
-        </div>
-        <div class="audio-box">
-            <button id="audio-octave-minus" class="btn">-</button>
-            <p id="audio-octave">Octave: 0</p>
-            <button id="audio-octave-plus" class="btn">+</button>
-        </div>
-        <div class="audio-node">
-            <p class="audio-node-label">Oscilliator</p>
-            <div class="audio-box">
-                <button id="audio-type-minus" class="btn">-</button>
-                <p id="audio-type">Sine</p>
-                <button id="audio-type-plus" class="btn">+</button>
+        <div id="audio-toolbar">
+            <div class="audio-toolbar-input">
+                <label>Volume</label>
+                <input type="range" class="slider" min="0" max="100" value="50" id="audio-volume">
             </div>
-            <div class="audio-box">
-                <label>Attack</label>
-                <input type="range" class="slider" min="0" max="100" value="50" id="audio-attack">
-            </div>
-            <div class="audio-box">
-                <label>Decay</label>
-                <input type="range" class="slider" min="0" max="100" value="50" id="audio-decay">
-            </div>
-            <div class="audio-box">
-                <label>Sustain</label>
-                <input type="range" class="slider" min="0" max="100" value="50" id="audio-sustain">
-            </div>
-            <div class="audio-box">
-                <label>Release</label>
-                <input type="range" class="slider" min="0" max="100" value="50" id="audio-release">
-            </div>
-        </div>
-        <div id="audio-keyboard">
-            <button data-note="C" class="audio-key white"></button>
-            <button data-note="C#" class="audio-key black"></button>
-            <button data-note="D" class="audio-key white"></button>
-            <button data-note="Eb" class="audio-key black"></button>
-            <button data-note="E" class="audio-key white"></button>
-            <button data-note="F" class="audio-key white"></button>
-            <button data-note="F#" class="audio-key black"></button>
-            <button data-note="G" class="audio-key white"></button>
-            <button data-note="G#" class="audio-key black"></button>
-            <button data-note="A" class="audio-key white"></button>
-            <button data-note="Bb" class="audio-key black"></button>
-            <button data-note="B" class="audio-key white"></button>
         </div>
         <div id="audio-melody">
             <div class="audio-melody-row"></div>
             <div class="audio-melody-row"></div>
+        </div>
+        <div id="audio-tools">
+            <div class="audio-node">
+                <p class="audio-node-label">Oscilliator</p>
+                <div class="audio-node-input">
+                    <button id="audio-type-minus" class="btn">-</button>
+                    <p id="audio-type">Sine</p>
+                    <button id="audio-type-plus" class="btn">+</button>
+                </div>
+                <div class="audio-node-input">
+                    <label>Attack</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-attack">
+                </div>
+                <div class="audio-node-input">
+                    <label>Decay</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-decay">
+                </div>
+                <div class="audio-node-input">
+                    <label>Sustain</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-sustain">
+                </div>
+                <div class="audio-node-input">
+                    <label>Release</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-release">
+                </div>
+            </div>
+            <div class="audio-node">
+                <p class="audio-node-label">Filter</p>
+                <div class="audio-node-input">
+                    <label>Frequency</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-filter-frequency">
+                </div>
+            </div>
+        </div>
+        <div id="audio-keyboard">
+            <div class="audio-keyboard-octave">
+                <button id="audio-octave-plus" class="btn">+</button>
+                <p id="audio-octave">0</p>
+                <button id="audio-octave-minus" class="btn">-</button>
+            </div>
         </div>
     </div>
     <div id="settings-panel" class="tab-panel">

@@ -145,7 +145,7 @@ export class Physics2D {
 
 export class HtmlSynth {
 
-    constructor() {
+    constructor(audioContext) {
         this.WAVE_FORMS = ['sine', 'square', 'sawtooth', 'triangle'];
         this.FREQUENCIES = {
             'C': 16.35,
@@ -162,7 +162,7 @@ export class HtmlSynth {
             'B': 30.87,
         };
 
-        this.audioCtx = new AudioContext();
+        this.audioCtx = audioContext;
         this.eveloppeMaxTime = 1;
 
         this.mainGainNode = this.audioCtx.createGain();
@@ -172,12 +172,21 @@ export class HtmlSynth {
         this.playingNotes = {};
     }
 
+    
+    setVolume(volume) {
+        this.mainGainNode.gain.value = volume;
+    }
+
     playNote(instrument, octave, note) {
         let id = `${octave}-${note}`;
 
         if (this.playingNotes[id] != null) {
             this.playingNotes[id].gainNode.cancel();
+            this.playingNotes[id].oscillatorNode.stop();
         }
+
+        let filter = this.__createFilter('highpass', 4400, 1);
+        filter.connect(this.mainGainNode);
 
         let gainEnveloppeNode = this.__createGainEnveloppeNode(
             instrument.enveloppe.attack,
@@ -185,25 +194,27 @@ export class HtmlSynth {
             instrument.enveloppe.sustain,
             instrument.enveloppe.release,
         );
-        gainEnveloppeNode.connect(this.mainGainNode);
+        gainEnveloppeNode.connect(filter);
 
-        let oscillatorNode = this.__createOscillatorNode(instrument.waveForm);
+        let oscillatorNode = this.__createOscillatorNode(instrument.waveForm, instrument.enveloppe.release);
         oscillatorNode.connect(gainEnveloppeNode);
-        oscillatorNode.playNote(octave, note);
 
-        this.playingNotes[id] = { osc: oscillatorNode, gainNode: gainEnveloppeNode };
+        oscillatorNode.playNote(octave, note);
+        gainEnveloppeNode.start();
+
+        this.playingNotes[id] = { oscillatorNode: oscillatorNode, gainNode: gainEnveloppeNode };
         return this.playingNotes[id];
     }
 
     stopNote(octave, note) {
         let id = `${octave}-${note}`;
-        if (note in this.playingNotes && this.playingNotes[id]) {
+        if (id in this.playingNotes && this.playingNotes[id]) {
             this.playingNotes[id].gainNode.stop();
-            delete playingNotes[note];
+            this.playingNotes[id].oscillatorNode.stopNote();
         }
     }
 
-    __createOscillatorNode(waveForm) {
+    __createOscillatorNode(waveForm, release) {
         let osc = this.audioCtx.createOscillator();
         osc.type = waveForm;
 
@@ -212,6 +223,14 @@ export class HtmlSynth {
             osc.frequency.value = this.FREQUENCIES[note] * (octave * 2);
             osc.start();
         }
+
+        osc.stopNote = () => {
+            let now = this.audioCtx.currentTime;
+            let releaseDuration = release;
+            let releaseEnd = now + releaseDuration;
+            osc.stop(releaseEnd);
+        }
+
         return osc;
     }
 
@@ -220,8 +239,7 @@ export class HtmlSynth {
 
         gainNode.start = () => {
             let now = this.audioCtx.currentTime;
-            let attackDuration = attack;
-            let attackEnd = now + attackDuration;
+            let attackEnd = now + attack;
             let decayDuration = decay;
 
             gainNode.gain.setValueAtTime(0, now);
@@ -230,6 +248,7 @@ export class HtmlSynth {
         }
 
         gainNode.stop = () => {
+            let now = this.audioCtx.currentTime;
             let releaseDuration = release;
             let releaseEnd = now + releaseDuration;
 
@@ -242,6 +261,14 @@ export class HtmlSynth {
             gainNode.gain.cancelScheduledValues(0);
         }
         return gainNode;
+    }
+
+    __createFilter(type, frequency, resonance) {
+        let filterNode = this.audioCtx.createBiquadFilter();
+        filterNode.type = type;
+        filterNode.frequency.value = frequency;
+        filterNode.Q.value = resonance;
+        return filterNode;
     }
 }
 

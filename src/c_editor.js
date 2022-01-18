@@ -26,11 +26,11 @@ let activeTab = 0;
 
 function openTab(button, id) {
     for (let i = 0; i < tabPanels.length; i++) {
-        tabPanels[i].style.display = "none";
+        tabPanels[i].classList.remove("active");
         tabButtons[i].classList.remove("active");
     }
     activeTab = [...tabPanels].findIndex(t => t.id == id);
-    document.getElementById(id).style.display = "flex";
+    document.getElementById(id).classList.add("active");
     button.classList.add("active");
     sessionStorage.setItem("activeTab", activeTab);
 }
@@ -398,7 +398,10 @@ document.getElementById('sprite-editor-load').addEventListener('change', event =
 }, false);
 
 // ================================= Audio ==========================================
-const synth = new HtmlSynth();
+
+// const audioCtx = new (AudioContext || webkitAudioContext)();
+const audioCtx = new AudioContext();
+const synth = new HtmlSynth(audioCtx);
 
 const WAVE_FORMS = [
     'sine',
@@ -407,37 +410,8 @@ const WAVE_FORMS = [
     'triangle',
 ]
 
-const FREQUENCIES = {
-    'C': 16.35,
-    'C#': 17.32,
-    'D': 18.35,
-    'Eb': 19.45,
-    'E': 20.60,
-    'F': 21.83,
-    'F#': 23.12,
-    'G': 24.50,
-    'G#': 25.96,
-    'A': 27.50,
-    'Bb': 29.14,
-    'B': 30.87,
-}
-
-const audioCtx = new AudioContext();
-// const audioCtx = new (AudioContext || webkitAudioContext)();
-
-const mainGainNode = audioCtx.createGain();
-mainGainNode.gain.value = 0.2;
-mainGainNode.connect(audioCtx.destination);
-
-const eveloppeMaxTime = 1;
-
-let playingNotes = {};
-
 let selectedWaveForm = 0;
-
 let octave = 4;
-let _octave = 4;
-
 
 let instrument = {
     waveForm: 'sine',
@@ -449,9 +423,8 @@ let instrument = {
     }
 };
 
-function setOctave(newOctave) {
-    octave = Math.min(Math.max(0, newOctave), 25);
-    document.getElementById('audio-octave').innerHTML = 'Octave: ' + octave;
+function setInstrumentEnveloppe(param, value) {
+    instrument.enveloppe[param] = value;
 }
 
 function setWaveForm(newWaveForm) {
@@ -461,107 +434,51 @@ function setWaveForm(newWaveForm) {
     document.getElementById('audio-type').innerHTML = s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function playNote(note) {
-    synth.playNote(instrument, octave, note);
-    return;
+function setOctave(newOctave) {
+    octave = Math.min(Math.max(0, newOctave), 25);
+    document.getElementById('audio-octave').innerHTML = octave;
+}
 
-    if (playingNotes[note] != null) {
-        // if (playingNotes[note].osc != null)
-        //     playingNotes[note].osc.stop();
-        if (playingNotes[note].gainNode != null)
-            playingNotes[note].gainNode.gain.cancelScheduledValues(0);
+let notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+let notesColors = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
+let keyboard = document.getElementById('audio-keyboard');
+
+let keysMap = { 'q': 'C', 'z': 'C#', 's': 'D', 'e': 'Eb', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'Bb', 'j': 'B' };
+let keys = {};
+
+for (let keyOctave = 0; keyOctave < 2; keyOctave++) {
+    for (let i = 0; i < notes.length; i++) {
+        let key = document.createElement('button');
+        key.className = 'audio-key ' + notesColors[i];
+        key.dataset.note = notes[i];
+        key.dataset.octave = keyOctave;
+
+        key.addEventListener('mousedown', () => {
+            key.classList.add('active');
+            synth.playNote(instrument, octave + keyOctave, key.dataset.note);
+        });
+
+        key.addEventListener('mouseup', () => {
+            key.classList.remove('active');
+            synth.stopNote(octave + keyOctave, key.dataset.note);
+        })
+        
+        keyboard.appendChild(key);
+        if (keyOctave == 0)
+            keys[key.dataset.note] = key;
     }
-
-    let gainNode = audioCtx.createGain();
-    gainNode.connect(mainGainNode);
-
-    let osc = audioCtx.createOscillator();
-    osc.type = instrument.waveForm;
-    osc.frequency.value = FREQUENCIES[note] * (_octave * 2);
-    osc.connect(gainNode);
-
-    playingNotes[note] = { osc: osc, gainNode: gainNode };
-
-    let now = audioCtx.currentTime;
-    let attackDuration = instrument.enveloppe.attack * eveloppeMaxTime;
-    let attackEnd = now + attackDuration;
-    let decayDuration = instrument.enveloppe.decay * eveloppeMaxTime;
-
-    gainNode.gain.setValueAtTime(0, now);
-    gainNode.gain.linearRampToValueAtTime(1, attackEnd);
-    gainNode.gain.setTargetAtTime(instrument.enveloppe.sustain, attackEnd, decayDuration);
-
-    osc.start();
 }
-
-function stopNote(note) {
-    synth.stopNote(octave, note);
-    return;
-
-    if (!(note in playingNotes) || !playingNotes[note]) return;
-    let gainNode = playingNotes[note].gainNode;
-    playingNotes[note].gainNode.gain.cancelScheduledValues(0);
-
-    let now = audioCtx.currentTime;
-    let releaseDuration = instrument.enveloppe.release * eveloppeMaxTime;
-    let releaseEnd = now + releaseDuration;
-
-    gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-    gainNode.gain.linearRampToValueAtTime(0, releaseEnd);
-
-    delete playingNotes[note];
-}
-
-function setInstrumentEnveloppe(param, value) {
-    instrument.enveloppe[param] = value;
-}
-
-let keysMap = {
-    'q': 'C',
-    'z': 'C#',
-    's': 'D',
-    'e': 'Eb',
-    'd': 'E',
-    'f': 'F',
-    't': 'F#',
-    'g': 'G',
-    'y': 'G#',
-    'h': 'A',
-    'u': 'Bb',
-    'j': 'B',
-};
-
-let keyButtons = {};
-let keysList = document.querySelectorAll('.audio-key');
-
-keysList.forEach(key => {
-    keyButtons[key.dataset.note] = key;
-
-    key.addEventListener('mousedown', () => {
-        key.classList.add('active');
-        playNote(key.dataset.note);
-    });
-
-    key.addEventListener('mouseup', () => {
-        key.classList.remove('active');
-        stopNote(key.dataset.note);
-    })
-});
 
 document.addEventListener('keydown', (event) => {
-    if (activeTab !== 3) return;
+    if (activeTab !== 3 || event.repeat) return;
     event.preventDefault();
 
-    if (event.repeat) return;
-
     let key = event.key.toLowerCase();
+    if (!(key in keysMap)) return;
 
-    if (key in keysMap) {
-        keyButtons[keysMap[key]].classList.add('active');
-        playNote(keysMap[key]);
-    } else {
-        stopNote(keysMap[key]);
-    }
+    let note = keysMap[key];
+    keys[note].classList.add('active');
+    synth.playNote(instrument, octave, note);
 
     if (event.key == 'ArrowUp') {
         setOctave(octave + 1);
@@ -576,10 +493,12 @@ document.addEventListener('keyup', (event) => {
 
     let key = event.key.toLowerCase();
     if (key in keysMap) {
-        keyButtons[keysMap[key]].classList.remove('active');
-        stopNote(keysMap[key]);
+        keys[keysMap[key]].classList.remove('active');
+        synth.stopNote(octave, keysMap[key]);
     }
 })
+
+addEventListener('audio-volume', 'input', (event) => synth.setVolume(parseFloat(event.target.value) / 100.0 * 0.1));
 
 addEventListener('audio-octave-plus', 'click', () => setOctave(octave + 1));
 addEventListener('audio-octave-minus', 'click', () => setOctave(octave - 1));
@@ -587,7 +506,6 @@ addEventListener('audio-octave-minus', 'click', () => setOctave(octave - 1));
 addEventListener('audio-type-plus', 'click', () => setWaveForm(selectedWaveForm + 1));
 addEventListener('audio-type-minus', 'click', () => setWaveForm(selectedWaveForm - 1));
 
-addEventListener('audio-volume', 'input', (event) => mainGainNode.gain.value = parseFloat(event.target.value) / 100.0 * 0.1);
 addEventListener('audio-attack', 'input', (event) => setInstrumentEnveloppe('attack', parseFloat(event.target.value) / 100.0 * 1));
 addEventListener('audio-decay', 'input', (event) => setInstrumentEnveloppe('decay', parseFloat(event.target.value) / 100.0 * 1));
 addEventListener('audio-sustain', 'input', (event) => setInstrumentEnveloppe('sustain', parseFloat(event.target.value) / 100.0 * 1));
