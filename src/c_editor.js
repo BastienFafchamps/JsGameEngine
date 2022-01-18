@@ -1,4 +1,5 @@
 import { App } from "./c_main.js";
+import { HtmlSynth } from "./c_engine.js";
 
 function addEventListener(id, type, method) {
     document.getElementById(id).addEventListener(type, method);
@@ -397,14 +398,14 @@ document.getElementById('sprite-editor-load').addEventListener('change', event =
 }, false);
 
 // ================================= Audio ==========================================
+const synth = new HtmlSynth();
+
 const WAVE_FORMS = [
     'sine',
     'square',
     'sawtooth',
     'triangle',
 ]
-
-const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 const FREQUENCIES = {
     'C': 16.35,
@@ -450,8 +451,6 @@ let instrument = {
 
 function setOctave(newOctave) {
     octave = Math.min(Math.max(0, newOctave), 25);
-    if (newOctave <= 0) _octave = 0.5;
-    else _octave = newOctave;
     document.getElementById('audio-octave').innerHTML = 'Octave: ' + octave;
 }
 
@@ -463,6 +462,9 @@ function setWaveForm(newWaveForm) {
 }
 
 function playNote(note) {
+    synth.playNote(instrument, octave, note);
+    return;
+
     if (playingNotes[note] != null) {
         // if (playingNotes[note].osc != null)
         //     playingNotes[note].osc.stop();
@@ -493,6 +495,9 @@ function playNote(note) {
 }
 
 function stopNote(note) {
+    synth.stopNote(octave, note);
+    return;
+
     if (!(note in playingNotes) || !playingNotes[note]) return;
     let gainNode = playingNotes[note].gainNode;
     playingNotes[note].gainNode.gain.cancelScheduledValues(0);
@@ -525,8 +530,10 @@ let keysMap = {
     'u': 'Bb',
     'j': 'B',
 };
+
 let keyButtons = {};
 let keysList = document.querySelectorAll('.audio-key');
+
 keysList.forEach(key => {
     keyButtons[key.dataset.note] = key;
 

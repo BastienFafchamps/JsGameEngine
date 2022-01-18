@@ -139,13 +139,110 @@ export class Physics2D {
         let max = circle_a.radius + circle_b.radius;
         let dx = circle_a.x - circle_b.x;
         let dy = circle_a.y - circle_b.y;
-        return ((dx * dx) + (dy * dy)) <= (max * max); 
+        return ((dx * dx) + (dy * dy)) <= (max * max);
     }
 }
 
 export class HtmlSynth {
 
-    constructor() {}
+    constructor() {
+        this.WAVE_FORMS = ['sine', 'square', 'sawtooth', 'triangle'];
+        this.FREQUENCIES = {
+            'C': 16.35,
+            'C#': 17.32,
+            'D': 18.35,
+            'Eb': 19.45,
+            'E': 20.60,
+            'F': 21.83,
+            'F#': 23.12,
+            'G': 24.50,
+            'G#': 25.96,
+            'A': 27.50,
+            'Bb': 29.14,
+            'B': 30.87,
+        };
+
+        this.audioCtx = new AudioContext();
+        this.eveloppeMaxTime = 1;
+
+        this.mainGainNode = this.audioCtx.createGain();
+        this.mainGainNode.gain.value = 0.2;
+        this.mainGainNode.connect(this.audioCtx.destination);
+
+        this.playingNotes = {};
+    }
+
+    playNote(instrument, octave, note) {
+        let id = `${octave}-${note}`;
+
+        if (this.playingNotes[id] != null) {
+            this.playingNotes[id].gainNode.cancel();
+        }
+
+        let gainEnveloppeNode = this.__createGainEnveloppeNode(
+            instrument.enveloppe.attack,
+            instrument.enveloppe.decay,
+            instrument.enveloppe.sustain,
+            instrument.enveloppe.release,
+        );
+        gainEnveloppeNode.connect(this.mainGainNode);
+
+        let oscillatorNode = this.__createOscillatorNode(instrument.waveForm);
+        oscillatorNode.connect(gainEnveloppeNode);
+        oscillatorNode.playNote(octave, note);
+
+        this.playingNotes[id] = { osc: oscillatorNode, gainNode: gainEnveloppeNode };
+        return this.playingNotes[id];
+    }
+
+    stopNote(octave, note) {
+        let id = `${octave}-${note}`;
+        if (note in this.playingNotes && this.playingNotes[id]) {
+            this.playingNotes[id].gainNode.stop();
+            delete playingNotes[note];
+        }
+    }
+
+    __createOscillatorNode(waveForm) {
+        let osc = this.audioCtx.createOscillator();
+        osc.type = waveForm;
+
+        osc.playNote = (octave, note) => {
+            if (octave <= 0) octave = 0.5;
+            osc.frequency.value = this.FREQUENCIES[note] * (octave * 2);
+            osc.start();
+        }
+        return osc;
+    }
+
+    __createGainEnveloppeNode(attack, decay, sustain, release) {
+        let gainNode = this.audioCtx.createGain();
+
+        gainNode.start = () => {
+            let now = this.audioCtx.currentTime;
+            let attackDuration = attack;
+            let attackEnd = now + attackDuration;
+            let decayDuration = decay;
+
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(1, attackEnd);
+            gainNode.gain.setTargetAtTime(sustain, attackEnd, decayDuration);
+        }
+
+        gainNode.stop = () => {
+            let releaseDuration = release;
+            let releaseEnd = now + releaseDuration;
+
+            gainNode.gain.cancelScheduledValues(0);
+            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+            gainNode.gain.linearRampToValueAtTime(0, releaseEnd);
+        }
+
+        gainNode.cancel = () => {
+            gainNode.gain.cancelScheduledValues(0);
+        }
+        return gainNode;
+    }
 }
 
 export class Engine {
