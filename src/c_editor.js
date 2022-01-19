@@ -420,6 +420,11 @@ let instrument = {
         'decay': 0.1,
         'sustain': 0,
         'release': 0.5,
+    },
+    filter: {
+        type: 'lowpass',
+        frequency: 4400,
+        resonance: 1,
     }
 };
 
@@ -510,6 +515,8 @@ addEventListener('audio-attack', 'input', (event) => setInstrumentEnveloppe('att
 addEventListener('audio-decay', 'input', (event) => setInstrumentEnveloppe('decay', parseFloat(event.target.value) / 100.0 * 1));
 addEventListener('audio-sustain', 'input', (event) => setInstrumentEnveloppe('sustain', parseFloat(event.target.value) / 100.0 * 1));
 addEventListener('audio-release', 'input', (event) => setInstrumentEnveloppe('release', parseFloat(event.target.value) / 100.0 * 3));
+
+addEventListener('audio-frequency', 'input', (event) => instrument.filter.frequency = (parseFloat(event.target.value) / 100.0 * 3));
 
 setOctave(4);
 setWaveForm(0);

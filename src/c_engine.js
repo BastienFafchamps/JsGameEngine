@@ -185,19 +185,22 @@ export class HtmlSynth {
             this.playingNotes[id].oscillatorNode.stop();
         }
 
-        let filter = this.__createFilter('highpass', 4400, 1);
-        filter.connect(this.mainGainNode);
+        let outputNode = this.mainGainNode;
+        const connect = node => {
+            node.connect(outputNode);
+            outputNode = node;
+        }
 
-        let gainEnveloppeNode = this.__createGainEnveloppeNode(
-            instrument.enveloppe.attack,
-            instrument.enveloppe.decay,
-            instrument.enveloppe.sustain,
-            instrument.enveloppe.release,
-        );
-        gainEnveloppeNode.connect(filter);
+        if (instrument.filter != null && instrument.filter.type != 'none') {
+            let filter = this.__createFilter(instrument.filter);
+            connect(filter);
+        }
+
+        let gainEnveloppeNode = this.__createGainEnveloppeNode(instrument.enveloppe);
+        connect(gainEnveloppeNode);
 
         let oscillatorNode = this.__createOscillatorNode(instrument.waveForm, instrument.enveloppe.release);
-        oscillatorNode.connect(gainEnveloppeNode);
+        connect(oscillatorNode);
 
         oscillatorNode.playNote(octave, note);
         gainEnveloppeNode.start();
@@ -234,7 +237,7 @@ export class HtmlSynth {
         return osc;
     }
 
-    __createGainEnveloppeNode(attack, decay, sustain, release) {
+    __createGainEnveloppeNode({attack, decay, sustain, release}) {
         let gainNode = this.audioCtx.createGain();
 
         gainNode.start = () => {
@@ -263,7 +266,7 @@ export class HtmlSynth {
         return gainNode;
     }
 
-    __createFilter(type, frequency, resonance) {
+    __createFilter({type, frequency, resonance}) {
         let filterNode = this.audioCtx.createBiquadFilter();
         filterNode.type = type;
         filterNode.frequency.value = frequency;
