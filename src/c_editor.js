@@ -516,7 +516,7 @@ addEventListener('audio-decay', 'input', (event) => setInstrumentEnveloppe('deca
 addEventListener('audio-sustain', 'input', (event) => setInstrumentEnveloppe('sustain', parseFloat(event.target.value) / 100.0 * 1));
 addEventListener('audio-release', 'input', (event) => setInstrumentEnveloppe('release', parseFloat(event.target.value) / 100.0 * 3));
 
-addEventListener('audio-frequency', 'input', (event) => instrument.filter.frequency = (parseFloat(event.target.value) / 100.0 * 3));
+addEventListener('audio-frequency', 'input', (event) => instrument.filter.frequency = (parseFloat(event.target.value) / 100.0 * 1));
 
 setOctave(4);
 setWaveForm(0);
