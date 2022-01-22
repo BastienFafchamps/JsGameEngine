@@ -68,7 +68,7 @@ export class HtmlRenderer {
     }
 
     drawImage(x, y, image) {
-        this.ctx.drawImage(image, x, y);
+        this.ctx.putImageData(image, x, y);
     }
 
     drawRect(x, y, width, height, color) {
@@ -171,7 +171,6 @@ export class HtmlSynth {
 
         this.playingNotes = {};
     }
-
     
     setVolume(volume) {
         this.mainGainNode.gain.value = volume;
@@ -284,6 +283,12 @@ export class Engine {
         this.gameLoop = null;
         this.objects_img = [];
         this.entities = [];
+        this.sprites = [];
+    }
+
+    init(sprites) {
+        this.sprites = sprites;
+        this.clear();
     }
 
     clear() {
@@ -325,7 +330,7 @@ export class Engine {
     }
 
     drawImage(x, y, image) {
-        this.renderer.drawImage(image, x, y);
+        this.renderer.drawImage(x, y, image);
     }
 
     drawRect(x, y, width, height, color) {
@@ -356,6 +361,13 @@ export class Engine {
         return Math.random() * (max - min) + min;
     }
 
+    createObjectSprite(obj = { x, y, spriteIndex }) {
+        obj.__id = this.entities.length;
+        obj.__type = 'sprite';
+        this.entities.push(obj);
+        return obj;
+    }
+
     createObjectRect(obj = { x, y, width, height, color }) {
         obj.__id = this.entities.length;
         obj.__type = 'rect';
@@ -380,8 +392,13 @@ export class Engine {
         this.entities.forEach(obj => {
             if (obj.__type == 'rect')
                 this.drawRect(obj.x, obj.y, obj.width, obj.height, obj.color);
-            if (obj.__type == 'elipse')
+            else if (obj.__type == 'elipse')
                 this.drawElipse(obj.x, obj.y, obj.radius, obj.color);
+            else if (obj.__type == 'sprite') {
+                if (obj.spriteIndex >= 0 && obj.spriteIndex < this.sprites.length) {
+                    this.drawImage(obj.x, obj.y, this.sprites[obj.spriteIndex])
+                }
+            }
         });
     }
 }

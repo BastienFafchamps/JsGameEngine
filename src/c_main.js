@@ -4,7 +4,16 @@ export class App {
 
     constructor(canvas) {
         this.CANVAS = canvas;
+
+        this.CANVAS.style.width = this.CANVAS.width + "px";
+        this.CANVAS.style.height = this.CANVAS.height + "px";
+
+        this.CANVAS.width /= 12;
+        this.CANVAS.height /= 12;
+
         this.RENDERER = new HtmlRenderer(this.CANVAS);
+        this.RENDERER.setCripsPixel();
+
         this.INPUT_MANAGER = new HtmlInputManager(document);
         this.PHYSICS = new Physics2D();
         this.ENGINE = new Engine(this.RENDERER, this.INPUT_MANAGER, null);
@@ -17,6 +26,7 @@ export class App {
                 frameRate: 24,
             },
             gameCode: '',
+            sprites: this.__initSprites(16, 8),
         }
 
         this.context = {
@@ -29,6 +39,7 @@ export class App {
             KEY_DOWN: (key) => this.ENGINE.isKeyDown(key),
             KEY_PRESSED: (key) => this.ENGINE.isKeyPressed(key),
             KEY_UP: (key) => this.ENGINE.isKeyUp(key),
+            CREATE_SPRITE: (obj = { x, y, spriteIndex }) => this.ENGINE.createObjectSprite(obj),
             CREATE_RECT: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectRect(obj),
             CREATE_CIRCLE: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectCircle(obj),
             REMOVE: (obj = { x, y, width, height, color }) => this.ENGINE.deleteObject(obj),
@@ -109,7 +120,8 @@ export class App {
         try {
             this.CANVAS.style.backgroundColor = this.GameData.settings.backgroundColor;
             console.log(this.GameData);
-            this.ENGINE.clear();
+
+            this.ENGINE.init(this.GameData.sprites);
     
             let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
     
@@ -142,6 +154,25 @@ export class App {
         if (gameData.settings != null)
             this.GameData.settings = gameData.settings;
         this.GameData.gameCode = gameData.gameCode;
+    }
+
+    getSprite(index) {
+        if (index <= 0 || index > this.GameData.sprites.length) return null;
+        return this.GameData.sprites[index];
+    }
+
+    setSprite(index, sprite) {
+        if (index <= 0 || index > this.GameData.sprites.length) return null;
+        this.GameData.sprites[index] = sprite;
+    }
+
+    __initSprites(spriteCount, spriteSize) {
+        let sprites = [];
+        for (let i = 0; i < spriteCount; i++) {
+            let sprite = new ImageData(spriteSize, spriteSize);
+            sprites.push(sprite);
+        }
+        return sprites;
     }
 }
 

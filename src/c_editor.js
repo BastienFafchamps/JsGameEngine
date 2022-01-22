@@ -240,9 +240,14 @@ try {
 }
 
 // ================================= Sprite Editor ==========================================
-
 const spriteEditorCanvas = document.getElementById('sprite-editor-canvas');
 const spriteEditorCtx = spriteEditorCanvas.getContext('2d');
+const spriteEditorTool = {
+    type: 'pencil',
+    canMove: true,
+    color: [0, 0, 0, 255],
+};
+let selectedSprite = -1;
 
 function setPixel(x, y, rgba) {
     let imgData = spriteEditorCtx.createImageData(1, 1);
@@ -259,8 +264,12 @@ function getPixel(x, y) {
     return [data[0], data[1], data[2], data[3]];
 }
 
-function drawImage(x, y, image) {
+function loadImageOnEditor(x, y, image) {
     spriteEditorCtx.drawImage(image, x, y);
+}
+
+function loadImageDataOnEditor(x, y, image) {
+    spriteEditorCtx.putImageData(image, x, y);
 }
 
 function clearSpriteEditor() {
@@ -271,6 +280,7 @@ const spriteEditorGrid = document.getElementById('sprite-editor-grid');
 function setSpriteEditor(spriteSize) {
     spriteEditorCanvas.width = spriteSize;
     spriteEditorCanvas.height = spriteSize;
+    spriteEditorGrid.innerHTML = '';
     spriteEditorGrid.style.gridTemplateColumns = `repeat(${spriteSize}, 1fr)`;
     spriteEditorGrid.style.gridTemplateRows = `repeat(${spriteSize}, 1fr)`;
     for (let x = 0; x < spriteSize; x++) {
@@ -283,11 +293,36 @@ function setSpriteEditor(spriteSize) {
 }
 setSpriteEditor(16);
 
-const spriteEditorTool = {
-    type: 'pencil',
-    canMove: true,
-    color: [0, 0, 0, 255],
-};
+const spritesContainer = document.getElementById('sprites-container');
+const spritesItems = []
+
+function updateSpritesList() {
+    let url = spriteEditorCanvas.toDataURL("image/png");
+    spritesItems[selectedSprite].src = url;
+    spritesItems[selectedSprite].classList.add('active');
+    app.GameData.sprites[selectedSprite] = spriteEditorCtx.getImageData(0, 0, spriteEditorCanvas.width, spriteEditorCanvas.height);
+}
+
+function selectSprite(index) {
+    selectedSprite = index;
+    let sprite = app.getSprite(index);
+
+    setSpriteEditor(sprite.width);
+    loadImageDataOnEditor(0, 0, sprite);
+
+    spritesItems.forEach(e => e.classList.remove('active'));
+    spritesItems[index].classList.add('active');
+}
+
+for (let i = 0; i < 16; i++) {
+    let element = document.createElement('img');
+    element.classList = 'sprite-item';
+    element.addEventListener('click', () => {
+        selectSprite(i);
+    })
+    spritesContainer.appendChild(element);
+    spritesItems.push(element);
+}
 
 // --------------- Color Picker ---------------
 const spriteEditorColorPicker = document.getElementById('sprite-editor-color-picker');
@@ -343,7 +378,17 @@ function handleClick(event) {
             return a.length === b.length && a.every((value, index) => value === b[index]);
         }
     }
+    updateSpritesList();
 }
+
+function setSelectedTool(tool) {
+    let tools = document.getElementsByClassName('sprite-editor-tool');
+    for (let i = 0; i < tools.length; i++) {
+        tools[i].classList.remove('active');
+    }
+    document.getElementById('sprite-editor-' + tool).classList.add('active');
+}
+setSelectedTool('pencil');
 
 let spriteEditor_isMouseDown = false;
 spriteEditorCanvas.addEventListener("mousedown", (e) => {
@@ -356,15 +401,6 @@ spriteEditorCanvas.addEventListener("mousemove", (e) => {
     if (spriteEditor_isMouseDown && spriteEditorTool.canMove)
         handleClick(e);
 });
-
-function setSelectedTool(tool) {
-    let tools = document.getElementsByClassName('sprite-editor-tool');
-    for (let i = 0; i < tools.length; i++) {
-        tools[i].classList.remove('active');
-    }
-    document.getElementById('sprite-editor-' + tool).classList.add('active');
-}
-setSelectedTool('pencil');
 
 document.getElementById('sprite-editor-pencil').addEventListener('click', () => {
     spriteEditorTool.type = 'pencil';
@@ -390,7 +426,7 @@ document.getElementById('sprite-editor-load').addEventListener('change', event =
     let image = new Image();
     image.onload = () => {
         clearSpriteEditor();
-        drawImage(0, 0, image);
+        loadImageOnEditor(0, 0, image);
         URL.revokeObjectURL(image.src);
     }
     image.src = URL.createObjectURL(event.target.files[0]);
@@ -422,7 +458,7 @@ let instrument = {
         'release': 0.5,
     },
     filter: {
-        type: 'lowpass',
+        type: 'none',
         frequency: 4400,
         resonance: 1,
     }
@@ -516,7 +552,7 @@ addEventListener('audio-decay', 'input', (event) => setInstrumentEnveloppe('deca
 addEventListener('audio-sustain', 'input', (event) => setInstrumentEnveloppe('sustain', parseFloat(event.target.value) / 100.0 * 1));
 addEventListener('audio-release', 'input', (event) => setInstrumentEnveloppe('release', parseFloat(event.target.value) / 100.0 * 3));
 
-addEventListener('audio-frequency', 'input', (event) => instrument.filter.frequency = (parseFloat(event.target.value) / 100.0 * 1));
+addEventListener('audio-filter-frequency', 'input', (event) => instrument.filter.frequency = (parseFloat(event.target.value) / 100.0 * 1));
 
 setOctave(4);
 setWaveForm(0);
