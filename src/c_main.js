@@ -21,10 +21,6 @@ export class App {
         this.onGameDataUpdate = (gameData) => {};
 
         this.GameData = {
-            settings: {
-                backgroundColor: 'rgb(0, 0, 0)',
-                frameRate: 24,
-            },
             gameCode: '',
             sprites: this.__initSprites(16, 8),
         }
@@ -34,8 +30,9 @@ export class App {
             SCREEN_HEIGHT: this.CANVAS.height,
             STOP: () => this.ENGINE.stop(),
             DRAW_RECT: (x, y, width, height, color) => this.ENGINE.drawRect(x, y, width, height, color),
-            DRAW_PX: (x, y, color) => this.ENGINE.drawPixel(x, y, color),
+            DRAW_PIXEL: (x, y, color) => this.ENGINE.drawPixel(x, y, color),
             DRAW_CIRCLE: (x, y, radius, color) => this.ENGINE.drawElipse(x, y, radius, color),
+            SET_BACKGROUND: (color) => this.ENGINE.setBackgroundColor(color),
             KEY_DOWN: (key) => this.ENGINE.isKeyDown(key),
             KEY_PRESSED: (key) => this.ENGINE.isKeyPressed(key),
             KEY_UP: (key) => this.ENGINE.isKeyUp(key),
@@ -118,9 +115,7 @@ export class App {
 
     run() {
         try {
-            this.CANVAS.style.backgroundColor = this.GameData.settings.backgroundColor;
             console.log(this.GameData);
-
             this.ENGINE.init(this.GameData.sprites);
     
             let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
@@ -157,12 +152,12 @@ export class App {
     }
 
     getSprite(index) {
-        if (index <= 0 || index > this.GameData.sprites.length) return null;
+        if (index < 0 || index > this.GameData.sprites.length) return null;
         return this.GameData.sprites[index];
     }
 
     setSprite(index, sprite) {
-        if (index <= 0 || index > this.GameData.sprites.length) return null;
+        if (index < 0 || index > this.GameData.sprites.length) return null;
         this.GameData.sprites[index] = sprite;
     }
 
@@ -175,82 +170,3 @@ export class App {
         return sprites;
     }
 }
-
-// const CANVAS = document.getElementById("main-canvas");
-
-// const canvasContainer = document.getElementById("game-view");
-// window.onresize = () => {
-//     if (canvasContainer == null) return;
-//     CANVAS.width = canvasContainer.clientWidth;
-//     CANVAS.height = canvasContainer.clientHeight;
-// }
-
-// const RENDERER = new HtmlRenderer(CANVAS);
-// const INPUT_MANAGER = new HtmlInputManager(document);
-// const PHYSICS = new Physics2D();
-// const ENGINE = new Engine(RENDERER, INPUT_MANAGER, null);
-
-// export const GameData = {
-//     settings: {
-//         color: 'rgb(0, 0, 0)',
-//         frameRate: 24,
-//     },
-//     code: '',
-// }
-
-// const context = {
-//     SCREEN_WIDTH: CANVAS.width,
-//     SCREEN_HEIGHT: CANVAS.height,
-//     STOP: () => ENGINE.stop(),
-//     DRAW_RECT: (x, y, width, height, color) => ENGINE.drawRect(x, y, width, height, color),
-//     DRAW_PX: (x, y, color) => ENGINE.drawPixel(x, y, color),
-//     DRAW_CIRCLE: (x, y, radius, color) => ENGINE.drawElipse(x, y, radius, color),
-//     KEY_DOWN: (key) => ENGINE.isKeyDown(key),
-//     KEY_PRESSED: (key) => ENGINE.isKeyPressed(key),
-//     KEY_UP: (key) => ENGINE.isKeyUp(key),
-//     CREATE_RECT: (obj = { x, y, width, height, color }) => ENGINE.createObjectRect(obj),
-//     CREATE_CIRCLE: (obj = { x, y, width, height, color }) => ENGINE.createObjectCircle(obj),
-//     REMOVE: (obj = { x, y, width, height, color }) => ENGINE.deleteObject(obj),
-//     DO_RECT_COLLIDES: (rect_a, rect_b) => PHYSICS.doRectsCollides(rect_a, rect_b),
-//     DO_RECT_CIRCLE_COLLIDES: (rect, circle) => PHYSICS.doRectCircleCollides(circle, rect),
-//     DO_CIRCLES_COLLIDES: (circle_a, circle_b) => PHYSICS.doCirclesCollides(circle_a, circle_b),
-//     RANDOM: () => ENGINE.random(),
-//     RANDOM_RANGE: (min, max) => ENGINE.randomRange(min, max),
-// }
-
-// export function run(game_code) {
-//     try {
-//         GameData.code = game_code;
-//         CANVAS.style.backgroundColor = GameData.settings.color;
-//         ENGINE.clear();
-
-//         game_code = game_code + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
-
-//         let f = new Function(...Object.keys(context), game_code);
-//         let [update_f, draw_f] = f(...Object.values(context));
-
-//         if (!update_f)
-//             throw (new Error('No "UPDATE" function found.'));
-//         if (update_f && !draw_f) {
-//             ENGINE.start(update_f, null);
-//         } if (update_f && draw_f) {
-//             ENGINE.start(update_f, draw_f);
-//         }
-//     } catch (error) {
-//         ENGINE.clear();
-//         console.warn("There are code errors, fix them before running the code", error);
-//     }
-// }
-
-// export function reload() {
-//     run(GameData.code);
-// }
-
-// export function loadGameData(gameData) {
-//     if (gameData.settings != null)
-//         GameData.settings = gameData.settings;
-//     GameData.code = gameData.code;
-//     reload();
-// }
-
-// document.getElementById("btn-reload").addEventListener('click', () => reload());

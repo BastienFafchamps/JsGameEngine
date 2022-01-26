@@ -10,7 +10,7 @@
 } */
 
 :root {
-  --background: #444444;
+  --background: #1f1f1f;
   --background-secondary: #f1eee7;
   --background-highlight: #000000;
   --text-main: #ffffff;
@@ -18,6 +18,9 @@
   --main: #444444;
   --menu-background: #000000;
   --menu-text: #f1eee7;
+  --primary: #ff9239;
+  --primary-darker: #c55d21;
+  --primary-selected: #ffb968;
 }
 
 * {
@@ -39,8 +42,33 @@ hr {
   margin: .5rem 0;
 }
 
-button {
+button, .btn {
+  margin: 0.1rem;
+  padding: 0.5rem 1rem 1.25rem 1rem;
+  cursor: pointer;
+  background: var(--primary);
+  height: 2rem;
+  color: var(--text-main);
+  transition: 0.2s ease-in-out;
+
   border: none;
+  border-bottom: 5px solid var(--primary-darker);
+}
+button.contained, .btn.contained {
+  /* border: solid 0.5px var(--background-secondary); */
+}
+button:hover, .btn:hover {
+  filter: brightness(1.2);
+}
+button:active, .btn:active {
+  background: var(--primary-selected);
+}
+button.active, .btn.active {
+  background: var(--primary-selected);
+}
+
+.w2 {
+  width: 1rem;
 }
 
 .grid-center {
@@ -67,32 +95,21 @@ button {
 .tab-buttons {
   padding: 0.5rem 0.5rem 0 0.5rem;
   width: auto;
+  height: 2.3rem;
   display: flex;
-}
-.btn {
-  margin: 0;
-  padding: 0.5rem 1rem;
-  cursor: pointer;
-  border: none;
-  background: var(--background);
-  height: 2rem;
-  color: var(--text-main);
-  transition: 0.2s ease-in-out;
-}
-.btn.contained {
-  border: solid 0.5px var(--background-secondary);
-}
-.btn:hover {
-  border: transparent;
-  background: var(--background-highlight);
-}
-.btn.active, .btn:active {
-  color: var(--text-hightlight);
-  background: var(--background-secondary);
 }
 
 .tab-btn {
   width: 5rem;
+  filter: brightness(0.7);
+  border-bottom: transparent;
+  height: auto;
+  margin-top: 0.3rem;
+}
+.tab-btn.active {
+  margin-top: 0;
+  background-color: var(--primary);
+  filter: brightness(1);
 }
 .tab-select .select-list {
   display: none;
@@ -237,9 +254,14 @@ input[type="file"] {
   grid-column: 2 / 2;
 }
 #sprites-panel > *:nth-child(3) {
+  grid-row: 1 / 1;
+  grid-column: 3 / 3;
+}
+#sprites-panel > *:nth-child(4) {
   grid-row: 2 / 2;
   grid-column: 2 / 2;
 }
+
 #sprite-editor-tools {
   display: flex;
   flex-direction: column;
@@ -306,14 +328,32 @@ button.sprite-editor-tool {
   gap: 0;
   width: min-content;
 }
+
+#sprite-palette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 0;
+  width: min-content;
+  margin-right: 5rem;
+}
+
 .sprite-item {
-  border: 5px solid transparent;
   background: rgba(0, 0, 0, 0.137);
   width: 3rem;
   height: 3rem;
 }
-.sprite-item.active {
-  border: 5px solid var(--background-secondary);
+.sprite-item.active, .sprite-color.active {
+}
+
+.sprite-color {
+  width: 2rem;
+  height: 2rem;
+  transition: transform 0.2s ease-in-out;
+}
+.sprite-color.active {
+  transform: scale(1.2);
+  box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.5);
 }
 
 /* ################################ Audio ##############################*/

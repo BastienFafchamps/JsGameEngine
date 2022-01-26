@@ -17,14 +17,14 @@
                 <li><label class="btn" for="load">Load</label><input id="load" type="file" /></li>
             </ul>
         </div>
+        <button class="btn contained" id="btn-reload">Reload</button>
+        <span class="w2"></span>
         <button class="btn tab-btn">Game</button>
         <button class="btn tab-btn">Code</button>
         <button class="btn tab-btn">Sprites</button>
         <button class="btn tab-btn">Audio</button>
-        <button class="btn tab-btn">Settings</button>
-        <button id="btn-reload" class="btn contained">Reload</button>
-        <button id="btn-host" class="btn contained">Host</button>
-        <button id="btn-connect" class="btn contained">Connect</button>
+        <!-- <button id="btn-host" class="btn contained">Host</button>
+        <button id="btn-connect" class="btn contained">Connect</button> -->
     </div>
     <div id="game-view-panel" class="tab-panel center">
         <canvas id="main-canvas" width="840" height="580">
@@ -60,6 +60,10 @@
                 <canvas id="sprite-editor-canvas" width="16" height="16">
                     Your browser doesn't support WebGL, please use a more recent one.
                 </canvas>
+            </div>
+        </div>
+        <div class="grid-center">
+            <div id="sprite-palette">
             </div>
         </div>
         <div class="grid-center">
@@ -116,10 +120,6 @@
                 <p id="audio-octave">0</p>
                 <button id="audio-octave-minus" class="btn">-</button>
             </div>
-        </div>
-    </div>
-    <div id="settings-panel" class="tab-panel">
-        <div id="settings-editor" class="obj-editor">
         </div>
     </div>
     <script src="./editor/prism.js"></script>

@@ -55,13 +55,17 @@ export class HtmlRenderer {
         this.canvas.style.imageRendering = 'crisp-edges';
     }
 
+    setBackgroundColor(color) {
+        this.canvas.style.backgroundColor = color;
+    }
+
     clear() {
         this.ctx.clearRect(0, 0, this.width, this.height);
     }
 
     drawPixel(x, y, color) {
         this.ctx.beginPath();
-        this.ctx.rect(x, y, 1, 1);
+        this.ctx.rect(Math.round(x), Math.round(y), 1, 1);
         this.ctx.fillStyle = color;
         this.ctx.fill();
         this.ctx.closePath();
@@ -339,6 +343,10 @@ export class Engine {
 
     drawElipse(x, y, radius, color) {
         this.renderer.drawEclipse(x, y, radius, color);
+    }
+
+    setBackgroundColor(color) {
+        this.renderer.setBackgroundColor(color);
     }
 
     isKeyDown(key) {

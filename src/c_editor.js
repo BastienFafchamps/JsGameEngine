@@ -19,29 +19,47 @@ app.onGameDataUpdate = (gameData) => sessionStorage.setItem('gameData', JSON.str
 
 document.getElementById("btn-reload").addEventListener('click', () => app.run());
 
-// ==================================== TABS =============================================
-const tabPanels = document.getElementsByClassName("tab-panel");
-const tabButtons = document.getElementsByClassName("tab-btn");
-let activeTab = 0;
-
-function openTab(button, id) {
-    for (let i = 0; i < tabPanels.length; i++) {
-        tabPanels[i].classList.remove("active");
-        tabButtons[i].classList.remove("active");
+try {
+    let gameData = JSON.parse(sessionStorage.getItem('gameData'));
+    if (gameData != null) {
+        app.loadGameData(gameData);
+        loadCode(gameData.gameCode);
     }
-    activeTab = [...tabPanels].findIndex(t => t.id == id);
-    document.getElementById(id).classList.add("active");
-    button.classList.add("active");
-    sessionStorage.setItem("activeTab", activeTab);
+} catch (error) {
+    console.warn('Error trying to load session gameData');
 }
 
-for (let i = 0; i < tabPanels.length; i++)
-    tabButtons[i].addEventListener('click', event => openTab(event.currentTarget, tabPanels[i].id));
+// ==================================== TABS =============================================
+class TabsManager {
+    constructor(panels, buttons) {
+        this.panels = panels;
+        this.buttons = buttons;
+        this.activeTab = 0;
 
-if (sessionStorage.getItem('activeTab'))
-    activeTab = sessionStorage.getItem('activeTab')
-openTab(tabButtons[activeTab], tabPanels[activeTab].id);
+        for (let i = 0; i < this.panels.length; i++)
+            this.buttons[i].addEventListener('click', event => this.openTab(event.currentTarget, this.panels[i].id));
 
+        if (sessionStorage.getItem('activeTab'))
+            this.activeTab = sessionStorage.getItem('activeTab')
+        this.openTab(this.buttons[this.activeTab], this.panels[this.activeTab].id);
+    }
+
+    openTab(button, id) {
+        for (let i = 0; i < this.panels.length; i++) {
+            this.panels[i].classList.remove("active");
+            this.buttons[i].classList.remove("active");
+        }
+        this.activeTab = [...this.panels].findIndex(t => t.id == id);
+        document.getElementById(id).classList.add("active");
+        button.classList.add("active");
+        sessionStorage.setItem("activeTab", this.activeTab);
+    }
+}
+
+const tabsManager = new TabsManager(
+    document.getElementsByClassName("tab-panel"),
+    document.getElementsByClassName("tab-btn")
+);
 
 // ================================= Main ==========================================
 function downloadLink(filename, url) {
@@ -127,118 +145,6 @@ codeInput.addEventListener('input', (event) => updateCode(event.target.value));
 codeInput.addEventListener('scroll', (event) => syncScroll(event.target));
 codeInput.addEventListener('keydown', (event) => checkTab(event.target, event));
 
-// ================================= Settings ==========================================
-
-function capitalize(string) {
-    string = string.replace(/([A-Z])/g, ' $1').trim();
-    string = string.replace('_', ' ');
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-function getFieldsEditor(objKey, template, obj, onChange) {
-    const inputTypes = { 'number': 'number', 'int': 'number', 'float': 'number', 'string': 'text', 'boolean': 'checkbox' };
-
-    function createInput(name, type) {
-        let input = document.createElement('input');
-        input.classList.add('object-editor-input');
-        input.name = name;
-        input.type = type;
-        return input;
-    }
-
-    function createLabel(name) {
-        let label = document.createElement('label');
-        label.classList.add('object-editor-label');
-        label.innerHTML = capitalize(name);
-        label.for = name;
-        return label;
-    }
-
-    function addListener(input, key, obj, validation) {
-        input.addEventListener('change', e => {
-            obj[key] = validate(e.target.value, validation);
-            input.value = obj[key];
-            console.log(obj);
-            onChange();
-        });
-    }
-
-    function validate(value, validation) {
-        if (validation.type == 'number' || validation.type == 'int' || validation.type == 'float') {
-            return validateNumber(value, validation);
-        } else {
-            return value;
-        }
-    }
-
-    function validateNumber(value, validation) {
-        if (validation.type == 'int') {
-            value = parseInt(value);
-        } else if (validation.type == 'float') {
-            value = parseFloat(value);
-        }
-        if (value > validation.max)
-            value = validation.max;
-        if (value < validation.min)
-            value = validation.min;
-        return value;
-    }
-
-    let container = document.createElement('div');
-    container.classList.add('object-editor-container');
-
-    for (const [key, templateData] of Object.entries(template)) {
-        let input = null;
-        let label = null;
-        if (key.endsWith('_&t')) {
-            label = templateData.label != null ? createLabel(templateData.label) : createLabel(key);
-            input = createInput(objKey, inputTypes[templateData.type], templateData);
-            addListener(input, key.replace('_&t', ''), obj, templateData);
-            input.value = obj[key.replace('_&t', '')];
-        } else if (typeof templateData === 'object') {
-            label = createLabel(key);
-            label.classList.add('object-editor-collapsible');
-            input = getFieldsEditor(key, templateData, obj[key]);
-
-            label.addEventListener('click', () => {
-                if (input.style.maxHeight != '0px') {
-                    label.classList.remove('active');
-                    input.style.maxHeight = '0px';
-                } else {
-                    label.classList.add('active');
-                    input.style.maxHeight = input.scrollHeight + "px";
-                }
-            });
-            input.style.maxHeight = "0px";
-        } else {
-            label = createLabel(key);
-            input = createInput(key, inputTypes[typeof templateData]);
-            input.value = obj[key];
-            addListener(input, key, obj, templateData);
-        }
-        container.appendChild(label);
-        container.appendChild(input);
-    }
-    return container;
-}
-
-const settingsEditor = document.getElementById('settings-editor');
-
-settingsEditor.appendChild(getFieldsEditor('settings', app.GameData.settings, app.GameData.settings, () => {
-    console.log('changed', app.GameData);
-    app.updatedGameData();
-}));
-
-try {
-    let gameData = JSON.parse(sessionStorage.getItem('gameData'));
-    if (gameData != null) {
-        app.loadGameData(gameData);
-        loadCode(gameData.gameCode);
-    }
-} catch (error) {
-    console.warn('Error trying to load session gameData');
-}
-
 // ================================= Sprite Editor ==========================================
 const spriteEditorCanvas = document.getElementById('sprite-editor-canvas');
 const spriteEditorCtx = spriteEditorCanvas.getContext('2d');
@@ -323,6 +229,7 @@ for (let i = 0; i < 16; i++) {
     spritesContainer.appendChild(element);
     spritesItems.push(element);
 }
+selectSprite(0);
 
 // --------------- Color Picker ---------------
 const spriteEditorColorPicker = document.getElementById('sprite-editor-color-picker');
@@ -340,6 +247,39 @@ spriteEditorColorPicker.addEventListener("input", (event) => {
     spriteEditorTool.color = [r, g, b, 255];
     spriteEditorColorPickerLabel.style.background = inputColor;
 });
+
+const palette = document.getElementById('sprite-palette');
+const paletteColors = []
+function setPalette(colors) {
+    colors.forEach(color => {
+        let el = document.createElement('div');
+        el.className = 'sprite-color';
+        el.style.backgroundColor = color;
+
+        el.addEventListener('click', () => {
+            paletteColors.forEach(e => e.classList.remove('active'));
+            el.classList.add('active');
+
+            let bigint = parseInt(color.substring(1), 16);
+            let r = (bigint >> 16) & 255;
+            let g = (bigint >> 8) & 255;
+            let b = bigint & 255;
+            spriteEditorTool.color = [r, g, b, 255];
+        })
+        paletteColors.push(el);
+        palette.appendChild(el);
+    });
+}
+setPalette([
+    '#ffffff',
+    '#ff0000',
+    '#00ff00',
+    '#0000ff',
+    '#ff00ff',
+    '#ffff00',
+    '#00ffff',
+]);
+
 // ---------------------------------------------
 
 function handleClick(event) {
@@ -393,8 +333,7 @@ setSelectedTool('pencil');
 let spriteEditor_isMouseDown = false;
 spriteEditorCanvas.addEventListener("mousedown", (e) => {
     spriteEditor_isMouseDown = true;
-    if (!spriteEditorTool.canMove)
-        handleClick(e);
+    handleClick(e);
 });
 spriteEditorCanvas.addEventListener("mouseup", () => spriteEditor_isMouseDown = false);
 spriteEditorCanvas.addEventListener("mousemove", (e) => {
@@ -503,7 +442,7 @@ for (let keyOctave = 0; keyOctave < 2; keyOctave++) {
             key.classList.remove('active');
             synth.stopNote(octave + keyOctave, key.dataset.note);
         })
-        
+
         keyboard.appendChild(key);
         if (keyOctave == 0)
             keys[key.dataset.note] = key;
@@ -511,7 +450,7 @@ for (let keyOctave = 0; keyOctave < 2; keyOctave++) {
 }
 
 document.addEventListener('keydown', (event) => {
-    if (activeTab !== 3 || event.repeat) return;
+    if (tabsManager.activeTab !== 3 || event.repeat) return;
     event.preventDefault();
 
     let key = event.key.toLowerCase();
@@ -529,7 +468,7 @@ document.addEventListener('keydown', (event) => {
 });
 
 document.addEventListener('keyup', (event) => {
-    if (activeTab !== 3) return;
+    if (tabsManager.activeTab !== 3) return;
     event.preventDefault();
 
     let key = event.key.toLowerCase();
@@ -558,50 +497,50 @@ setOctave(4);
 setWaveForm(0);
 
 // ================================= Online editing ==========================================
-let connection;
+// let connection;
 
-function startHost(id) {
-    console.log('Starting Host...');
-    let peer = new Peer('jsgameengine-peer-id-' + id);
-    peer.on('open', () => {
-        console.log('Host Started.', peer);
+// function startHost(id) {
+//     console.log('Starting Host...');
+//     let peer = new Peer('jsgameengine-peer-id-' + id);
+//     peer.on('open', () => {
+//         console.log('Host Started.', peer);
 
-        peer.on('connection', (conn) => {
-            connection = conn;
-            console.log('Client connected', connection);
-            connection.on('data', (data) => {
-                console.log(data);
-            });
-        });
-    });
-}
+//         peer.on('connection', (conn) => {
+//             connection = conn;
+//             console.log('Client connected', connection);
+//             connection.on('data', (data) => {
+//                 console.log(data);
+//             });
+//         });
+//     });
+// }
 
-function connectToHost(id) {
-    console.log('Connecting...');
+// function connectToHost(id) {
+//     console.log('Connecting...');
 
-    let peer = new Peer();
-    peer.on('open', () => {
-        console.log('Client Connected', peer);
+//     let peer = new Peer();
+//     peer.on('open', () => {
+//         console.log('Client Connected', peer);
 
-        let conn = peer.connect('jsgameengine-peer-id-' + id);
-        conn.on('open', () => {
-            connection = conn;
-        });
-    });
-}
+//         let conn = peer.connect('jsgameengine-peer-id-' + id);
+//         conn.on('open', () => {
+//             connection = conn;
+//         });
+//     });
+// }
 
-function sendData(data) {
-    if (connection == null) return;
-    connection.send(data);
-}
+// function sendData(data) {
+//     if (connection == null) return;
+//     connection.send(data);
+// }
 
-document.getElementById("btn-host").addEventListener('click', () => {
-    startHost(0);
-});
+// document.getElementById("btn-host").addEventListener('click', () => {
+//     startHost(0);
+// });
 
-document.getElementById("btn-connect").addEventListener('click', () => {
-    connectToHost(0);
-});
+// document.getElementById("btn-connect").addEventListener('click', () => {
+//     connectToHost(0);
+// });
 
 // ================================= Short Cuts ==========================================
 document.addEventListener('keypress', (event) => {
