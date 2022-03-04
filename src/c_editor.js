@@ -145,6 +145,24 @@ codeInput.addEventListener('input', (event) => updateCode(event.target.value));
 codeInput.addEventListener('scroll', (event) => syncScroll(event.target));
 codeInput.addEventListener('keydown', (event) => checkTab(event.target, event));
 
+const codeWiki = document.getElementById("code-wiki");
+const codeWikiList = [];
+for (let [key, value] of Object.entries(app.contextDetails)) {
+    console.log(`${key}: ${value}`);
+    let div = document.createElement('div');
+    div.className = 'code-wiki-entry';
+
+    let label = document.createElement('h6');
+    label.innerHTML = key;
+    div.appendChild(label)
+
+    codeWikiList.push(div);
+    codeWiki.appendChild(div);
+}
+
+addEventListener('code-wiki-btn', 'click', () => codeWiki.classList.add('active'));
+addEventListener('code-wiki-btn-close', 'click', () => codeWiki.classList.remove('active'))
+
 // ================================= Sprite Editor ==========================================
 const spriteEditorCanvas = document.getElementById('sprite-editor-canvas');
 const spriteEditorCtx = spriteEditorCanvas.getContext('2d');
@@ -270,15 +288,7 @@ function setPalette(colors) {
         palette.appendChild(el);
     });
 }
-setPalette([
-    '#ffffff',
-    '#ff0000',
-    '#00ff00',
-    '#0000ff',
-    '#ff00ff',
-    '#ffff00',
-    '#00ffff',
-]);
+setPalette(app.GameData.palette);
 
 // ---------------------------------------------
 

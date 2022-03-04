@@ -22,6 +22,17 @@ export class App {
 
         this.GameData = {
             gameCode: '',
+            palette: [
+                '#ffffff',
+                '#ff0000',
+                '#00ff00',
+                '#0000ff',
+                '#ff00ff',
+                '#ffff00',
+                '#00ffff',
+                '#aaaaaa',
+                '#aabb2e',
+            ],
             sprites: this.__initSprites(16, 8),
         }
 
@@ -45,6 +56,8 @@ export class App {
             DO_CIRCLES_COLLIDES: (circle_a, circle_b) => this.PHYSICS.doCirclesCollides(circle_a, circle_b),
             RANDOM: () => this.ENGINE.random(),
             RANDOM_RANGE: (min, max) => this.ENGINE.randomRange(min, max),
+            COLOR: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
+            COLOR_HSL: (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
         }
 
         this.contextDetails = {

@@ -278,6 +278,42 @@ export class HtmlSynth {
     }
 }
 
+export class SpritesManager {
+
+    constructor(palette, spritesCount, spriteSize = 8) {
+        this.sprites = [];
+        this.spriteSize = spriteSize;
+        this.palette = palette;
+        for (let i = 0; i < spritesCount; i++) {
+            this.sprites.push(-1);
+        }
+    }
+
+    setPalette(palette) {
+        this.palette = palette;
+    }
+
+    setPixel(palette) {
+        this.palette = palette;
+    }
+
+    getImages() {
+        let images = [];
+        this.sprites.forEach(sprite => {
+            let image = new ImageData(this.spriteSize, this.spriteSize);
+            sprite.forEach(px => {
+                if (px == -1) {
+
+                } else {
+                    // image.data[px]
+                }
+            })
+            images.push(image);
+        });
+        return images;
+    }
+}
+
 export class Engine {
 
     constructor(renderer, inputManager, audioPlayer) {
