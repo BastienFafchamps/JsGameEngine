@@ -1,6 +1,6 @@
-import { App } from "./c_main.js";
-import { HtmlSynth } from "./c_engine.js";
-import { CodeParser } from "./c_codeParser.js";
+import { App } from "./main.js";
+import { HtmlSynth } from "./engine.js";
+import { CodeParser } from "./codeParser.js";
 
 // ==================================== UTIL =============================================
 function addEventListener(id, type, method) {
