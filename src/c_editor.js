@@ -1,39 +1,44 @@
 import { App } from "./c_main.js";
 import { HtmlSynth } from "./c_engine.js";
+import { CodeParser } from "./c_codeParser.js";
 
+// ==================================== UTIL =============================================
 function addEventListener(id, type, method) {
     document.getElementById(id).addEventListener(type, method);
 }
 
+// ==================================== APP =============================================
 const CANVAS = document.getElementById("main-canvas");
 const canvasContainer = document.getElementById("game-view");
+const APP = new App(CANVAS);
 
-window.onresize = () => {
-    if (canvasContainer == null || CANVAS == null) return;
-    CANVAS.width = canvasContainer.clientWidth;
-    CANVAS.height = canvasContainer.clientHeight;
-}
+(function init() {
+    APP.onGameDataUpdate = (gameData) => sessionStorage.setItem('gameData', JSON.stringify(gameData));
 
-const app = new App(CANVAS);
-app.onGameDataUpdate = (gameData) => sessionStorage.setItem('gameData', JSON.stringify(gameData));
-
-document.getElementById("btn-reload").addEventListener('click', () => app.run());
-
-try {
-    let gameData = JSON.parse(sessionStorage.getItem('gameData'));
-    if (gameData != null) {
-        app.loadGameData(gameData);
-        loadCode(gameData.gameCode);
+    window.onresize = () => {
+        if (canvasContainer == null || CANVAS == null) return;
+        CANVAS.width = canvasContainer.clientWidth;
+        CANVAS.height = canvasContainer.clientHeight;
     }
-} catch (error) {
-    console.warn('Error trying to load session gameData');
-}
+
+    addEventListener('btn-reload', 'click', () => APP.run());
+
+    try {
+        let gameData = JSON.parse(sessionStorage.getItem('gameData'));
+        if (gameData != null) {
+            APP.loadGameData(gameData);
+            loadCode(gameData.gameCode);
+        }
+    } catch (error) {
+        console.warn('Error trying to load session gameData');
+    }
+})();
 
 // ==================================== TABS =============================================
 class TabsManager {
-    constructor(panels, buttons) {
-        this.panels = panels;
-        this.buttons = buttons;
+    constructor() {
+        this.panels = document.getElementsByClassName("tab-panel");
+        this.buttons = document.getElementsByClassName("tab-btn");
         this.activeTab = 0;
 
         for (let i = 0; i < this.panels.length; i++)
@@ -55,332 +60,449 @@ class TabsManager {
         sessionStorage.setItem("activeTab", this.activeTab);
     }
 }
-
-const tabsManager = new TabsManager(
-    document.getElementsByClassName("tab-panel"),
-    document.getElementsByClassName("tab-btn")
-);
+const tabsManager = new TabsManager();
 
 // ================================= Main ==========================================
-function downloadLink(filename, url) {
-    let a = document.createElement('a');
-    a.download = filename;
-    a.href = url;
 
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function () {
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-    }, 0);
-}
-
-function download() {
-    let filename = 'game.json';
-    let file = new Blob([JSON.stringify(app.GameData)], { type: 'json' });
-    if (window.navigator.msSaveOrOpenBlob)
-        window.navigator.msSaveOrOpenBlob(file, filename);
-    else {
-        let url = URL.createObjectURL(file);
-        downloadLink(filename, url);
+class FileManager {
+    constructor() {
+        document.getElementById('download').addEventListener('click', () => this.download());
+        document.getElementById('load').addEventListener('change', event => this.onFileLoaded(event));
     }
-}
-document.getElementById('download').addEventListener('click', () => download());
 
-function onFileLoaded(event) {
-    let reader = new FileReader();
-    reader.readAsText(event.target.files[0], 'UTF-8');
-    reader.onload = readerEvent => {
-        let gameData = JSON.parse(readerEvent.target.result);
-        app.loadGameData(gameData);
-        codeInput.innerHTML = gameData.gameCode;
-        updateCode(gameData.gameCode);
+    static getDownloadLink(filename, url) {
+        let a = document.createElement('a');
+        a.download = filename;
+        a.href = url;
+
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
     }
-}
-document.getElementById('load').addEventListener('change', event => onFileLoaded(event));
 
-// ================================= Code Editor ==========================================
-const codeInput = document.getElementById("code-area-input");
-const codeArea = document.getElementById("code-area");
-const codeAreaContent = document.getElementById("code-area-content");
-
-function loadCode(code) {
-    codeInput.innerText = code;
-    updateCode(code);
-}
-
-function updateCode(text) {
-    if (text[text.length - 1] == "\n") {
-        text += " ";
+    download() {
+        let filename = 'game.json';
+        let file = new Blob([JSON.stringify(APP.GameData)], { type: 'json' });
+        if (window.navigator.msSaveOrOpenBlob)
+            window.navigator.msSaveOrOpenBlob(file, filename);
+        else {
+            let url = URL.createObjectURL(file);
+            FileManager.getDownloadLink(filename, url);
+        }
     }
-    codeAreaContent.innerHTML = text.replace("&", "&amp;").replace("<", "&lt;");
-    Prism.highlightElement(codeAreaContent);
-    app.setGameCode(text);
-}
 
-function syncScroll(element) {
-    codeArea.scrollTop = element.scrollTop;
-    codeArea.scrollLeft = element.scrollLeft;
-}
-
-function checkTab(e, event) {
-    if (event.ctrlKey && event.key == "Z") {
-        updateCode(e.value);
-    }
-    if (event.key == "Tab") {
-        event.preventDefault();
-        if (event.shiftKey) {
-
-        } else {
-            let cursor_pos = e.selectionEnd + 1;
-            e.value = e.value.slice(0, e.selectionStart) + "\t" + e.value.slice(e.selectionEnd, e.value.length);
-            e.selectionStart = cursor_pos;
-            e.selectionEnd = cursor_pos;
-            updateCode(e.value);
+    onFileLoaded(event) {
+        let reader = new FileReader();
+        reader.readAsText(event.target.files[0], 'UTF-8');
+        reader.onload = readerEvent => {
+            let gameData = JSON.parse(readerEvent.target.result);
+            APP.loadGameData(gameData);
+            codeInput.innerHTML = gameData.gameCode;
+            updateCode(gameData.gameCode);
         }
     }
 }
+const fileManager = new FileManager();
 
-codeInput.addEventListener('input', (event) => updateCode(event.target.value));
-codeInput.addEventListener('scroll', (event) => syncScroll(event.target));
-codeInput.addEventListener('keydown', (event) => checkTab(event.target, event));
+// ================================= Code Editor ==========================================
 
-const codeWiki = document.getElementById("code-wiki");
-const codeWikiList = [];
-for (let [key, value] of Object.entries(app.contextDetails)) {
-    console.log(`${key}: ${value}`);
-    let div = document.createElement('div');
-    div.className = 'code-wiki-entry';
+class CodeEditor {
+    constructor(codeParser) {
+        this.codeParser = codeParser;
 
-    let label = document.createElement('h6');
-    label.innerHTML = key;
-    div.appendChild(label)
+        this.codeInput = document.getElementById("code-area-input");
+        this.codeArea = document.getElementById("code-area");
+        this.codeAreaContent = document.getElementById("code-area-content");
 
-    codeWikiList.push(div);
-    codeWiki.appendChild(div);
+        this.codeInput.addEventListener('input', (event) => this.updateCode(event.target.value));
+        this.codeInput.addEventListener('scroll', (event) => this.syncScroll(event.target));
+        this.codeInput.addEventListener('keydown', (event) => this.checkTab(event.target, event));
+
+        this.setDoc();
+    }
+
+    loadCode(code) {
+        this.codeInput.innerText = code;
+        this.updateCode(code);
+    }
+
+    updateCode(text) {
+        // if (text[text.length - 1] == "\n") {
+        //     text += " ";
+        // }
+        // let code = text.replace("&", "&amp;").replace("<", "&lt;");
+        // this.codeAreaContent.innerHTML = code;
+        // Prism.highlightElement(this.codeAreaContent);
+        this.codeParser.highlight(this.codeAreaContent, text);
+        APP.setGameCode(text);
+    }
+
+    syncScroll(element) {
+        this.codeArea.scrollTop = element.scrollTop;
+        this.codeArea.scrollLeft = element.scrollLeft;
+    }
+
+    checkTab(e, event) {
+        if (event.ctrlKey && event.key == "Z") {
+            this.updateCode(e.value);
+        } if (event.key == "Tab") {
+            event.preventDefault();
+            if (event.shiftKey) {
+
+            } else {
+                let cursor_pos = e.selectionEnd + 1;
+                e.value = e.value.slice(0, e.selectionStart) + "\t" + e.value.slice(e.selectionEnd, e.value.length);
+                e.selectionStart = cursor_pos;
+                e.selectionEnd = cursor_pos;
+                this.updateCode(e.value);
+            }
+        }
+    }
+
+    setDoc() {
+        this.codeDoc = document.getElementById("code-doc");
+        this.codeDocList = [];
+
+        for (let [key, value] of Object.entries(APP.context)) {
+            let div = document.createElement('div');
+            div.className = 'code-doc-entry';
+
+            let label = document.createElement('h6');
+            label.innerHTML = key;
+            div.appendChild(label);
+
+            let description = document.createElement('p');
+            description.innerHTML = value.description;
+            div.appendChild(description);
+
+            if (value.type == 'function') {
+                let args = document.createElement('p');
+                // for (let i = 0; i < value.arguments.length; i++) {
+                //     args.innerHTML = args.innerHTML + ', ' + value.arguments[i];
+                // }
+                div.appendChild(args);
+            } else if (value.type == 'value')
+            {
+
+            }
+
+            this.codeDocList.push(div);
+            this.codeDoc.appendChild(div);
+        }
+
+        addEventListener('code-doc-btn', 'click', () => this.codeDoc.classList.add('active'));
+        addEventListener('code-doc-btn-close', 'click', () => this.codeDoc.classList.remove('active'));
+    }
 }
 
-addEventListener('code-wiki-btn', 'click', () => codeWiki.classList.add('active'));
-addEventListener('code-wiki-btn-close', 'click', () => codeWiki.classList.remove('active'))
+const codeParser = new CodeParser();
+const codeEditor = new CodeEditor(codeParser);
 
 // ================================= Sprite Editor ==========================================
-const spriteEditorCanvas = document.getElementById('sprite-editor-canvas');
-const spriteEditorCtx = spriteEditorCanvas.getContext('2d');
 const spriteEditorTool = {
     type: 'pencil',
     canMove: true,
     color: [0, 0, 0, 255],
+    hexColor: '#00000011',
 };
-let selectedSprite = -1;
 
-function setPixel(x, y, rgba) {
-    let imgData = spriteEditorCtx.createImageData(1, 1);
-    let d = imgData.data;
-    d[0] = rgba[0];
-    d[1] = rgba[1];
-    d[2] = rgba[2];
-    d[3] = rgba[3];
-    spriteEditorCtx.putImageData(imgData, x, y);
+class DrawingCanvas {
+    constructor() {
+        this.spriteEditorCanvas = document.getElementById('sprite-editor-canvas');
+        this.spriteEditorCtx = this.spriteEditorCanvas.getContext('2d');
+        this.spriteEditorGrid = document.getElementById('sprite-editor-grid');
+
+        this.setSpriteSize(16);
+    }
+
+    setPixel(x, y, rgba) {
+        let imgData = this.spriteEditorCtx.createImageData(1, 1);
+        let d = imgData.data;
+        d[0] = rgba[0];
+        d[1] = rgba[1];
+        d[2] = rgba[2];
+        d[3] = rgba[3];
+        this.spriteEditorCtx.putImageData(imgData, x, y);
+    }
+
+    getPixel(x, y) {
+        let data = this.spriteEditorCtx.getImageData(x, y, 1, 1).data;
+        return [data[0], data[1], data[2], data[3]];
+    }
+
+    loadImage(x, y, image) {
+        this.spriteEditorCtx.drawImage(image, x, y);
+    }
+
+    loadImageData(x, y, image) {
+        this.spriteEditorCtx.putImageData(image, x, y);
+    }
+
+    clear() {
+        this.spriteEditorCtx.clearRect(0, 0, this.spriteEditorCanvas.width, this.spriteEditorCanvas.height);
+    }
+
+    getImageData() {
+        return this.spriteEditorCtx.getImageData(0, 0, this.spriteEditorCanvas.width, this.spriteEditorCanvas.height);
+    }
+
+    getImageUrl() {
+        return this.spriteEditorCanvas.toDataURL('image/png');
+    }
+
+    getClickPosition(event) {
+        let rect = this.spriteEditorCanvas.getBoundingClientRect();
+        let scaleFactor = rect.width / this.spriteEditorCanvas.width;
+        let x = Math.floor((event.clientX - rect.left) / scaleFactor);
+        let y = Math.floor((event.clientY - rect.top) / scaleFactor);
+        return [x, y];
+    }
+
+    setSpriteSize(spriteSize) {
+        this.spriteEditorCanvas.width = spriteSize;
+        this.spriteEditorCanvas.height = spriteSize;
+        this.spriteEditorGrid.innerHTML = '';
+        this.spriteEditorGrid.style.gridTemplateColumns = `repeat(${spriteSize}, 1fr)`;
+        this.spriteEditorGrid.style.gridTemplateRows = `repeat(${spriteSize}, 1fr)`;
+
+        for (let x = 0; x < spriteSize; x++) {
+            for (let y = 0; y < spriteSize; y++) {
+                let cell = document.createElement('div');
+                cell.className = 'sprite-editor-cell';
+                this.spriteEditorGrid.appendChild(cell);
+            }
+        }
+        
+        this.width = this.spriteEditorCanvas.width;
+        this.height = this.spriteEditorCanvas.height;
+    }
+
+    addEventListener(event, callback) {
+        this.spriteEditorCanvas.addEventListener(event, callback);
+    }
 }
 
-function getPixel(x, y) {
-    let data = spriteEditorCtx.getImageData(x, y, 1, 1).data;
-    return [data[0], data[1], data[2], data[3]];
-}
+class SpriteList {
+    constructor(drawingCanvas) {
+        this.drawingCanvas = drawingCanvas;
+        this.spritesContainer = document.getElementById('sprites-container');
+        this.spritesItems = [];
+        this.selectedSprite = 0;
 
-function loadImageOnEditor(x, y, image) {
-    spriteEditorCtx.drawImage(image, x, y);
-}
+        this.setListSize(16);
+        this.selectSprite(this.selectedSprite);
+    }
 
-function loadImageDataOnEditor(x, y, image) {
-    spriteEditorCtx.putImageData(image, x, y);
-}
+    updateSpritesList() {
+        this.spritesItems[this.selectedSprite].src = this.drawingCanvas.getImageUrl();
+        this.spritesItems[this.selectedSprite].classList.add('active');
+        APP.setSprite(this.selectedSprite, this.drawingCanvas.getImageData());
+    }
 
-function clearSpriteEditor() {
-    spriteEditorCtx.clearRect(0, 0, spriteEditorCanvas.width, spriteEditorCanvas.height);
-}
+    selectSprite(index) {
+        this.selectedSprite = index;
+        let sprite = APP.getSprite(index);
 
-const spriteEditorGrid = document.getElementById('sprite-editor-grid');
-function setSpriteEditor(spriteSize) {
-    spriteEditorCanvas.width = spriteSize;
-    spriteEditorCanvas.height = spriteSize;
-    spriteEditorGrid.innerHTML = '';
-    spriteEditorGrid.style.gridTemplateColumns = `repeat(${spriteSize}, 1fr)`;
-    spriteEditorGrid.style.gridTemplateRows = `repeat(${spriteSize}, 1fr)`;
-    for (let x = 0; x < spriteSize; x++) {
-        for (let y = 0; y < spriteSize; y++) {
-            let cell = document.createElement('div');
-            cell.className = 'sprite-editor-cell';
-            spriteEditorGrid.appendChild(cell);
+        this.drawingCanvas.setSpriteSize(sprite.width);
+        this.drawingCanvas.loadImageData(0, 0, sprite);
+
+        this.spritesItems.forEach(e => e.classList.remove('active'));
+        this.spritesItems[index].classList.add('active');
+    }
+
+    setListSize(size) {
+        this.spritesItems = [];
+        this.spritesContainer.innerHTML = '';
+
+        for (let i = 0; i < size; i++) {
+            let element = document.createElement('img');
+            element.classList = 'sprite-item';
+            element.addEventListener('click', () => {
+                this.selectSprite(i);
+            })
+            this.spritesContainer.appendChild(element);
+            this.spritesItems.push(element);
         }
     }
 }
-setSpriteEditor(16);
 
-const spritesContainer = document.getElementById('sprites-container');
-const spritesItems = []
+class ColorPalette {
 
-function updateSpritesList() {
-    let url = spriteEditorCanvas.toDataURL("image/png");
-    spritesItems[selectedSprite].src = url;
-    spritesItems[selectedSprite].classList.add('active');
-    app.GameData.sprites[selectedSprite] = spriteEditorCtx.getImageData(0, 0, spriteEditorCanvas.width, spriteEditorCanvas.height);
+    constructor() {
+        this.palette = document.getElementById('sprite-palette');
+        this.paletteColors = [];
+        this.setPalette(APP.GameData.palette);
+
+        // this.spriteEditorColorPicker = document.getElementById('sprite-editor-color-picker');
+        // this.spriteEditorColorPickerLabel = document.getElementById('sprite-editor-color-picker-label');
+    }
+
+    hexToRGB(hex) {
+        let bigint = parseInt(hex.substring(1), 16);
+        let r = (bigint >> 16) & 255;
+        let g = (bigint >> 8) & 255;
+        let b = bigint & 255;
+        return [r, g, b, 255];
+    }
+
+    setColorPicker() {
+        this.spriteEditorColorPicker.value = '#000000';
+        this.spriteEditorColorPickerLabel.style.background = '#000000';
+
+        this.spriteEditorColorPicker.addEventListener("input", (event) => {
+            let inputColor = event.target.value;
+            spriteEditorTool.color = this.hexToRGB(inputColor);
+            spriteEditorTool.hexColor = inputColor;
+            this.spriteEditorColorPickerLabel.style.background = inputColor;
+        });
+    }
+
+    setPalette(colors) {
+        colors.forEach(hexColor => {
+            let el = document.createElement('div');
+            el.className = 'sprite-color';
+            el.style.backgroundColor = hexColor;
+
+            el.addEventListener('click', () => {
+                this.paletteColors.forEach(e => e.classList.remove('active'));
+                el.classList.add('active');
+                spriteEditorTool.color = this.hexToRGB(hexColor);
+            })
+            this.paletteColors.push(el);
+            this.palette.appendChild(el);
+        });
+    }
 }
 
-function selectSprite(index) {
-    selectedSprite = index;
-    let sprite = app.getSprite(index);
+class SpriteEditor {
+    constructor(drawingCanvas, colorPalette, spritesList) {
+        this.drawingCanvas = drawingCanvas;
+        this.colorPalette = colorPalette;
+        this.spritesList = spritesList;
+        
+        this.toolsContainer = document.getElementById('sprite-editor-tools');
+        
+        this.tools = []
+        this.currentTool = null;
+        this.isMouseDown = false;
+        this.setEvents();
+    }
 
-    setSpriteEditor(sprite.width);
-    loadImageDataOnEditor(0, 0, sprite);
+    setEvents() {
+        this.drawingCanvas.addEventListener("mouseup", () => this.isMouseDown = false);
+        this.drawingCanvas.addEventListener("mousedown", (e) => {
+            this.isMouseDown = true;
+            this.handleClick(e);
+        });
+        this.drawingCanvas.addEventListener("mousemove", (e) => {
+            if (this.isMouseDown && this.currentTool.canMove)
+                this.handleClick(e);
+        });
+    }
 
-    spritesItems.forEach(e => e.classList.remove('active'));
-    spritesItems[index].classList.add('active');
+    setSelectedTool(tool) {
+        this.currentTool = tool;
+
+        for (let i = 0; i < this.tools.length; i++) {
+            if (this.tools[i].innerHTML == tool.name)
+                this.tools[i].classList.add('active');
+            else
+                this.tools[i].classList.remove('active');
+        }
+    }
+
+    addTool(tool) {
+        let btn = document.createElement('button');
+        btn.innerHTML = tool.name;
+        btn.className = 'btn sprite-editor-tool';
+        btn.id = `sprite-editor-${tool.name}`;
+
+        btn.addEventListener('click', () => {
+            this.setSelectedTool(tool);
+        });
+
+        this.toolsContainer.appendChild(btn);
+        this.tools.push(btn);
+    }
+
+    handleClick(event) {
+        let pos = this.drawingCanvas.getClickPosition(event);
+        this.currentTool.callback(this.drawingCanvas, pos[0], pos[1], spriteEditorTool.color);
+        this.spritesList.updateSpritesList();
+    }
 }
 
-for (let i = 0; i < 16; i++) {
-    let element = document.createElement('img');
-    element.classList = 'sprite-item';
-    element.addEventListener('click', () => {
-        selectSprite(i);
-    })
-    spritesContainer.appendChild(element);
-    spritesItems.push(element);
+const drawingCanvas = new DrawingCanvas();
+const spritesList = new SpriteList(drawingCanvas);
+const colorPalette = new ColorPalette();
+const spriteEditor = new SpriteEditor(drawingCanvas, colorPalette, spritesList);
+
+const pencil = {
+    name: 'pencil',
+    canMove: true,
+    callback: (drawingCanvas, x, y, color) => {
+        drawingCanvas.setPixel(x, y, color);
+    }
 }
-selectSprite(0);
+spriteEditor.addTool(pencil);
+spriteEditor.setSelectedTool(pencil);
 
-// --------------- Color Picker ---------------
-const spriteEditorColorPicker = document.getElementById('sprite-editor-color-picker');
-const spriteEditorColorPickerLabel = document.getElementById('sprite-editor-color-picker-label');
-
-spriteEditorColorPicker.value = '#000000';
-spriteEditorColorPickerLabel.style.background = '#000000';
-
-spriteEditorColorPicker.addEventListener("input", (event) => {
-    let inputColor = event.target.value;
-    let bigint = parseInt(inputColor.substring(1), 16);
-    let r = (bigint >> 16) & 255;
-    let g = (bigint >> 8) & 255;
-    let b = bigint & 255;
-    spriteEditorTool.color = [r, g, b, 255];
-    spriteEditorColorPickerLabel.style.background = inputColor;
+spriteEditor.addTool({
+    name: 'eraser',
+    canMove: true,
+    callback: (drawingCanvas, x, y, color) => {
+        drawingCanvas.setPixel(x, y, [0, 0, 0, 0]);
+    }
 });
 
-const palette = document.getElementById('sprite-palette');
-const paletteColors = []
-function setPalette(colors) {
-    colors.forEach(color => {
-        let el = document.createElement('div');
-        el.className = 'sprite-color';
-        el.style.backgroundColor = color;
+spriteEditor.addTool({
+    name: 'bucket',
+    canMove: false,
+    callback: (drawingCanvas, x, y, color) => {
+        const areColorEquals = (a, b) => {
+            return a.length === b.length && a.every((value, index) => value === b[index]);
+        }
 
-        el.addEventListener('click', () => {
-            paletteColors.forEach(e => e.classList.remove('active'));
-            el.classList.add('active');
+        const areColorSimilar = (a, b) => {
+            return a.length === b.length && a.every((value, index) => value === b[index]);
+        }
 
-            let bigint = parseInt(color.substring(1), 16);
-            let r = (bigint >> 16) & 255;
-            let g = (bigint >> 8) & 255;
-            let b = bigint & 255;
-            spriteEditorTool.color = [r, g, b, 255];
-        })
-        paletteColors.push(el);
-        palette.appendChild(el);
-    });
-}
-setPalette(app.GameData.palette);
+        const floodFill = (x, y, oldColor, newColor) => {
+            if (x < 0 || y < 0 || x >= drawingCanvas.width || y >= drawingCanvas.height) return;
+            if (areColorEquals(drawingCanvas.getPixel(x, y), newColor)) return;
+            if (!areColorSimilar(drawingCanvas.getPixel(x, y), oldColor)) return;
 
-// ---------------------------------------------
-
-function handleClick(event) {
-    let rect = spriteEditorCanvas.getBoundingClientRect();
-    let scaleFactor = rect.width / spriteEditorCanvas.width;
-    let x = Math.floor((event.clientX - rect.left) / scaleFactor);
-    let y = Math.floor((event.clientY - rect.top) / scaleFactor);
-
-    if (spriteEditorTool.type == 'pencil')
-        setPixel(x, y, spriteEditorTool.color);
-    else if (spriteEditorTool.type == 'eraser')
-        setPixel(x, y, [0, 0, 0, 0]);
-    else if (spriteEditorTool.type == 'bucket') {
-        let oldColor = getPixel(x, y);
-        if (areColorEquals(oldColor, spriteEditorTool.color)) return;
-
-        floodFill(x, y, oldColor, spriteEditorTool.color);
-        function floodFill(x, y, oldColor, newColor) {
-            if (x < 0 || y < 0 || x >= spriteEditorCanvas.width || y >= spriteEditorCanvas.width) return;
-            if (areColorEquals(getPixel(x, y), newColor)) return;
-            if (!areColorSimilar(getPixel(x, y), oldColor)) return;
-
-            setPixel(x, y, newColor);
+            drawingCanvas.setPixel(x, y, newColor);
             floodFill(x + 1, y, oldColor, newColor);  // then i can either go south
             floodFill(x - 1, y, oldColor, newColor);  // or north
             floodFill(x, y + 1, oldColor, newColor);  // or east
             floodFill(x, y - 1, oldColor, newColor);  // or west
             return;
         }
-
-        function areColorEquals(a, b) {
-            return a.length === b.length && a.every((value, index) => value === b[index]);
-        }
-
-        function areColorSimilar(a, b) {
-            return a.length === b.length && a.every((value, index) => value === b[index]);
-        }
+        
+        let oldColor = drawingCanvas.getPixel(x, y);
+        if (areColorEquals(oldColor, color)) return;
+        floodFill(x, y, oldColor, color);
     }
-    updateSpritesList();
-}
-
-function setSelectedTool(tool) {
-    let tools = document.getElementsByClassName('sprite-editor-tool');
-    for (let i = 0; i < tools.length; i++) {
-        tools[i].classList.remove('active');
-    }
-    document.getElementById('sprite-editor-' + tool).classList.add('active');
-}
-setSelectedTool('pencil');
-
-let spriteEditor_isMouseDown = false;
-spriteEditorCanvas.addEventListener("mousedown", (e) => {
-    spriteEditor_isMouseDown = true;
-    handleClick(e);
-});
-spriteEditorCanvas.addEventListener("mouseup", () => spriteEditor_isMouseDown = false);
-spriteEditorCanvas.addEventListener("mousemove", (e) => {
-    if (spriteEditor_isMouseDown && spriteEditorTool.canMove)
-        handleClick(e);
 });
 
-document.getElementById('sprite-editor-pencil').addEventListener('click', () => {
-    spriteEditorTool.type = 'pencil';
-    spriteEditorTool.canMove = true;
-    setSelectedTool(spriteEditorTool.type);
-});
-document.getElementById('sprite-editor-eraser').addEventListener('click', () => {
-    spriteEditorTool.type = 'eraser';
-    spriteEditorTool.canMove = true;
-    setSelectedTool(spriteEditorTool.type);
-});
-document.getElementById('sprite-editor-bucket').addEventListener('click', () => {
-    spriteEditorTool.type = 'bucket';
-    spriteEditorTool.canMove = false;
-    setSelectedTool(spriteEditorTool.type);
-});
+// addEventListener('sprite-editor-download', 'click', () => {
+//     FileManager.getDownloadLink('sprite.png', spriteEditorCanvas.toDataURL("image/png"));
+// });
 
-document.getElementById('sprite-editor-download').addEventListener('click', () => {
-    downloadLink('sprite.png', spriteEditorCanvas.toDataURL("image/png"));
-});
-
-document.getElementById('sprite-editor-load').addEventListener('change', event => {
-    let image = new Image();
-    image.onload = () => {
-        clearSpriteEditor();
-        loadImageOnEditor(0, 0, image);
-        URL.revokeObjectURL(image.src);
-    }
-    image.src = URL.createObjectURL(event.target.files[0]);
-    event.target.value = '';
-}, false);
+// addEventListener('sprite-editor-load', 'change', event => {
+//     let image = new Image();
+//     image.onload = () => {
+//         clearSpriteEditor();
+//         loadImageOnEditor(0, 0, image);
+//         URL.revokeObjectURL(image.src);
+//     }
+//     image.src = URL.createObjectURL(event.target.files[0]);
+//     event.target.value = '';
+// }, false);
 
 // ================================= Audio ==========================================
 

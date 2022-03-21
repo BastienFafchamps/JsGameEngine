@@ -6,6 +6,8 @@
     <title>Js Game Engine</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <link rel='stylesheet' type='text/css' href='./editor/prism-dark.css'>
+    <link rel='stylesheet' type='text/css' media='screen' href='./fonts/chary.css'>
+    <link rel='stylesheet' type='text/css' media='screen' href='./fonts/graph.css'>
     <link rel='stylesheet' type='text/css' media='screen' href='./main.css'>
 </head>
 <body>
@@ -36,29 +38,26 @@
             <textarea id="code-area-input" spellcheck="false" ></textarea>
             <pre id="code-area" class="language-javascript" aria-hidden="true"><code id="code-area-content"></code></pre>
         </div>
-        <button id="code-wiki-btn">?</button>
-        <div id="code-wiki">
-            <div class="code-wiki-header">
+        <button id="code-doc-btn">?</button>
+        <div id="code-doc">
+            <div class="code-doc-header">
                 <h5>DOC</h5>
-                <button id="code-wiki-btn-close">X</button>
+                <button id="code-doc-btn-close">X</button>
             </div>
         </div>
     </div>
     <div id="sprites-panel" class="tab-panel center">
         <div class="grid-center">
             <div id="sprite-editor-tools">
+                <!-- <button class="btn contained sprite-editor-tool" id="sprite-editor-download">Download</button>
+                <label class="btn contained sprite-editor-tool" for="sprite-editor-load">Load</label><input id="sprite-editor-load" type="file" />    
+                <hr>
                 <div class="sprite-editor-tool">
                     <label>Color</label>
                     <label id="sprite-editor-color-picker-label" for="sprite-editor-color-picker">
                     <input type="color" id="sprite-editor-color-picker" name="sprite-editor-color-picker">
                 </div>
-                <hr>
-                <button class="btn sprite-editor-tool" id="sprite-editor-pencil">Pencil</button>
-                <button class="btn sprite-editor-tool" id="sprite-editor-eraser">Eraser</button>
-                <button class="btn sprite-editor-tool" id="sprite-editor-bucket">Bucket</button>
-                <hr>
-                <button class="btn contained sprite-editor-tool" id="sprite-editor-download">Download</button>
-                <label class="btn contained sprite-editor-tool" for="sprite-editor-load">Load</label><input id="sprite-editor-load" type="file" />    
+                <hr> -->
             </div>
         </div>
         <div class="grid-center">
@@ -133,6 +132,7 @@
     <script src="./src/peerjs.min.js"></script>
     <script type="module" src="./src/c_engine.js"></script>
     <script type="module" src="./src/c_main.js"></script>
+    <script type="module" src="./src/c_codeParser.js"></script>
     <script type="module" src="./src/c_editor.js"></script>
 </body>
 </html>

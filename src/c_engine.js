@@ -41,6 +41,18 @@ export class HtmlRenderer {
 
         this.width = this.canvas.width;
         this.height = this.canvas.height;
+
+        this.mousePos = { x: 0, y: 0 };
+        this.setupMousePosListening();
+    }
+
+    setupMousePosListening() {
+        this.canvas.addEventListener('mousemove', event => {
+            let rect = this.canvas.getBoundingClientRect();
+            let scaleFactor = rect.width / this.canvas.width;
+            this.mousePos.x = Math.floor((event.clientX - rect.left) / scaleFactor);
+            this.mousePos.y = Math.floor((event.clientY - rect.top) / scaleFactor);
+        });
     }
 
     upscaleCanvas(width, height) {
@@ -324,6 +336,7 @@ export class Engine {
         this.objects_img = [];
         this.entities = [];
         this.sprites = [];
+        this.mousePos = renderer.mousePos;
     }
 
     init(sprites) {
@@ -342,14 +355,20 @@ export class Engine {
     }
 
     start(update, draw = null) {
-        if (draw != null) {
+        if (draw != null && update != null) {
             this.gameLoop = setInterval(() => {
                 update();
                 this.renderer.clear();
                 this.__drawEntities();
                 draw();
             }, 10);
-        } else {
+        } else if (draw != null && update == null) { 
+            this.gameLoop = setInterval(() => {
+                this.renderer.clear();
+                this.__drawEntities();
+                draw();
+            }, 10);
+        } else if (update != null) {
             this.gameLoop = setInterval(() => {
                 update();
                 this.renderer.clear();

@@ -21,15 +21,27 @@
   --primary: #ff9239;
   --primary-darker: #c55d21;
   --primary-selected: #ffb968;
+
+  /* --font-name: 'Graph';
+  --font-letter-spacing: 2pt;
+  --font-size: 12pt; */
+
+  --font-name: 'Chary';
+  --font-letter-spacing: 2pt;
+  --font-size: 1.1em;
+  --font-line-height: 1em;
 }
 
 * {
   margin: 0;
   padding: 0;
+  font-family: var(--font-name);
+  font-size: var(--font-size);
+  line-height: var(--font-line-height);
+  letter-spacing: var(--font-letter-spacing);
 }
 
 body {
-  font-family: monospace;
   background-color: var(--background);
   color: var(--text-main);
   height: 100vh;
@@ -160,7 +172,7 @@ input[type="file"] {
   z-index: 1;
   white-space: pre;
   overflow-wrap: normal;
-  color: transparent;
+  color: rgba(255, 255, 255, 0.1);
   background: none;
   resize: none;
   caret-color: white;
@@ -181,12 +193,13 @@ input[type="file"] {
 #code-area *,
 #code-area-input {
   text-align: left;
-  font-size: 10pt;
-  font-family: monospace;
-  line-height: 14pt;
+  letter-spacing: var(--font-letter-spacing);
+  font-family: var(--font-name);
+  font-size: 1em;
+  line-height: var(--font-line-height);
   tab-size: 2;
 }
-#code-wiki {
+#code-doc {
   position: absolute;
   z-index: 22;
   top: 0;
@@ -197,10 +210,10 @@ input[type="file"] {
   background: #585858;
   display: none;
 }
-#code-wiki.active {
+#code-doc.active {
   display: block;
 }
-.code-wiki-header {
+.code-doc-header {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -209,17 +222,17 @@ input[type="file"] {
   margin-bottom: 1rem;
   padding-bottom: .5rem
 }
-.code-wiki-header h5 {
+.code-doc-header h5 {
   font-size: 1.2rem;
   color: var(--primary);
 }
-.code-wiki-entry {
+.code-doc-entry {
   margin-bottom: 0.5rem;
 }
-.code-wiki-entry h6 {
+.code-doc-entry h6 {
   font-size: .8rem;
 }
-#code-wiki-btn {
+#code-doc-btn {
   position: absolute;
   top: .5rem;
   right: .5rem;
@@ -229,10 +242,41 @@ input[type="file"] {
 :not(pre)>code[class*=language-], pre[class*=language-] {
   background: #2d2d2d;
 }
+.token {
+  height: var(--font-line-height);
+}
 .token.keyword {
+  color: red;
+}
+.token.operator {
+  color: rgb(238, 226, 62);
+}
+.token.identifier {
+  color: blue;
+}
+.token.punctuation {
+  color: orange;
+}
+.token.string {
+  color: green;
+}
+.token.number {
+  color: darksalmon;
+}
+.token.boolean {
+  color: darkkhaki;
+}
+.token.comparator {
+  color: rgb(238, 226, 62);
+}
+.token.comment {
+  color: rgb(121, 121, 121);
+}
+
+/* .token.keyword {
   color: rgb(147, 240, 71);
   font-weight: bold;
-}
+} */
 
 /* ########################################## */
 #sprites-panel.active {
