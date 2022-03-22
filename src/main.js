@@ -63,6 +63,9 @@ export class App {
         this.contextDetails = {
             SCREEN_WIDTH: this.CANVAS.width,
             SCREEN_HEIGHT: this.CANVAS.height,
+            MOUSE_POS: {
+                f: this.ENGINE.mousePos
+            },
             STOP: {
                 f: () => this.ENGINE.stop(),
                 description: 'Stops the engine',

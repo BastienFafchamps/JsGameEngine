@@ -246,31 +246,40 @@ input[type="file"] {
   height: var(--font-line-height);
 }
 .token.keyword {
-  color: red;
+  color: rgb(250, 170, 77);
 }
 .token.operator {
-  color: rgb(238, 226, 62);
-}
-.token.identifier {
-  color: blue;
+  color: rgb(163, 155, 141);
 }
 .token.punctuation {
-  color: orange;
+  color: rgb(163, 155, 141);
+}
+.token.comment {
+  color: rgb(121, 121, 121);
+}
+.token.separator {
+  color: rgb(143, 115, 97);
 }
 .token.string {
-  color: green;
+  color: rgb(131, 175, 89);
 }
 .token.number {
   color: darksalmon;
 }
 .token.boolean {
-  color: darkkhaki;
+  color: darksalmon;
 }
 .token.comparator {
-  color: rgb(238, 226, 62);
+  color: darksalmon;
 }
-.token.comment {
-  color: rgb(121, 121, 121);
+.token.identifier {
+  color: rgb(235, 235, 235);
+}
+.token.identifier.upper {
+  color: rgb(157, 124, 233);
+}
+.token.error {
+  text-decoration: red underline;
 }
 
 /* .token.keyword {
