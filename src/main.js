@@ -37,32 +37,12 @@ export class App {
         }
 
         this.context = {
-            SCREEN_WIDTH: this.CANVAS.width,
-            SCREEN_HEIGHT: this.CANVAS.height,
-            STOP: () => this.ENGINE.stop(),
-            DRAW_RECT: (x, y, width, height, color) => this.ENGINE.drawRect(x, y, width, height, color),
-            DRAW_PIXEL: (x, y, color) => this.ENGINE.drawPixel(x, y, color),
-            DRAW_CIRCLE: (x, y, radius, color) => this.ENGINE.drawElipse(x, y, radius, color),
-            SET_BACKGROUND: (color) => this.ENGINE.setBackgroundColor(color),
-            KEY_DOWN: (key) => this.ENGINE.isKeyDown(key),
-            KEY_PRESSED: (key) => this.ENGINE.isKeyPressed(key),
-            KEY_UP: (key) => this.ENGINE.isKeyUp(key),
-            CREATE_SPRITE: (obj = { x, y, spriteIndex }) => this.ENGINE.createObjectSprite(obj),
-            CREATE_RECT: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectRect(obj),
-            CREATE_CIRCLE: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectCircle(obj),
-            REMOVE: (obj = { x, y, width, height, color }) => this.ENGINE.deleteObject(obj),
-            DO_RECT_COLLIDES: (rect_a, rect_b) => this.PHYSICS.doRectsCollides(rect_a, rect_b),
-            DO_RECT_CIRCLE_COLLIDES: (rect, circle) => this.PHYSICS.doRectCircleCollides(circle, rect),
-            DO_CIRCLES_COLLIDES: (circle_a, circle_b) => this.PHYSICS.doCirclesCollides(circle_a, circle_b),
-            RANDOM: () => this.ENGINE.random(),
-            RANDOM_RANGE: (min, max) => this.ENGINE.randomRange(min, max),
-            COLOR: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
-            COLOR_HSL: (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
-        }
-
-        this.contextDetails = {
-            SCREEN_WIDTH: this.CANVAS.width,
-            SCREEN_HEIGHT: this.CANVAS.height,
+            SCREEN_WIDTH: {
+                f: this.CANVAS.width
+            },
+            SCREEN_HEIGHT: { 
+                f: this.CANVAS.height
+            },
             MOUSE_POS: {
                 f: this.ENGINE.mousePos
             },
@@ -78,8 +58,12 @@ export class App {
                 f: (x, y, radius, color) => this.ENGINE.drawElipse(x, y, radius, color),
                 description: 'Draws a circle to the screen',
             },
-            DRAW_PX: {
+            DRAW_PIXEL: {
                 f: (x, y, color) => this.ENGINE.drawPixel(x, y, color),
+                description: 'Draws a pixel at a specific position',
+            },
+            SET_BACKGROUND: {
+                f: (color) => this.ENGINE.setBackgroundColor(color),
                 description: 'Draws a pixel at a specific position',
             },
             KEY_DOWN: {
@@ -100,6 +84,10 @@ export class App {
             },
             CREATE_CIRCLE: {
                 f: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectCircle(obj),
+                description: 'Stops the engine',
+            },
+            CREATE_SPRITE: {
+                f: (obj = { x, y, spriteIndex }) => this.ENGINE.createObjectSprite(obj),
                 description: 'Stops the engine',
             },
             REMOVE: {
@@ -126,18 +114,26 @@ export class App {
                 f: (min, max) => this.ENGINE.randomRange(min, max),
                 description: 'Stops the engine',
             },
+            COLOR: {
+                f: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
+                description: 'Draws a rectangle to the screen',
+            },
+            COLOR_HSL: {
+                f:  (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
+                description: 'Draws a rectangle to the screen',
+            },
         }
     }
 
     run() {
         try {
-            console.log(this.GameData);
             this.ENGINE.init(this.GameData.sprites);
     
+            let gameContext = this.__getGameContext();
             let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
     
-            let f = new Function(...Object.keys(this.context), runCode);
-            let [update_f, draw_f] = f(...Object.values(this.context));
+            let f = new Function(...Object.keys(gameContext), runCode);
+            let [update_f, draw_f] = f(...Object.values(gameContext));
     
             if (!update_f)
                 throw (new Error('No "UPDATE" function found.'));
@@ -184,5 +180,13 @@ export class App {
             sprites.push(sprite);
         }
         return sprites;
+    }
+
+    __getGameContext() {
+        let gameContext = {};
+        Object.keys(this.context).forEach(key => {
+            gameContext[key] = this.context[key].f;
+        });
+        return gameContext;
     }
 }
