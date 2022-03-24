@@ -121,12 +121,12 @@ button.active, .btn.active {
 .menu-btn {
   position: absolute;
   right: .5rem;
-  display: block;
+  display: none;
 }
 
 @media screen and (max-width: 600px) { 
   .menu-btn {
-    display: none;
+    display: block;
   }
   .tab-push-btn {
     display: none;
@@ -134,7 +134,7 @@ button.active, .btn.active {
 }
 
 .tab-btn {
-  width: 5rem;
+  width: auto;
   filter: brightness(0.7);
   border-bottom: transparent;
   height: auto;
@@ -222,15 +222,18 @@ input[type="file"] {
   tab-size: 2;
 }
 #code-doc {
-  position: absolute;
-  z-index: 22;
-  top: 0;
-  right: 0;
-  padding: 1.25rem 1.75rem;
-  width: 20rem;
-  height: calc(100% - 2.5rem);
   background: #585858;
+  position: fixed;
+  z-index: 22;
+  margin: auto;
+  padding: 1.25rem 1.75rem;
+  width: 50%;
+  min-width: 25rem;
+  height: 80vh;
   display: none;
+  overflow-y: scroll;
+  box-shadow: 0 0 2rem 0rem rgba(0, 0, 0, 0.534);
+  text-shadow: 2px 2px var(--text-hightlight);
 }
 #code-doc.active {
   display: block;
@@ -242,22 +245,26 @@ input[type="file"] {
   justify-content: space-between;
   border-bottom: 1px solid white;
   margin-bottom: 1rem;
-  padding-bottom: .5rem
-}
-.code-doc-header h5 {
-  font-size: 1.2rem;
-  color: var(--primary);
+  padding-bottom: .5rem;
 }
 .code-doc-entry {
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
 }
 .code-doc-entry h6 {
-  font-size: .8rem;
+  color: var(--primary-selected);
+  font-weight: 100;
+}
+.code-doc-entry h6 span {
+  color: var(--primary-darker);
+}
+.code-doc-entry p {
+  margin-bottom: 1rem;
+  color: var(--menu-text);
 }
 #code-doc-btn {
   position: absolute;
-  top: .5rem;
-  right: .5rem;
+  top: 1rem;
+  right: 2.2rem;
   z-index: 20;
 }
 

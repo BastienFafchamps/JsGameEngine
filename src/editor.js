@@ -176,12 +176,18 @@ class CodeEditor {
             description.innerHTML = value.description;
             div.appendChild(description);
 
-            if (value.type == 'function') {
-                let args = document.createElement('p');
-                // for (let i = 0; i < value.arguments.length; i++) {
-                //     args.innerHTML = args.innerHTML + ', ' + value.arguments[i];
-                // }
-                div.appendChild(args);
+            if (typeof(value.f) == 'function') {
+                let functionStr = value.f.toString();
+                let i = functionStr.indexOf(')');
+                let args = functionStr.substring(0, i + 1);
+                args = args.replace('obj = ', '');
+                args = args.replace('(', '<span>(</span>');
+                args = args.replace(')', '<span>)</span>');
+                args = args.replace('{', '<span>{</span>');
+                args = args.replace('}', '<span>}</span>');
+
+                if (args.length > 0)
+                    label.innerHTML += args;
             } else if (value.type == 'value')
             {
 
