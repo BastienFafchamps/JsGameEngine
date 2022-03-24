@@ -12,7 +12,9 @@ const CANVAS = document.getElementById("main-canvas");
 const canvasContainer = document.getElementById("game-view");
 const APP = new App(CANVAS);
 
-(function init() {
+let onCodeLoaded = () => {};
+
+function INIT() {
     APP.onGameDataUpdate = (gameData) => sessionStorage.setItem('gameData', JSON.stringify(gameData));
 
     window.onresize = () => {
@@ -27,12 +29,12 @@ const APP = new App(CANVAS);
         let gameData = JSON.parse(sessionStorage.getItem('gameData'));
         if (gameData != null) {
             APP.loadGameData(gameData);
-            loadCode(gameData.gameCode);
+            onCodeLoaded(gameData.gameCode);
         }
     } catch (error) {
-        console.warn('Error trying to load session gameData');
+        console.warn('Error trying to load session gameData', error);
     }
-})();
+}
 
 // ==================================== TABS =============================================
 class TabsManager {
@@ -125,18 +127,14 @@ class CodeEditor {
     }
 
     loadCode(code) {
-        this.codeInput.innerText = code;
+        let text = code.replace('\n', '\\\n');
+        this.codeInput.innerHTML = code;
         this.updateCode(code);
     }
 
     updateCode(text) {
-        // if (text[text.length - 1] == "\n") {
-        //     text += " ";
-        // }
-        // let code = text.replace("&", "&amp;").replace("<", "&lt;");
-        // this.codeAreaContent.innerHTML = code;
-        // Prism.highlightElement(this.codeAreaContent);
-        this.codeParser.highlight(this.codeAreaContent, text);
+        let tokens = this.codeParser.parseTokens(text);
+        this.codeAreaContent.innerHTML = this.codeParser.generateHtml(tokens);
         APP.setGameCode(text);
     }
 
@@ -200,6 +198,7 @@ class CodeEditor {
 
 const codeParser = new CodeParser();
 const codeEditor = new CodeEditor(codeParser);
+onCodeLoaded = (code) => codeEditor.loadCode(code);
 
 // ================================= Sprite Editor ==========================================
 const spriteEditorTool = {
@@ -684,3 +683,5 @@ document.addEventListener('keypress', (event) => {
     // if (event.ctrlKey && event.key == 'A') {
     // }
 });
+
+INIT();

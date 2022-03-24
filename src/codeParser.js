@@ -93,20 +93,17 @@ export class CodeParser {
         }
     }
 
-    highlight(container, code) {
-        this.container = container;
-        container.innerHTML = '';
-
+    parseTokens(code) {
         this.tokens = [];
-        let currentToken = { value: '', type: '' };
+        let currentToken = { value: '', tags: [] };
         let char = '';
 
         const addToken = () => {
-            currentToken.type = this.__handleToken(currentToken.value);
-            if (currentToken.type !== null) 
-                this.__addToken(currentToken.value, currentToken.type);
+            currentToken.tags = this.__handleToken(currentToken.value);
+            if (currentToken.tags !== null)
+                this.__addToken(currentToken.value, currentToken.tags);
             currentToken.value = '';
-            currentToken.type = 'none';
+            currentToken.tags = ['none'];
         }
 
         for (let i = 0; i < code.length; i++) {
@@ -114,17 +111,17 @@ export class CodeParser {
 
             let isInLitteral = this.__isInLitteral(currentToken.value);
 
-            if (char in this.espaceChars) {
+            if (this.espaceChars[char] == 0) {
                 addToken();
-                container.innerHTML += char;
-            } else if (!isInLitteral && char in this.whiteSpaces) {
+                this.__addToken(char, ['whitespace']);
+            } else if (!isInLitteral && this.whiteSpaces[char] == 0) {
                 addToken();
-                container.innerHTML += char;
-            } else if (!isInLitteral && char in this.punctuations) {
+                this.__addToken(char, ['whitespace']);
+            } else if (!isInLitteral && this.punctuations[char] != null) {
                 addToken();
                 let escapeTokenType = this.__handleToken(char);
                 this.__addToken(char, escapeTokenType);
-            } else if (!isInLitteral && currentToken.type == 'none' && !this.__isAlphabetic(char)) {
+            } else if (!isInLitteral && currentToken.tags[0] == 'none' && !this.__isAlphabetic(char)) {
                 addToken();
                 currentToken.value += char;
             } else {
@@ -135,9 +132,23 @@ export class CodeParser {
                 addToken();
             }
         }
-        console.log(this.tokens);
-        // this.tokens[this.tokens.length - 1].el.classList.add("error");
+        return this.tokens;
     }
+
+    generateHtml(tokens) {
+        let htmlString = '';
+        tokens.forEach(token => {
+            if (token.tags[0] != 'whitespace')
+                htmlString += `<span class="token ${token.tags.join(' ')}">${token.value}</span>`;
+            else
+                htmlString += token.value;
+        });
+        return htmlString;
+    }
+
+    // ######################################################################################
+    // #                                  - PRIVATES -                                      #
+    // ######################################################################################
 
     __isInLitteral(token) {
         return this.litteralMatches.some(l => token.match(l));
@@ -155,52 +166,50 @@ export class CodeParser {
         return token.match(/[A-Z_]/) != null;
     }
 
-    __matchLitteral(token) {
-        for (const l in this.literals) {
-            if (token.match(this.literals[l].regex))
-                return this.literals[l].type;
-        }
-        return null;
-    }
+    __isFunctionParam(token) {
+        if (token.tags[0] != 'identifier') return false;
 
-    __tokenType(token) {
-        if (token.length <= 0) return null;
-
-        let type = 'none';
-        if (token in this.keywords)
-            type = this.keywords[token].type;
-        else if (token in this.punctuations)
-            type = this.punctuations[token].type;
-        else if (token in this.operators)
-            type = this.operators[token].type;
-
-        for (const l in this.literals) {
-            if (token.match(this.literals[l].regex))
-                type = this.literals[l].type;
-        }
-
-        if (type == 'none') {
-            if (this.__isUpperAlphabetic(token))
-                type = 'identifier upper';
-            else if (this.__isAlphabetic(token))
-                type = 'identifier';
-        }
-
-        return type;
+        
     }
 
     __handleToken(token) {
         if (token.length <= 0) return null;
-        let type = this.__tokenType(token);
-        return type;
+
+        let tags = ['none'];
+        if (token in this.keywords)
+            tags = [this.keywords[token].type];
+        else if (token in this.punctuations)
+            tags = [this.punctuations[token].type];
+        else if (token in this.operators)
+            tags = [this.operators[token].type];
+
+        for (const l in this.literals) {
+            if (token.match(this.literals[l].regex))
+                tags = [this.literals[l].type];
+        }
+
+        if (tags[0] == 'none') {
+            if (this.__isUpperAlphabetic(token))
+                tags = ['identifier', 'upper'];
+            else if (this.__isAlphabetic(token))
+                tags = ['identifier'];
+        }
+
+        if (tags[0] == 'identifier' && this.tokens.length >= 2) {
+            let i = this.tokens.length - 1;
+            if (this.tokens[i].value == '.' && this.tokens[i - 1].tags[0] == 'identifier') {
+                tags.push('sub-identifier');
+            }
+        }
+
+        return tags;
     }
 
-    __addToken(token, type) {
-        let tag = document.createElement('span');
-        tag.className = `token ${type}`;
-        tag.innerHTML = token;
-
-        this.container.appendChild(tag);
-        this.tokens.push({ type: type, value: token, el: tag });
+    __addToken(token, tags) {
+        // If last token was a whitespace, concatenate token it.
+        if (tags[0] == 'whitespace' && this.tokens.length >= 1 && this.tokens[this.tokens.length - 1].tags[0] == 'whitespace')
+            this.tokens[this.tokens.length - 1].value += token;
+        else
+            this.tokens.push({ tags: tags, value: token });
     }
 }

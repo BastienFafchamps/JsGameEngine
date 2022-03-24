@@ -16,7 +16,7 @@ function DRAW() {
 	}
 }
 
-// Small footprint wave
+/* Small footprint wave
 SET_BACKGROUND('black');
 
 let i = 0;
@@ -27,8 +27,9 @@ function DRAW() {
 		DRAW_PIXEL(x, Math.sin(x + i) * 3 + (SCREEN_HEIGHT / 2), color);
 	}
 }
+*/
 
-
+/*
 SET_BACKGROUND('black');
 let pixels = [];
 
@@ -49,3 +50,4 @@ function DRAW() {
 		DRAW_PIXEL(pixels[j].x, pixels[j].y, color);
 	}
 }
+*/

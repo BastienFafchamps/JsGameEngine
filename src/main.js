@@ -37,6 +37,9 @@ export class App {
         }
 
         this.context = {
+            PRINT: {
+                f: (a) => console.log(a),
+            },
             SCREEN_WIDTH: {
                 f: this.CANVAS.width
             },

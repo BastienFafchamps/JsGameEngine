@@ -83,6 +83,14 @@ button.active, .btn.active {
   width: 1rem;
 }
 
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--primary-darker); }
+::-webkit-scrollbar-thumb { background: var(--primary); }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-selected);
+  cursor: pointer;
+}
+
 .grid-center {
   display: flex;
   align-items: center;
@@ -109,6 +117,20 @@ button.active, .btn.active {
   width: auto;
   height: 2.3rem;
   display: flex;
+}
+.menu-btn {
+  position: absolute;
+  right: .5rem;
+  display: block;
+}
+
+@media screen and (max-width: 600px) { 
+  .menu-btn {
+    display: none;
+  }
+  .tab-push-btn {
+    display: none;
+  }
 }
 
 .tab-btn {
@@ -277,6 +299,9 @@ input[type="file"] {
 }
 .token.identifier.upper {
   color: rgb(157, 124, 233);
+}
+.token.identifier.sub-identifier {
+  font-style: italic;
 }
 .token.error {
   text-decoration: red underline;
