@@ -65,6 +65,10 @@ export class App {
                 f: (x, y, color) => this.ENGINE.drawPixel(x, y, color),
                 description: 'Draws a pixel at a specific position',
             },
+            TEXT: {
+                f: (text, x, y, size, color) => this.ENGINE.drawText(text, x, y, size, color),
+                description: 'Draws a pixel at a specific position',
+            },
             SET_BACKGROUND: {
                 f: (color) => this.ENGINE.setBackgroundColor(color),
                 description: 'Draws a pixel at a specific position',

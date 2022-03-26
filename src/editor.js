@@ -7,12 +7,62 @@ function addEventListener(id, type, method) {
     document.getElementById(id).addEventListener(type, method);
 }
 
+let templateGame = `
+SET_BACKGROUND('black');
+let pixels = [];
+let blocks = [];
+
+let timer = 0;
+function UPDATE() {
+	timer++;
+	if (timer > 60) {
+		timer = 0;
+
+		blocks.push({
+			speed: 0.5,
+			x: SCREEN_WIDTH,
+			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
+			size: 3,
+		});
+	}
+
+	blocks = blocks.filter(b => {
+		b.x -= b.speed;
+		return b.x > 0;
+	});
+
+	pixels = pixels.filter(px => {
+		px.x -= 0.5;
+		px.y += px.d;
+		return px.x >= 0;
+	});
+	pixels.push({x: MOUSE_POS.x, y: MOUSE_POS.y, d: RANDOM_RANGE(-0.1, 0.1)});
+}
+
+let i = 0;
+function DRAW() {
+	blocks.forEach(b => {
+		DRAW_RECT(b.x, b.y, b.size, b.size, "white");
+	})
+
+	TEXT("abcdefghijk", 0, 0, 15, 'white');
+	TEXT("lmnopqrstuv", 0, 10, 15, 'white');
+	TEXT("wxyz0123456789", 0, 20, 15, 'white');
+
+	i += 0.1 % 60;
+	for (let j=0; j < pixels.length; j++) {
+		let color = COLOR_HSL((j + i % 40) / 40 * 360, 100, 50);
+		DRAW_PIXEL(pixels[j].x, pixels[j].y, color);
+	}
+}
+`;
+
 // ==================================== APP =============================================
 const CANVAS = document.getElementById("main-canvas");
 const canvasContainer = document.getElementById("game-view");
 const APP = new App(CANVAS);
 
-let onCodeLoaded = () => {};
+let onCodeLoaded = () => { };
 
 function INIT() {
     APP.onGameDataUpdate = (gameData) => sessionStorage.setItem('gameData', JSON.stringify(gameData));
@@ -30,6 +80,9 @@ function INIT() {
         if (gameData != null) {
             APP.loadGameData(gameData);
             onCodeLoaded(gameData.gameCode);
+        } else {
+            APP.loadGameData({ gameCode: templateGame });
+            onCodeLoaded(templateGame);
         }
     } catch (error) {
         console.warn('Error trying to load session gameData', error);
@@ -118,10 +171,11 @@ class CodeEditor {
         this.codeInput = document.getElementById("code-area-input");
         this.codeArea = document.getElementById("code-area");
         this.codeAreaContent = document.getElementById("code-area-content");
+        this.lineNumbers = document.getElementById("code-line-number");
 
         this.codeInput.addEventListener('input', (event) => this.updateCode(event.target.value));
         this.codeInput.addEventListener('scroll', (event) => this.syncScroll(event.target));
-        this.codeInput.addEventListener('keydown', (event) => this.checkTab(event.target, event));
+        this.codeInput.addEventListener('keydown', (event) => this.handleKeyInput(event));
 
         this.setDoc();
     }
@@ -136,27 +190,62 @@ class CodeEditor {
         let tokens = this.codeParser.parseTokens(text);
         this.codeAreaContent.innerHTML = this.codeParser.generateHtml(tokens);
         APP.setGameCode(text);
+        this.setLineNumbers();
     }
 
     syncScroll(element) {
         this.codeArea.scrollTop = element.scrollTop;
         this.codeArea.scrollLeft = element.scrollLeft;
+        this.lineNumbers.scrollTop = element.scrollTop;
     }
 
-    checkTab(e, event) {
-        if (event.ctrlKey && event.key == "Z") {
-            this.updateCode(e.value);
-        } if (event.key == "Tab") {
+    insert(str, index) {
+        let txt = this.codeInput.innerHTML;
+        txt = txt.slice(0, index) + str + txt.slice(index);
+        this.codeInput.innerHTML = txt;
+        this.updateCode(txt);
+    }
+
+    setLineNumbers() {
+        this.lineNumbers.innerHTML = '';
+        let textLines = this.codeInput.value.split("\n");
+        for (let i = 0; i < textLines.length; i++) {
+            this.lineNumbers.innerHTML += '<span>' + i + '</span>';
+        }
+    }
+
+    handleKeyInput(event) {
+        let key = event.key;
+        let e = event.target;
+        let cursor_pos = e.selectionEnd + 1;
+
+        function insert(str) {
+            e.value = e.value.slice(0, e.selectionStart) + str + e.value.slice(e.selectionEnd, e.value.length);
+        }
+
+        function wrap(str1, str2, index = e.selectionStart) {
+            e.value = e.value.slice(0, e.selectionStart) + str1 + e.value.slice(e.selectionStart, e.selectionEnd) + str2 + e.value.slice(e.selectionEnd, e.value.length);
+        }
+
+        if (key == "Tab") {
             event.preventDefault();
             if (event.shiftKey) {
 
             } else {
-                let cursor_pos = e.selectionEnd + 1;
-                e.value = e.value.slice(0, e.selectionStart) + "\t" + e.value.slice(e.selectionEnd, e.value.length);
+                insert('\t');
                 e.selectionStart = cursor_pos;
                 e.selectionEnd = cursor_pos;
                 this.updateCode(e.value);
             }
+        }
+        
+        let chars = {'(': ')', '{': '}', '[': ']'}
+        if (key in chars) {
+            event.preventDefault();
+            wrap(key, chars[key]);
+            e.selectionStart = cursor_pos;
+            e.selectionEnd = cursor_pos;
+            this.updateCode(e.value);
         }
     }
 
@@ -176,7 +265,7 @@ class CodeEditor {
             description.innerHTML = value.description;
             div.appendChild(description);
 
-            if (typeof(value.f) == 'function') {
+            if (typeof (value.f) == 'function') {
                 let functionStr = value.f.toString();
                 let i = functionStr.indexOf(')');
                 let args = functionStr.substring(0, i + 1);
@@ -188,8 +277,7 @@ class CodeEditor {
 
                 if (args.length > 0)
                     label.innerHTML += args;
-            } else if (value.type == 'value')
-            {
+            } else if (value.type == 'value') {
 
             }
 
@@ -280,7 +368,7 @@ class DrawingCanvas {
                 this.spriteEditorGrid.appendChild(cell);
             }
         }
-        
+
         this.width = this.spriteEditorCanvas.width;
         this.height = this.spriteEditorCanvas.height;
     }
@@ -387,9 +475,9 @@ class SpriteEditor {
         this.drawingCanvas = drawingCanvas;
         this.colorPalette = colorPalette;
         this.spritesList = spritesList;
-        
+
         this.toolsContainer = document.getElementById('sprite-editor-tools');
-        
+
         this.tools = []
         this.currentTool = null;
         this.isMouseDown = false;
@@ -487,7 +575,7 @@ spriteEditor.addTool({
             floodFill(x, y - 1, oldColor, newColor);  // or west
             return;
         }
-        
+
         let oldColor = drawingCanvas.getPixel(x, y);
         if (areColorEquals(oldColor, color)) return;
         floodFill(x, y, oldColor, color);

@@ -33,6 +33,75 @@ export class HtmlInputManager {
     }
 }
 
+export class FontUtil {
+    constructor(context) {
+        this.images = {};
+        this.bitmap = {
+            'a': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
+            'b': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+            'c': [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0],
+            'd': [0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
+            'e': [0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+            'f': [0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            'g': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0],
+            'h': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
+            'i': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'j': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+            'k': [1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0],
+            'l': [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'm': [0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            'n': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
+            'o': [0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
+            'p': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0],
+            'q': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1],
+            'r': [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            's': [0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0],
+            't': [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0],
+            'u': [0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
+            'v': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+            'w': [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            'x': [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+            'y': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0],
+            'z': [0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+            '0': [0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+            '1': [0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+            '2': [1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+            '3': [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            '4': [1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0],
+            '5': [1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+            '6': [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            '7': [1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            '8': [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+            '9': [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+        }
+        this.setImageDatas(context);
+    }
+
+    setImageDatas(context) {
+        Object.keys(this.bitmap).forEach(char => {
+            this.images[char] = this.__getImage(context, char);
+        });
+    }
+
+    getImage(char) {
+        return this.images[char];
+    }
+
+    __getImage(context, char) {
+        let bitmap = this.bitmap[char];
+        let imageData = context.createImageData(3, 5);
+        let x = 0;
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            imageData.data[i + 0] = 255;
+            imageData.data[i + 1] = 255;
+            imageData.data[i + 2] = 255;
+            imageData.data[i + 3] = bitmap[x] == 1 ? 255 : 0;
+            x++;
+        }
+        return imageData;
+    }
+}
+
 export class HtmlRenderer {
 
     constructor(canvas) {
@@ -44,6 +113,8 @@ export class HtmlRenderer {
 
         this.mousePos = { x: 0, y: 0 };
         this.setupMousePosListening();
+
+        this.fontUtil = new FontUtil(this.ctx);
     }
 
     setupMousePosListening() {
@@ -101,6 +172,12 @@ export class HtmlRenderer {
         this.ctx.fillStyle = color != null ? color : '#ff00fb';
         this.ctx.fill();
         this.ctx.closePath();
+    }
+
+    drawText(text, x, y, size, color) {
+        for (let i = 0; i < text.length; i++) {
+            this.drawImage(x + (4 * i), y, this.fontUtil.getImage(text[i]));
+        }
     }
 }
 
@@ -187,7 +264,7 @@ export class HtmlSynth {
 
         this.playingNotes = {};
     }
-    
+
     setVolume(volume) {
         this.mainGainNode.gain.value = volume;
     }
@@ -252,7 +329,7 @@ export class HtmlSynth {
         return osc;
     }
 
-    __createGainEnveloppeNode({attack, decay, sustain, release}) {
+    __createGainEnveloppeNode({ attack, decay, sustain, release }) {
         let gainNode = this.audioCtx.createGain();
 
         gainNode.start = () => {
@@ -281,7 +358,7 @@ export class HtmlSynth {
         return gainNode;
     }
 
-    __createFilter({type, frequency, resonance}) {
+    __createFilter({ type, frequency, resonance }) {
         let filterNode = this.audioCtx.createBiquadFilter();
         filterNode.type = type;
         filterNode.frequency.value = frequency;
@@ -362,7 +439,7 @@ export class Engine {
                 this.__drawEntities();
                 draw();
             }, 10);
-        } else if (draw != null && update == null) { 
+        } else if (draw != null && update == null) {
             this.gameLoop = setInterval(() => {
                 this.renderer.clear();
                 this.__drawEntities();
@@ -398,6 +475,10 @@ export class Engine {
 
     drawElipse(x, y, radius, color) {
         this.renderer.drawEclipse(x, y, radius, color);
+    }
+
+    drawText(text, x, y, size, color) {
+        this.renderer.drawText(text, x, y, size, color);
     }
 
     setBackgroundColor(color) {
