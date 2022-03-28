@@ -3,22 +3,6 @@ import { HtmlInputManager, HtmlRenderer, Engine, Physics2D } from "./engine.js";
 export class App {
 
     constructor(canvas) {
-        this.CANVAS = canvas;
-
-        this.CANVAS.style.width = this.CANVAS.width + "px";
-        this.CANVAS.style.height = this.CANVAS.height + "px";
-
-        this.CANVAS.width /= 12;
-        this.CANVAS.height /= 12;
-
-        this.RENDERER = new HtmlRenderer(this.CANVAS);
-        this.RENDERER.setCripsPixel();
-
-        this.INPUT_MANAGER = new HtmlInputManager(document);
-        this.PHYSICS = new Physics2D();
-        this.ENGINE = new Engine(this.RENDERER, this.INPUT_MANAGER, null);
-
-        this.onGameDataUpdate = (gameData) => {};
 
         this.GameData = {
             gameCode: '',
@@ -33,8 +17,28 @@ export class App {
                 '#aaaaaa',
                 '#aabb2e',
             ],
-            sprites: this.__initSprites(16, 8),
         }
+
+        this.CANVAS = canvas;
+
+        this.CANVAS.style.width = this.CANVAS.width + "px";
+        this.CANVAS.style.height = this.CANVAS.height + "px";
+
+        this.CANVAS.width /= 12;
+        this.CANVAS.height /= 12;
+
+        this.RENDERER = new HtmlRenderer(this.CANVAS);
+        this.RENDERER.setCripsPixel();
+
+        this.SPRITE_MANAGER = new SpritesManager(this.GameData.palette, 16, 16);
+        this.GameData.sprites = this.SPRITE_MANAGER.sprites;
+
+        this.INPUT_MANAGER = new HtmlInputManager(document);
+        this.PHYSICS = new Physics2D();
+
+        this.ENGINE = new Engine(this.RENDERER, this.INPUT_MANAGER, null, this.SPRITE_MANAGER);
+
+        this.onGameDataUpdate = (gameData) => {};
 
         this.context = {
             PRINT: {
@@ -101,6 +105,10 @@ export class App {
                 f: (obj = { x, y, width, height, color }) => this.ENGINE.deleteObject(obj),
                 description: 'Stops the engine',
             },
+            IS_MOUSE_OVER: {
+                f: (rect) => this.ENGINE.isMouseOverRect(rect),
+                description: 'Stops the engine',
+            },
             DO_RECT_COLLIDES: {
                 f: (rect_a, rect_b) => this.PHYSICS.doRectsCollides(rect_a, rect_b),
                 description: 'Stops the engine',
@@ -134,11 +142,10 @@ export class App {
 
     run() {
         try {
-            this.ENGINE.init(this.GameData.sprites);
+            this.ENGINE.setup(this.SPRITE_MANAGER.imageDatas);
     
             let gameContext = this.__getGameContext();
             let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
-    
             let f = new Function(...Object.keys(gameContext), runCode);
             let [update_f, draw_f] = f(...Object.values(gameContext));
     
@@ -170,30 +177,103 @@ export class App {
         this.GameData.gameCode = gameData.gameCode;
     }
 
-    getSprite(index) {
-        if (index < 0 || index > this.GameData.sprites.length) return null;
-        return this.GameData.sprites[index];
+    getSpriteImg(spriteId) {
+        return this.SPRITE_MANAGER.getSpriteImg(spriteId);
     }
 
-    setSprite(index, sprite) {
-        if (index < 0 || index > this.GameData.sprites.length) return null;
-        this.GameData.sprites[index] = sprite;
+    getPalette() {
+        return this.SPRITE_MANAGER.getPalette();
     }
 
-    __initSprites(spriteCount, spriteSize) {
-        let sprites = [];
-        for (let i = 0; i < spriteCount; i++) {
-            let sprite = new ImageData(spriteSize, spriteSize);
-            sprites.push(sprite);
-        }
-        return sprites;
+    setPixel(spriteId, x, y, colorId) {
+        this.SPRITE_MANAGER.setPixel(spriteId, x, y, colorId);
+        this.updatedGameData();
     }
 
     __getGameContext() {
+        Array.prototype.add = function(obj) {
+            return this.push(obj);
+        };
+
         let gameContext = {};
         Object.keys(this.context).forEach(key => {
             gameContext[key] = this.context[key].f;
         });
         return gameContext;
+    }
+}
+
+export class SpritesManager {
+
+    constructor(palette, spritesCount, spriteSize = 8) {
+        this.sprites = [];
+        this.imageDatas = [];
+        this.spriteSize = spriteSize;
+        this.palette = palette;
+
+        for (let i = 0; i < spritesCount; i++) {
+            this.sprites.push(this.__createEmptySprite());
+            this.imageDatas.push(new ImageData(this.spriteSize, this.spriteSize));
+        }
+    }
+
+    loadSprites(sprites) {
+        this.__setSprites(sprites);
+    }
+
+    getSprite(spriteId) {
+        return this.sprites[spriteId];
+    }
+
+    getSpriteImg(spriteId) {
+        return this.imageDatas[spriteId];
+    }
+
+    getPalette() {
+        return palette;
+    }
+
+    setPalette(palette) {
+        this.palette = palette;
+    }
+
+    setPixel(spriteId, x, y, colorId) {
+        this.sprites[spriteId][y][x] = colorId;
+
+        let [r, g, b, a] = colorId != -1 ? this.__hexToRGB(this.palette[colorId]) : [0, 0, 0, 0];
+        let i = ((y * this.spriteSize) + x) * 4;
+        this.imageDatas[spriteId][i + 0] = r;
+        this.imageDatas[spriteId][i + 1] = g;
+        this.imageDatas[spriteId][i + 2] = b;
+        this.imageDatas[spriteId][i + 3] = a;
+    }
+
+    __createEmptySprite() {
+        let sprite = [];
+        for (let i = 0; i < this.spriteSize; i++) {
+            sprite.push([]);
+            for (let j = 0; j < this.spriteSize; j++) {
+                sprite[i].push(-1);
+            }
+        }
+        return sprite;
+    }
+
+    __hexToRGB(hex) {
+        let bigint = parseInt(hex.substring(1), 16);
+        let r = (bigint >> 16) & 255;
+        let g = (bigint >> 8) & 255;
+        let b = bigint & 255;
+        return [r, g, b, 255];
+    }
+
+    __setSprites(sprites) {
+        sprites.forEach((sprite, index) => {
+           for (let y = 0; y < this.spriteSize; y++) {
+               for (let x = 0; x < this.spriteSize; x++) {
+                   this.setPixel(index, x, y, sprite[y][x]);
+               }
+           } 
+        });
     }
 }

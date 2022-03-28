@@ -73,6 +73,12 @@ export class FontUtil {
             '7': [1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
             '8': [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
             '9': [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+            '-': [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+            '+': [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            '_': [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
+            '/': [0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+            '.': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            ',': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
         }
         this.setImageDatas(context);
     }
@@ -176,7 +182,9 @@ export class HtmlRenderer {
 
     drawText(text, x, y, size, color) {
         for (let i = 0; i < text.length; i++) {
-            this.drawImage(x + (4 * i), y, this.fontUtil.getImage(text[i]));
+            let img = this.fontUtil.getImage(text[i]);
+            if (img != null)
+                this.drawImage(x + (4 * i), y, img);
         }
     }
 }
@@ -367,56 +375,20 @@ export class HtmlSynth {
     }
 }
 
-export class SpritesManager {
-
-    constructor(palette, spritesCount, spriteSize = 8) {
-        this.sprites = [];
-        this.spriteSize = spriteSize;
-        this.palette = palette;
-        for (let i = 0; i < spritesCount; i++) {
-            this.sprites.push(-1);
-        }
-    }
-
-    setPalette(palette) {
-        this.palette = palette;
-    }
-
-    setPixel(palette) {
-        this.palette = palette;
-    }
-
-    getImages() {
-        let images = [];
-        this.sprites.forEach(sprite => {
-            let image = new ImageData(this.spriteSize, this.spriteSize);
-            sprite.forEach(px => {
-                if (px == -1) {
-
-                } else {
-                    // image.data[px]
-                }
-            })
-            images.push(image);
-        });
-        return images;
-    }
-}
-
 export class Engine {
 
-    constructor(renderer, inputManager, audioPlayer) {
+    constructor(renderer, inputManager, sprites, audioPlayer) {
         this.renderer = renderer;
         this.inputManager = inputManager;
         this.audioPlayer = audioPlayer;
         this.gameLoop = null;
         this.objects_img = [];
         this.entities = [];
-        this.sprites = [];
+        this.sprites = sprites;
         this.mousePos = renderer.mousePos;
     }
 
-    init(sprites) {
+    setup(sprite) {
         this.sprites = sprites;
         this.clear();
     }
@@ -463,6 +435,10 @@ export class Engine {
 
     drawPixel(x, y, color) {
         this.renderer.drawPixel(x, y, color);
+    }
+
+    drawSprite(x, y, spriteId) {
+        this.renderer.drawImage(x, y, this.sprites[spriteId]);
     }
 
     drawImage(x, y, image) {
@@ -531,6 +507,12 @@ export class Engine {
         this.entities.splice(i, 1);
     }
 
+    isMouseOverRect(rect) {
+        if (rect.x > this.mousePos.x || (rect.x + rect.width) < this.mousePos.x) return false;
+        if (rect.y > this.mousePos.y || (rect.y + rect.height) < this.mousePos.y) return false;
+        return true;
+    }
+
     // ================= PRIVATE METHODS ================= 
     __drawEntities() {
         this.entities.forEach(obj => {
@@ -539,9 +521,7 @@ export class Engine {
             else if (obj.__type == 'elipse')
                 this.drawElipse(obj.x, obj.y, obj.radius, obj.color);
             else if (obj.__type == 'sprite') {
-                if (obj.spriteIndex >= 0 && obj.spriteIndex < this.sprites.length) {
-                    this.drawImage(obj.x, obj.y, this.sprites[obj.spriteIndex])
-                }
+                this.drawImage(obj.x, obj.y, this.sprites[obj.spriteIndex])
             }
         });
     }

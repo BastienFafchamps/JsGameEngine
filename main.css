@@ -380,12 +380,31 @@ button.sprite-editor-tool {
   text-align: center;
 }
 #sprite-editor-container {
-  --grid-color: rgb(0, 0, 0);
+  --grid-color: rgb(0, 0, 0, 0);
   position: relative;
   display: flex;
   width: 25rem;
   height: 25rem;
 }
+#sprite-editor-canvas {
+  background-image: 
+    repeating-linear-gradient(
+      -45deg, 
+      transparent, 
+      transparent 5rem,
+      rgba(255, 255, 255, 0.05) 5rem,
+      rgba(255, 255, 255, 0.05) 10rem
+    );
+  background-size: 200% 200%;
+  animation: barberpole 30s linear infinite;
+}
+
+@keyframes barberpole {
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
 #sprite-editor-canvas, #sprite-editor-grid {
   border: 3px solid var(--grid-color);
   position: absolute;
@@ -432,6 +451,7 @@ button.sprite-editor-tool {
   grid-template-rows: 1fr 1fr;
   gap: 0;
   width: min-content;
+  border: 5px solid white;
 }
 
 #sprite-palette {
