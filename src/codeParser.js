@@ -1,5 +1,50 @@
 export class CodeParser {
     constructor() {
+        this.jsTokens = [
+            { regex: /^(false|true)$/, type: 'boolean', },
+            { regex: /^"[^"\\]*"$/, type: 'string', },
+            { regex: /^'[^'\\]*'$/, type: 'string', },
+            { regex: /^[0-9]+(.[0-9]+)?$/, type: 'number', },
+            { regex: /^\/\/[^\n\r]+$/, type: 'comment', },
+            { regex: /^\/\*(\*\/)*\*\/$/, type: 'comment', },
+            { regex: /\./, type: 'punctuation', value: '.' },
+            { regex: /,/, type: 'punctuation', value: ',' },
+            { regex: /:/, type: 'punctuation', value: ':' },
+            { regex: /;/, type: 'punctuation', value: ';' },
+            { regex: /!/, type: 'punctuation', value: '!' },
+            { regex: /\(/, type: 'separator', value: '(' },
+            { regex: /\)/, type: 'separator', value: ')' },
+            { regex: /\{/, type: 'separator', value: '{' },
+            { regex: /\}/, type: 'separator', value: '}' },
+            { regex: /\[/, type: 'separator', value: '[' },
+            { regex: /\]/, type: 'separator', value: ']' },
+            { regex: /let /, type: 'keyword', value: 'let', },
+            { regex: /var /, type: 'keyword', value: 'var', },
+            { regex: /const /, type: 'keyword', value: 'const', },
+            { regex: /if( )*\(/, type: 'keyword', value: 'if', },
+            { regex: /else( )*[{\n]/, type: 'keyword', value: 'else', },
+            { regex: /for( )*\(/, type: 'keyword', value: 'for', },
+            { regex: /do( )*\(/, type: 'keyword', value: 'do', },
+            { regex: /while( )*\(/, type: 'keyword', value: 'while', },
+            { regex: /function( )*\(/, type: 'keyword', value: 'function', },
+            { regex: /return( |;)/, type: 'keyword', value: 'return', },
+            { regex: /class /, type: 'keyword', value: 'class', },
+            { regex: /null/, type: 'keyword', value: 'null', },
+            { regex: /=/, type: 'operator', value: '=', },
+            { regex: /\+/, type: 'operator', value: '+', },
+            { regex: /-/, type: 'operator', value: '-', },
+            { regex: /\//, type: 'operator', value: '/', },
+            { regex: /\*/, type: 'operator', value: '*', },
+            { regex: /==/, type: 'comparator', value: '==', },
+            { regex: />/, type: 'comparator', value: '>', },
+            { regex: /</, type: 'comparator', value: '<', },
+            { regex: />=/, type: 'comparator', value: '>=', },
+            { regex: /<=/, type: 'comparator', value: '<=', },
+            { regex: /!=/, type: 'comparator', value: '!=', },
+            { regex: /&&/, type: 'comparator', value: '&&', },
+            { regex: /\|\|/, type: 'comparator', value: '||', },
+        ]
+
         this.punctuations = {
             '.': { type: 'punctuation', },
             ':': { type: 'punctuation', },
@@ -104,8 +149,9 @@ export class CodeParser {
                 this.__addToken(currentToken.value, currentToken.tags);
             currentToken.value = '';
             currentToken.tags = ['none'];
+            currentToken.data = {};
         }
-
+            
         for (let i = 0; i < code.length; i++) {
             char = code[i];
 
@@ -140,7 +186,7 @@ export class CodeParser {
         newTokens.forEach(t => {
 
         });
-        return newTokens.concat(t );
+        return newTokens.concat(t);
     }
 
     generateHtml(tokens) {
@@ -177,7 +223,7 @@ export class CodeParser {
     __isFunctionParam(token) {
         if (token.tags[0] != 'identifier') return false;
 
-        
+
     }
 
     __handleToken(token) {
@@ -213,11 +259,11 @@ export class CodeParser {
         return tags;
     }
 
-    __addToken(token, tags) {
+    __addToken(token, tags, data = {}) {
         // If last token was a whitespace, concatenate token it.
         if (tags[0] == 'whitespace' && this.tokens.length >= 1 && this.tokens[this.tokens.length - 1].tags[0] == 'whitespace')
             this.tokens[this.tokens.length - 1].value += token;
         else
-            this.tokens.push({ tags: tags, value: token });
+            this.tokens.push({ tags: tags, value: token, data: data });
     }
 }
