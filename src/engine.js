@@ -388,7 +388,7 @@ export class Engine {
         this.mousePos = renderer.mousePos;
     }
 
-    setup(sprite) {
+    setup(sprites) {
         this.sprites = sprites;
         this.clear();
     }

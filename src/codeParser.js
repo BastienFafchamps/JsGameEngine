@@ -135,6 +135,14 @@ export class CodeParser {
         return this.tokens;
     }
 
+    translate(tokens) {
+        let newTokens = [...tokens];
+        newTokens.forEach(t => {
+
+        });
+        return newTokens.concat(t );
+    }
+
     generateHtml(tokens) {
         let htmlString = '';
         tokens.forEach(token => {
