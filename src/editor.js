@@ -9,26 +9,55 @@ function addEventListener(id, type, method) {
 
 let templateGame = `
 SET_BACKGROUND('black');
+
 let pixels = [];
+let particles = [];
 let blocks = [];
+let lives = 3;
+
+function spawnParticles(x, y) {
+	for (let i=0; i < 25; i++) {
+		particles.push({
+			x: x,
+			y: y,
+			dx: RANDOM_RANGE(-1, 0),
+			dy: RANDOM_RANGE(-0.5, 0.5),
+		});
+	}
+}
 
 let timer = 0;
 function UPDATE() {
 	timer++;
-	if (timer > 60) {
+	if (timer > 20) {
 		timer = 0;
 
 		blocks.push({
 			speed: 0.5,
 			x: SCREEN_WIDTH,
 			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
-			size: 3,
+			width: 3,
+			height: 3,
 		});
 	}
 
 	blocks = blocks.filter(b => {
 		b.x -= b.speed;
+
+		if (IS_MOUSE_OVER(b)) {
+			lives--;
+			spawnParticles(b.x, b.y);
+			return false;
+		}
+
 		return b.x > 0;
+	});
+
+	particles = particles.filter(p => {
+		p.x += p.dx;
+		p.y += p.dy;
+		p.dy += 0.02;
+		return p.x >= 0 && p.y <= SCREEN_HEIGHT;
 	});
 
 	pixels = pixels.filter(px => {
@@ -42,12 +71,14 @@ function UPDATE() {
 let i = 0;
 function DRAW() {
 	blocks.forEach(b => {
-		DRAW_RECT(b.x, b.y, b.size, b.size, "white");
+		DRAW_RECT(b.x, b.y, b.width, b.height, "red");
 	})
 
-	TEXT("abcdefghijk", 0, 0, 15, 'white');
-	TEXT("lmnopqrstuv", 0, 10, 15, 'white');
-	TEXT("wxyz0123456789", 0, 20, 15, 'white');
+	particles.forEach(p => {
+		DRAW_PIXEL(p.x, p.y, 'red');
+	})
+
+	TEXT(lives.toString(), 0, 0, 15, 'white');
 
 	i += 0.1 % 60;
 	for (let j=0; j < pixels.length; j++) {
