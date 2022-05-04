@@ -1,3 +1,4 @@
+
 SET_BACKGROUND('black');
 
 let pixels = [];
@@ -6,12 +7,12 @@ let blocks = [];
 let lives = 3;
 
 function spawnParticles(x, y) {
-	for (let i=0; i < 10; i++) {
+	for (let i=0; i < 25; i++) {
 		particles.push({
 			x: x,
 			y: y,
 			dx: RANDOM_RANGE(-1, 0),
-			dy: RANDOM_RANGE(-1, 1),
+			dy: RANDOM_RANGE(-0.5, 0.5),
 		});
 	}
 }
@@ -26,7 +27,8 @@ function UPDATE() {
 			speed: 0.5,
 			x: SCREEN_WIDTH,
 			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
-			size: 3,
+			width: 3,
+			height: 3,
 		});
 	}
 
@@ -45,7 +47,7 @@ function UPDATE() {
 	particles = particles.filter(p => {
 		p.x += p.dx;
 		p.y += p.dy;
-		p.dy += 0.05;
+		p.dy += 0.02;
 		return p.x >= 0 && p.y <= SCREEN_HEIGHT;
 	});
 
@@ -60,14 +62,14 @@ function UPDATE() {
 let i = 0;
 function DRAW() {
 	blocks.forEach(b => {
-		DRAW_RECT(b.x, b.y, b.size, b.size, "red");
+		DRAW_RECT(b.x, b.y, b.width, b.height, "red");
 	})
 
 	particles.forEach(p => {
 		DRAW_PIXEL(p.x, p.y, 'red');
 	})
 
-	TEXT(`${lives}`, 0, 0, 15, 'white');
+	TEXT(lives.toString(), 0, 0, 15, 'white');
 
 	i += 0.1 % 60;
 	for (let j=0; j < pixels.length; j++) {

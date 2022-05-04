@@ -264,7 +264,6 @@ export class HtmlSynth {
         };
 
         this.audioCtx = audioContext;
-        this.eveloppeMaxTime = 1;
 
         this.mainGainNode = this.audioCtx.createGain();
         this.mainGainNode.gain.value = 0.2;
@@ -277,11 +276,49 @@ export class HtmlSynth {
         this.mainGainNode.gain.value = volume;
     }
 
+    getInstument(instrumentData) {
+        let previousNode = this.mainGainNode;
+        let instrument = {
+            nodes: [],
+            oscillators: [],
+        };
+
+        instrumentData.node.forEach(nodeData => {
+            let node = null;
+
+            if (nodeData.type == 'oscillator') {
+                node = this.__createOscillatorNode(nodeData);
+                instrument.oscillators.push(node);
+            } else if (nodeData.type == 'filter') {
+                node = this.__createFilter(nodeData);
+            }
+            
+            instrument.nodes.push(node);
+
+            if (previousNode != null)
+                node.connect(previousNode)
+            previousNode = node;
+        });
+
+        instrument.playNote = (octave, note) => {
+            instrument.oscillators.forEach(osc => {
+                osc.playNote(octave, note);
+            })
+        };
+
+        instrument.stopNote = () => {
+            instrument.oscillators.forEach(osc => {
+                osc.stop();
+            })
+        }
+
+        return instrument;
+    }
+
     playNote(instrument, octave, note) {
         let id = `${octave}-${note}`;
 
         if (this.playingNotes[id] != null) {
-            this.playingNotes[id].gainNode.cancel();
             this.playingNotes[id].oscillatorNode.stop();
         }
 
@@ -296,28 +333,25 @@ export class HtmlSynth {
             connect(filter);
         }
 
-        let gainEnveloppeNode = this.__createGainEnveloppeNode(instrument.enveloppe);
-        connect(gainEnveloppeNode);
-
-        let oscillatorNode = this.__createOscillatorNode(instrument.waveForm, instrument.enveloppe.release);
+        let oscillatorNode = this.__createOscillatorNode({
+            waveForm: instrument.waveForm,
+            ...instrument.enveloppe
+        });
         connect(oscillatorNode);
-
         oscillatorNode.playNote(octave, note);
-        gainEnveloppeNode.start();
 
-        this.playingNotes[id] = { oscillatorNode: oscillatorNode, gainNode: gainEnveloppeNode };
+        this.playingNotes[id] = { oscillatorNode: oscillatorNode, gainNode: null };
         return this.playingNotes[id];
     }
 
     stopNote(octave, note) {
         let id = `${octave}-${note}`;
         if (id in this.playingNotes && this.playingNotes[id]) {
-            this.playingNotes[id].gainNode.stop();
             this.playingNotes[id].oscillatorNode.stopNote();
         }
     }
 
-    __createOscillatorNode(waveForm, release) {
+    __createOscillatorNode_obsolete(waveForm, release) {
         let osc = this.audioCtx.createOscillator();
         osc.type = waveForm;
 
@@ -327,43 +361,77 @@ export class HtmlSynth {
             osc.start();
         }
 
-        osc.stopNote = () => {
-            let now = this.audioCtx.currentTime;
-            let releaseDuration = release;
-            let releaseEnd = now + releaseDuration;
+        osc.stopNote = (releaseEnd) => {
             osc.stop(releaseEnd);
         }
 
         return osc;
     }
 
-    __createGainEnveloppeNode({ attack, decay, sustain, release }) {
+    __createGainEnveloppeNode_obsolete({ attack, decay, sustain, release }) {
         let gainNode = this.audioCtx.createGain();
 
         gainNode.start = () => {
             let now = this.audioCtx.currentTime;
             let attackEnd = now + attack;
-            let decayDuration = decay;
-
             gainNode.gain.setValueAtTime(0, now);
             gainNode.gain.linearRampToValueAtTime(1, attackEnd);
-            gainNode.gain.setTargetAtTime(sustain, attackEnd, decayDuration);
+            gainNode.gain.setTargetAtTime(sustain, attackEnd, decay);
         }
 
         gainNode.stop = () => {
             let now = this.audioCtx.currentTime;
-            let releaseDuration = release;
-            let releaseEnd = now + releaseDuration;
-
             gainNode.gain.cancelScheduledValues(0);
             gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-            gainNode.gain.linearRampToValueAtTime(0, releaseEnd);
+            gainNode.gain.linearRampToValueAtTime(0, now + release);
         }
 
         gainNode.cancel = () => {
             gainNode.gain.cancelScheduledValues(0);
         }
         return gainNode;
+    }
+
+    __createOscillatorNode({ waveForm, attack, decay, sustain, release }) {
+        let gainNode = this.audioCtx.createGain();
+        gainNode.start = () => {
+            let now = this.audioCtx.currentTime;
+            let attackEnd = now + attack;
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(1, attackEnd);
+            gainNode.gain.setTargetAtTime(sustain, attackEnd, decay);
+        }
+        gainNode.stop = () => {
+            let now = this.audioCtx.currentTime;
+            gainNode.gain.cancelScheduledValues(0);
+            gainNode.gain.setValueAtTime(gainNode.gain.value, now);
+            gainNode.gain.linearRampToValueAtTime(0, now + release);
+        }
+        gainNode.cancel = () => {
+            gainNode.gain.cancelScheduledValues(0);
+        }
+
+        let osc = this.audioCtx.createOscillator();
+        osc.type = waveForm;
+        osc.gainNode = gainNode;
+
+        osc.playNote = (octave, note) => {
+            if (octave <= 0) octave = 0.5;
+            osc.frequency.value = this.FREQUENCIES[note] * (octave * 2);
+            osc.start();
+            gainNode.start();
+        }
+        osc.stopNote = () => {
+            let now = this.audioCtx.currentTime;
+            gainNode.stop();
+            osc.stop(now + release);
+        }
+        osc.cancel = () => {
+            gainNode.cancel();
+        }
+
+        osc.connect(gainNode);
+        return osc;
     }
 
     __createFilter({ type, frequency, resonance }) {
