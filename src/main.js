@@ -30,7 +30,7 @@ export class App {
         this.RENDERER = new HtmlRenderer(this.CANVAS);
         this.RENDERER.setCripsPixel();
 
-        this.SPRITE_MANAGER = new SpritesManager(this.GameData.palette, 16, 16);
+        this.SPRITE_MANAGER = new SpritesManager(this.GameData.palette, 16, 8);
         this.GameData.sprites = this.SPRITE_MANAGER.sprites;
 
         this.INPUT_MANAGER = new HtmlInputManager(document);
@@ -186,6 +186,7 @@ export class App {
     }
 
     setPixel(spriteId, x, y, colorId) {
+        console.log(spriteId, x, y, colorId);
         this.SPRITE_MANAGER.setPixel(spriteId, x, y, colorId);
         this.updatedGameData();
     }

@@ -5,8 +5,8 @@ export class CodeParser {
             { regex: /^"[^"\\]*"$/, type: 'string', },
             { regex: /^'[^'\\]*'$/, type: 'string', },
             { regex: /^[0-9]+(.[0-9]+)?$/, type: 'number', },
-            { regex: /^\/\/[^\n\r]+$/, type: 'comment', },
-            { regex: /^\/\*(\*\/)*\*\/$/, type: 'comment', },
+            { regex: /\/\/[^\n\r]+$/, type: 'comment', },
+            { regex: /\/\*(\*\/)*\*\/$/, type: 'comment', },
             { regex: /\./, type: 'punctuation', value: '.' },
             { regex: /,/, type: 'punctuation', value: ',' },
             { regex: /:/, type: 'punctuation', value: ':' },
@@ -138,7 +138,23 @@ export class CodeParser {
         }
     }
 
+    getFullRegex() {
+        let regex = '';
+        this.jsTokens.forEach((t, index) => {
+            if (index < this.jsTokens.length - 1)
+                regex += `(?<${t.type}>${t.regex.source})|`;
+            else
+                regex += `(?<${t.type}>${t.regex.source})`;
+        });
+        return regex;
+    }
+
     parseTokens(code) {
+        // let regex = this.getFullRegex();
+        // let matcher = new RegExp(regex);
+        // console.log(matcher);
+        // return;
+
         this.tokens = [];
         let currentToken = { value: '', tags: [] };
         let char = '';
@@ -184,7 +200,6 @@ export class CodeParser {
     translate(tokens) {
         let newTokens = [...tokens];
         newTokens.forEach(t => {
-
         });
         return newTokens.concat(t);
     }

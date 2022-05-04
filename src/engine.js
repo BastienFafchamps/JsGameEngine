@@ -508,8 +508,9 @@ export class Engine {
     }
 
     isMouseOverRect(rect) {
-        if (rect.x > this.mousePos.x || (rect.x + rect.width) < this.mousePos.x) return false;
-        if (rect.y > this.mousePos.y || (rect.y + rect.height) < this.mousePos.y) return false;
+        if (this.mousePos.x < rect.x || this.mousePos.x > (rect.x + rect.width)) return false;
+        if (this.mousePos.y < rect.y || this.mousePos.y > (rect.y + rect.height)) return false;
+        console.log(this.mousePos, rect);
         return true;
     }
 

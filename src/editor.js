@@ -8,27 +8,60 @@ function addEventListener(id, type, method) {
 }
 
 let templateGame = `
-SET_BACKGROUND('black');
+SET_BACKGROUND('white');
+
 let pixels = [];
+let particles = [];
 let blocks = [];
+let lives = 3;
+let score = 0;
+let speed = 0.5;
+
+function spawnParticles(x, y) {
+	for (let i=0; i < 10; i++) {
+		particles.push({
+			x: x,
+			y: y,
+			dx: RANDOM_RANGE(-1, 0),
+			dy: RANDOM_RANGE(-1, 1),
+		});
+	}
+}
 
 let timer = 0;
 function UPDATE() {
 	timer++;
-	if (timer > 60) {
+    score += 0.1;
+    speed += 0.0001;
+	if (timer > 10) {
 		timer = 0;
 
 		blocks.push({
-			speed: 0.5,
+			speed: speed,
 			x: SCREEN_WIDTH,
 			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
-			size: 3,
+			width: 3,
+			height: 3,
 		});
 	}
 
 	blocks = blocks.filter(b => {
 		b.x -= b.speed;
-		return b.x > 0;
+
+		if (IS_MOUSE_OVER(b)) {
+			lives--;
+			spawnParticles(b.x, b.y);
+			return false;
+		}
+
+		return b.x > -b.width;
+	});
+
+	particles = particles.filter(p => {
+		p.x += p.dx;
+		p.y += p.dy;
+		p.dy += 0.05;
+		return p.x >= 0 && p.y <= SCREEN_HEIGHT;
 	});
 
 	pixels = pixels.filter(px => {
@@ -42,12 +75,15 @@ function UPDATE() {
 let i = 0;
 function DRAW() {
 	blocks.forEach(b => {
-		DRAW_RECT(b.x, b.y, b.size, b.size, "white");
+		DRAW_RECT(b.x, b.y, b.width, b.height, 'black');
 	})
 
-	TEXT("abcdefghijk", 0, 0, 15, 'white');
-	TEXT("lmnopqrstuv", 0, 10, 15, 'white');
-	TEXT("wxyz0123456789", 0, 20, 15, 'white');
+	particles.forEach(p => {
+		DRAW_PIXEL(p.x, p.y, 'red');
+	})
+
+	TEXT(lives.toString(), 0, 0, 15, 'red');
+	TEXT(Math.round(score).toString(), SCREEN_WIDTH / 2, 0, 15, 'red');
 
 	i += 0.1 % 60;
 	for (let j=0; j < pixels.length; j++) {
@@ -451,8 +487,9 @@ class SpriteList {
     }
 
     updateSelectedSprite() {
-        this.spritesItems[spriteEditorTool.currentSpriteId].src = this.__getImageSrc(APP.getSpriteImg(i));;
-        this.spritesItems[spriteEditorTool.currentSpriteId].classList.add('active');
+        let i = spriteEditorTool.currentSpriteId;
+        this.spritesItems[i].src = this.__getImageSrc(APP.getSpriteImg(i));;
+        this.spritesItems[i].classList.add('active');
     }
 
     selectSprite(index) {
@@ -546,7 +583,7 @@ class SpriteEditor {
     handleClick(event) {
         let pos = this.drawingCanvas.getClickPosition(event);
         this.currentTool.callback(this.drawingCanvas, pos[0], pos[1], spriteEditorTool.color);
-        this.spritesList.updateSpritesList();
+        this.spritesList.updateSelectedSprite();
     }
 }
 
@@ -603,21 +640,6 @@ spriteEditor.addTool({
         floodFill(x, y, oldColor, color);
     }
 });
-
-// addEventListener('sprite-editor-download', 'click', () => {
-//     FileManager.getDownloadLink('sprite.png', spriteEditorCanvas.toDataURL("image/png"));
-// });
-
-// addEventListener('sprite-editor-load', 'change', event => {
-//     let image = new Image();
-//     image.onload = () => {
-//         clearSpriteEditor();
-//         loadImageOnEditor(0, 0, image);
-//         URL.revokeObjectURL(image.src);
-//     }
-//     image.src = URL.createObjectURL(event.target.files[0]);
-//     event.target.value = '';
-// }, false);
 
 // ================================= Audio ==========================================
 
@@ -742,6 +764,39 @@ addEventListener('audio-filter-frequency', 'input', (event) => instrument.filter
 
 setOctave(4);
 setWaveForm(0);
+
+// --------------------------------- Melody Writer ------------------------------------------
+
+class MelodyWriter {
+    constructor() {
+        this.container = document.getElementById('audio-melody');
+        this.rows = [];
+        this.__addRows();
+    }
+
+    __addRows() {
+        for (let i = 0; i < 12; i++) {
+            const el = document.createElement('div');
+            el.className = 'audio-melody-row';
+            this.container.appendChild(el);
+            this.rows.push(el);
+
+            el.addEventListener('click', event => {
+                if (event.detail === 1) {
+                    // it was a single click
+                } else if (event.detail === 2) {
+                    // it was a double click
+                }
+            });
+        }
+    }
+
+    __addNote(rowIndex) {
+        
+    }
+}
+const melodyWriter = new MelodyWriter();
+
 
 // ================================= Online editing ==========================================
 // let connection;
