@@ -7,6 +7,12 @@ function addEventListener(id, type, method) {
     document.getElementById(id).addEventListener(type, method);
 }
 
+function createElement(tag, className) {
+    let el = document.createElement(tag);
+    el.className = className;
+    return el;
+}
+
 let templateGame = `
 SET_BACKGROUND('black');
 
@@ -275,8 +281,8 @@ class CodeEditor {
                 this.updateCode(e.value);
             }
         }
-        
-        let chars = {'(': ')', '{': '}', '[': ']'}
+
+        let chars = { '(': ')', '{': '}', '[': ']' }
         if (key in chars) {
             event.preventDefault();
             wrap(key, chars[key]);
@@ -525,7 +531,7 @@ class SpriteList {
         ctx.putImageData(imageData, 0, 0);
         return canvas.toDataURL();
     }
- }
+}
 
 class SpriteEditor {
     constructor(drawingCanvas, colorPalette, spritesList) {
@@ -768,29 +774,147 @@ setWaveForm(0);
 class MelodyWriter {
     constructor() {
         this.container = document.getElementById('audio-melody');
-        this.rows = [];
-        this.__addRows();
+        this.NOTES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+        this.NOTES_DATA = [];
+        this.notesCount = 8;
+        this.octaveCount = 4;
+        this.rows = {};
+        this.melody = {};
+        this.notes = {};
+        this.currentDraggedNote = {};
+
+        this.__setNotesData();
+        this.__setRows(4);
+
+        this.container.addEventListener('dragover', (event) => this.__dragNote(event));
     }
 
-    __addRows() {
-        for (let i = 0; i < 12; i++) {
-            const el = document.createElement('div');
-            el.className = 'audio-melody-row';
-            this.container.appendChild(el);
-            this.rows.push(el);
+    __setNotesData() {
+        for (let i = 0; i < this.octaveCount; i++) {
+            for (let j = 0; j < this.NOTES.length; j++) {
+                this.NOTES_DATA[this.NOTES.length * i + j] = {
+                    key: this.NOTES[j],
+                    octave: i,
+                }
+            }
+        }
+    }
 
-            el.addEventListener('click', event => {
-                if (event.detail === 1) {
-                    // it was a single click
-                } else if (event.detail === 2) {
-                    // it was a double click
+    __setRows() {
+        this.container.innerHTML = "";
+        this.rows = {};
+
+        for (let i = 0; i < this.NOTES.length * this.octaveCount; i++) {
+            const row = createElement('div', 'audio-melody-row');
+            row.id = i;
+            this.container.appendChild(row);
+            this.rows[i] = row;
+
+            for (let k = 0; k < this.notesCount; k++) {
+                const separator = createElement('span', 'audio-melody-row-seprator');
+                separator.style.left = `${(k / this.notesCount) * 100}%`;
+                separator.style.width = `${(1 / this.notesCount) * 100}%`;
+                row.appendChild(separator);
+            }
+
+            row.addEventListener('click', event => {
+                if (event.detail === 2) {
+                    let x = event.clientX / row.offsetWidth;
+                    let time = Math.round(x * this.notesCount) - 1;
+                    this.__addNote(i, time, 2);
                 }
             });
         }
     }
 
-    __addNote(rowIndex) {
+    __addNote(index, time, length) {
+        const noteElement = createElement('div', 'audio-melody-note');
+        noteElement.style.left = `${time / this.notesCount * 100}%`;
+        noteElement.style.width = `calc(${length / this.notesCount * 100}% - 6px)`;
+        noteElement.draggable = true;
+        this.rows[index].appendChild(noteElement);
 
+        let id = Date.now();
+        let note = {
+            index: index,
+            octave: this.NOTES_DATA[index].octave,
+            key: this.NOTES_DATA[index].key,
+            time: time,
+            length: length,
+        };
+        this.melody[id] = note;
+        this.notes[id] = noteElement;
+
+        noteElement.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (event.detail === 2) {
+                noteElement.remove();
+                delete this.melody[id];
+            }
+        });
+
+        noteElement.addEventListener('dragstart', (event) => {
+            event.dataTransfer.setDragImage(event.target, window.outerWidth, window.outerHeight);
+            this.currentDraggedNote = {
+                id: id,
+                note: note,
+                element: noteElement,
+                startX: event.clientX,
+                startY: event.clientY,
+            };
+        });
+
+        noteElement.addEventListener('dragend', (event) => {
+            this.currentDraggedNote = null;
+        });
+    }
+
+    __editNoteRow(id, index) {
+        let note = this.melody[id];
+        note.index = index;
+        note.octave = this.NOTES_DATA[index].octave;
+        note.key = this.NOTES_DATA[index].key;
+
+        let noteElement = this.notes[id];
+        this.rows[index].appendChild(noteElement);
+    }
+
+    __editNoteTime(id, time) {
+        this.melody[id].time = time;
+        let noteElement = this.notes[id];
+        noteElement.style.left = `${time / this.notesCount * 100}%`;
+
+        console.log(this.melody);
+    }
+
+    __dragNote(event) {
+        if (this.currentDraggedNote == null)
+            return;
+
+        let threshold = 30;
+        let thresholdX = 95;
+
+        let deltaX = this.currentDraggedNote.startX - event.clientX;
+        let deltaY = this.currentDraggedNote.startY - event.clientY;
+
+        let id = this.currentDraggedNote.id;
+        let note = this.currentDraggedNote.note;
+
+        if (deltaX > thresholdX) {
+            this.currentDraggedNote.startX = event.clientX;
+            this.__editNoteTime(id, Math.max(note.time - 1, 0));
+        } else if (deltaX < -thresholdX) {
+            this.currentDraggedNote.startX = event.clientX;
+            this.__editNoteTime(id, Math.min(note.time + 1, this.notesCount - 1));
+        }
+
+        if (deltaY > threshold) {
+            this.currentDraggedNote.startY = event.clientY;
+            this.__editNoteRow(id, Math.max(note.index - 1, 0));
+        } else if (deltaY < -threshold) {
+            this.currentDraggedNote.startY = event.clientY;
+            this.__editNoteRow(id, Math.min(note.index + 1, this.NOTES_DATA.length - 1));
+        }
     }
 }
 const melodyWriter = new MelodyWriter();
