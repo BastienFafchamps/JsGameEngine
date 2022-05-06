@@ -776,17 +776,23 @@ class MelodyWriter {
         this.container = document.getElementById('audio-melody');
         this.NOTES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
         this.NOTES_DATA = [];
-        this.notesCount = 8;
+
+        this.notesCount = 32;
         this.octaveCount = 4;
+        this.containerWidth = 0;
+        this.containerHeight = 0;
+
         this.rows = {};
         this.melody = {};
         this.notes = {};
-        this.currentDraggedNote = {};
+        this.currentDraggedNote = null;
+        this.currentDraggedResizer = null;
 
         this.__setNotesData();
         this.__setRows(4);
 
-        this.container.addEventListener('dragover', (event) => this.__dragNote(event));
+        this.container.addEventListener('dragover', (event) => this.__dragNoteX(event));
+        this.onMelodyChange = () => { console.log(this.melody) };
     }
 
     __setNotesData() {
@@ -819,31 +825,35 @@ class MelodyWriter {
 
             row.addEventListener('click', event => {
                 if (event.detail === 2) {
-                    let x = event.clientX / row.offsetWidth;
-                    let time = Math.round(x * this.notesCount) - 1;
-                    this.__addNote(i, time, 2);
+                    let time = Math.round(event.clientX / row.offsetWidth * this.notesCount) - 1;
+                    this.__addNote(i, time);
                 }
             });
+            row.addEventListener('dragover', (event) => this.__dragNoteY(event, i));
         }
+
+        this.containerWidth = this.container.clientWidth;
+        this.containerHeight = this.container.clientHeight;
     }
 
-    __addNote(index, time, length) {
-        const noteElement = createElement('div', 'audio-melody-note');
-        noteElement.style.left = `${time / this.notesCount * 100}%`;
-        noteElement.style.width = `calc(${length / this.notesCount * 100}% - 6px)`;
-        noteElement.draggable = true;
-        this.rows[index].appendChild(noteElement);
-
+    __addNote(index, time) {
         let id = Date.now();
         let note = {
             index: index,
             octave: this.NOTES_DATA[index].octave,
             key: this.NOTES_DATA[index].key,
             time: time,
-            length: length,
+            endTime: 1,
+            length: 1,
         };
         this.melody[id] = note;
+
+        const noteElement = createElement('div', 'audio-melody-note');
+        noteElement.style.left = `${time / this.notesCount * 100}%`;
+        noteElement.style.width = `calc(${note.length / this.notesCount * 100}% - 6px)`;
+        noteElement.draggable = true;
         this.notes[id] = noteElement;
+        this.rows[index].appendChild(noteElement);
 
         noteElement.addEventListener('click', (event) => {
             event.stopPropagation();
@@ -864,107 +874,80 @@ class MelodyWriter {
             };
         });
 
-        noteElement.addEventListener('dragend', (event) => {
+        noteElement.addEventListener('dragend', () => {
+            if (this.currentDraggedNote == null) return;
+            this.setNote(this.currentDraggedNote.id);
             this.currentDraggedNote = null;
+        });
+
+        const noteResizeElement = createElement('div', 'audio-melody-note-resizer');
+        noteResizeElement.draggable = true;
+        noteElement.appendChild(noteResizeElement);
+
+        noteResizeElement.addEventListener('dragstart', (event) => {
+            event.stopPropagation();
+            event.dataTransfer.setDragImage(event.target, window.outerWidth, window.outerHeight);
+            this.currentDraggedResizer = {
+                id: id,
+                note: note,
+                element: noteElement,
+                startX: noteElement.clientX,
+            };
+        });
+        noteResizeElement.addEventListener('dragend', () => {
+            if (this.currentDraggedResizer == null) return;
+            this.setNote(this.currentDraggedResizer.id);
+            this.currentDraggedResizer = null;
         });
     }
 
-    __editNoteRow(id, index) {
+    __dragNoteX(event) {
+        event.preventDefault();
+        if (this.currentDraggedResizer != null) {
+            let x = event.clientX / this.container.offsetWidth * this.notesCount;
+            let id = this.currentDraggedResizer.id;
+            this.setNoteLength(id, Math.round(Math.max(x, 0)) - this.melody[id].time);
+        } else if (this.currentDraggedNote != null) {
+            let x = event.clientX / this.container.offsetWidth * this.notesCount;
+            this.setNoteTime(this.currentDraggedNote.id, Math.round(Math.max(x - 1, 0)));
+        }
+    }
+
+    __dragNoteY(event, rowIndex) {
+        event.preventDefault();
+        if (this.currentDraggedNote == null || this.currentDraggedResizer != null)
+            return;
+        this.setNoteRow(this.currentDraggedNote.id, rowIndex);
+    }
+
+    setNoteRow(id, index) {
         let note = this.melody[id];
         note.index = index;
         note.octave = this.NOTES_DATA[index].octave;
         note.key = this.NOTES_DATA[index].key;
-
-        let noteElement = this.notes[id];
-        this.rows[index].appendChild(noteElement);
+        this.rows[index].appendChild(this.notes[id]);
     }
 
-    __editNoteTime(id, time) {
+    setNoteTime(id, time) {
         this.melody[id].time = time;
-        let noteElement = this.notes[id];
-        noteElement.style.left = `${time / this.notesCount * 100}%`;
-
-        console.log(this.melody);
+        this.notes[id].style.left = `${time / this.notesCount * 100}%`;
     }
 
-    __dragNote(event) {
-        if (this.currentDraggedNote == null)
-            return;
+    setNoteLength(id, length) {
+        let note = this.melody[id];
+        note.length = length;
+        note.endTime = note.time + length;
+        this.notes[id].style.width = `calc(${length / this.notesCount * 100}% - 6px)`;
+    }
 
-        let threshold = 30;
-        let thresholdX = 95;
-
-        let deltaX = this.currentDraggedNote.startX - event.clientX;
-        let deltaY = this.currentDraggedNote.startY - event.clientY;
-
-        let id = this.currentDraggedNote.id;
-        let note = this.currentDraggedNote.note;
-
-        if (deltaX > thresholdX) {
-            this.currentDraggedNote.startX = event.clientX;
-            this.__editNoteTime(id, Math.max(note.time - 1, 0));
-        } else if (deltaX < -thresholdX) {
-            this.currentDraggedNote.startX = event.clientX;
-            this.__editNoteTime(id, Math.min(note.time + 1, this.notesCount - 1));
-        }
-
-        if (deltaY > threshold) {
-            this.currentDraggedNote.startY = event.clientY;
-            this.__editNoteRow(id, Math.max(note.index - 1, 0));
-        } else if (deltaY < -threshold) {
-            this.currentDraggedNote.startY = event.clientY;
-            this.__editNoteRow(id, Math.min(note.index + 1, this.NOTES_DATA.length - 1));
-        }
+    setNote(id) {
+        let note = this.melody[id];
+        this.setNoteTime(id, Math.min(note.time, this.notesCount - 1));
+        this.setNoteLength(id, Math.min(note.length, this.notesCount - note.time));
+        this.onMelodyChange();
     }
 }
 const melodyWriter = new MelodyWriter();
-
-
-// ================================= Online editing ==========================================
-// let connection;
-
-// function startHost(id) {
-//     console.log('Starting Host...');
-//     let peer = new Peer('jsgameengine-peer-id-' + id);
-//     peer.on('open', () => {
-//         console.log('Host Started.', peer);
-
-//         peer.on('connection', (conn) => {
-//             connection = conn;
-//             console.log('Client connected', connection);
-//             connection.on('data', (data) => {
-//                 console.log(data);
-//             });
-//         });
-//     });
-// }
-
-// function connectToHost(id) {
-//     console.log('Connecting...');
-
-//     let peer = new Peer();
-//     peer.on('open', () => {
-//         console.log('Client Connected', peer);
-
-//         let conn = peer.connect('jsgameengine-peer-id-' + id);
-//         conn.on('open', () => {
-//             connection = conn;
-//         });
-//     });
-// }
-
-// function sendData(data) {
-//     if (connection == null) return;
-//     connection.send(data);
-// }
-
-// document.getElementById("btn-host").addEventListener('click', () => {
-//     startHost(0);
-// });
-
-// document.getElementById("btn-connect").addEventListener('click', () => {
-//     connectToHost(0);
-// });
 
 // ================================= Short Cuts ==========================================
 document.addEventListener('keypress', (event) => {

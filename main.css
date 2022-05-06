@@ -542,12 +542,24 @@ button.sprite-editor-tool {
   top: 0;
   background-color: var(--primary);
   border: 3px solid var(--primary-darker);
-  transition: 0.2s ease-in-out;
+  transition: filter 0.2s ease-in-out;
   filter: brightness(1);
 }
 .audio-melody-note:hover {
-  cursor: grab;
+  cursor: move;
   filter: brightness(1.2);
+}
+.audio-melody-note:active {
+  cursor: grabbing !important;;
+}
+.audio-melody-note-resizer {
+  z-index: 1;
+  position: absolute;
+  right: 0;
+  height: 100%;
+  width: 1rem;
+  background-color: var(--primary-selected);
+  cursor: e-resize;
 }
 
 #audio-nodes {
