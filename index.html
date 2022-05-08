@@ -5,9 +5,719 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Js Game Engine</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <link rel='stylesheet' type='text/css' media='screen' href='./fonts/chary.css'>
-    <link rel='stylesheet' type='text/css' media='screen' href='./fonts/graph.css'>
-    <link rel='stylesheet' type='text/css' media='screen' href='./main.css'>
+<style>
+/* :root {
+  --background: #f1eee7;
+  --background-secondary: #444444;
+  --background-highlight: #ffffff;
+  --text-main: #444444;
+  --text-hightlight: #ffffff;
+  --main: #ffffff;
+  --menu-background: #ffffff;
+  --menu-text: #444444;
+} */
+
+:root {
+  --background: #1f1f1f;
+  --background-secondary: #f1eee7;
+  --background-highlight: #000000;
+  --text-main: #ffffff;
+  --text-hightlight: #444444;
+  --main: #444444;
+  --menu-background: #000000;
+  --menu-text: #f1eee7;
+  --primary: #ff9239;
+  --primary-darker: #c55d21;
+  --primary-selected: #ffb968;
+
+  /* --font-name: 'Graph';
+  --font-letter-spacing: 2pt;
+  --font-size: 12pt; */
+
+  --font-name: 'Chary';
+  --font-letter-spacing: 2pt;
+  --font-size: 1.1em;
+  --font-line-height: 1em;
+}
+
+@font-face {
+  font-family: pixel;
+  src: url("https://dl.dropboxusercontent.com/s/hsdwvz761xqphhb/pixel.ttf");
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-name);
+  font-size: var(--font-size);
+  line-height: var(--font-line-height);
+  letter-spacing: var(--font-letter-spacing);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-main);
+  height: 100vh;
+}
+
+hr {
+  height: 1px;
+  background: var(--background-secondary);
+  border: none;
+  margin: .5rem 0;
+}
+
+button, .btn {
+  margin: 0.1rem;
+  padding: 0.5rem 1rem 1.25rem 1rem;
+  cursor: pointer;
+  background: var(--primary);
+  height: 2rem;
+  color: var(--text-main);
+  transition: 0.2s ease-in-out;
+
+  border: none;
+  border-bottom: 5px solid var(--primary-darker);
+}
+button.contained, .btn.contained {
+  /* border: solid 0.5px var(--background-secondary); */
+}
+button:hover, .btn:hover {
+  filter: brightness(1.2);
+}
+button:active, .btn:active {
+  background: var(--primary-selected);
+}
+button.active, .btn.active {
+  background: var(--primary-selected);
+}
+
+input {
+  border: none;
+}
+input[type=number] {
+  padding-right: 0.2rem;
+  width: 4rem;
+}
+
+.w2 {
+  width: 1rem;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--primary-darker); }
+::-webkit-scrollbar-thumb { background: var(--primary); }
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-selected);
+  cursor: pointer;
+}
+
+.grid-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tab-panel {
+  position: relative;
+  margin: 0.5rem;
+  width: calc(100% - 1rem);
+  height: calc(90% - 1rem);
+  animation: fadeIn 0.5s;
+  display: none;
+}
+.tab-panel.active {
+  display: flex;
+}
+.tab-panel.center {
+  align-items: center;
+  justify-content: center;
+}
+.tab-buttons {
+  padding: 0.5rem 0.5rem 0 0.5rem;
+  width: auto;
+  height: 2.3rem;
+  display: flex;
+}
+.menu-btn {
+  position: absolute;
+  right: .5rem;
+  display: none;
+}
+
+@media screen and (max-width: 600px) { 
+  .menu-btn {
+    display: block;
+  }
+  .tab-push-btn {
+    display: none;
+  }
+}
+
+.tab-btn {
+  width: auto;
+  filter: brightness(0.7);
+  border-bottom: transparent;
+  height: auto;
+  margin-top: 0.3rem;
+}
+.tab-btn.active {
+  margin-top: 0;
+  background-color: var(--primary);
+  filter: brightness(1);
+}
+.tab-select .select-list {
+  display: none;
+}
+.tab-select:hover .select-list {
+  display: block;
+}
+.select-list {
+  list-style: none;
+  background: var(--menu-background);
+  position: absolute;
+  width: 5rem;
+  animation: fadeIn 0.2s;
+}
+.select-list li {
+  position: relative;
+  text-align: center;
+  width: 100%;
+  z-index: 10;
+  background: var(--menu-background);
+}
+.select-list li .btn {
+  color: var(--text-main);
+  background: none;
+  border: solid 1px transparent;
+}
+.select-list li .btn:hover {
+  border: solid 1px var(--background-secondary);
+}
+
+label.btn {
+  position: relative;
+  display: inline-block;
+  width: 58%;
+  height: 1rem;
+}
+input[type="file"] {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+#code-area { z-index: 1 }
+#code-area-input {
+  z-index: 2;
+  white-space: pre;
+  overflow-wrap: normal;
+  color: transparent;
+  background: none;
+  resize: none;
+  caret-color: white;
+}
+#code-area,
+#code-area-input,
+#code-line-number {
+  margin: 0;
+  padding: 10px;
+  border: 0;
+  width: calc(100% - 5rem);
+  height: calc(100% - 20px);
+  position: absolute;
+  overflow-x: scroll;
+  top: 0;
+  left: 0;
+}
+#code-area,
+#code-area-input {
+  margin-left: 3.5rem;
+}
+#code-area,
+#code-area *,
+#code-area-input,
+#code-line-number {
+  text-align: left;
+  letter-spacing: var(--font-letter-spacing);
+  font-family: var(--font-name);
+  font-size: 1em;
+  line-height: var(--font-line-height);
+  tab-size: 2;
+}
+#code-line-number { 
+  z-index: 0;
+  pointer-events: none;
+  color: #585858;
+  background: none;
+  overflow: hidden;
+  width: 2.5rem;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+#code-line-number span {
+  height: 1.33rem;
+}
+#code-doc {
+  background: #585858;
+  position: fixed;
+  z-index: 22;
+  margin: auto;
+  padding: 1.25rem 1.75rem;
+  width: 50%;
+  min-width: 25rem;
+  height: 80vh;
+  display: none;
+  overflow-y: scroll;
+  box-shadow: 0 0 2rem 0rem rgba(0, 0, 0, 0.534);
+  text-shadow: 2px 2px var(--text-hightlight);
+}
+#code-doc.active {
+  display: block;
+}
+.code-doc-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid white;
+  margin-bottom: 1rem;
+  padding-bottom: .5rem;
+}
+.code-doc-entry {
+  margin-bottom: 1rem;
+}
+.code-doc-entry h6 {
+  color: var(--primary-selected);
+  font-weight: 100;
+}
+.code-doc-entry h6 span {
+  color: var(--primary-darker);
+}
+.code-doc-entry p {
+  margin-bottom: 1rem;
+  color: var(--menu-text);
+}
+#code-doc-btn {
+  position: absolute;
+  top: 1rem;
+  right: 2.2rem;
+  z-index: 20;
+}
+
+:not(pre)>code[class*=language-], pre[class*=language-] {
+  background: #2d2d2d;
+}
+.token {
+  height: var(--font-line-height);
+}
+.token.keyword {
+  color: rgb(250, 170, 77);
+}
+.token.operator {
+  color: rgb(163, 155, 141);
+}
+.token.punctuation {
+  color: rgb(163, 155, 141);
+}
+.token.comment {
+  color: rgb(121, 121, 121);
+}
+.token.separator {
+  color: rgb(143, 115, 97);
+}
+.token.string {
+  color: rgb(131, 175, 89);
+}
+.token.number {
+  color: darksalmon;
+}
+.token.boolean {
+  color: darksalmon;
+}
+.token.comparator {
+  color: darksalmon;
+}
+.token.identifier {
+  color: rgb(235, 235, 235);
+}
+.token.identifier.upper {
+  color: rgb(157, 124, 233);
+}
+.token.identifier.sub-identifier {
+  font-style: italic;
+}
+.token.error {
+  text-decoration: red underline;
+}
+
+/* .token.keyword {
+  color: rgb(147, 240, 71);
+  font-weight: bold;
+} */
+
+/* ########################################## */
+#sprites-panel.active {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  grid-template-rows: 5fr 1fr;
+}
+#sprites-panel > *:nth-child(1) {
+  grid-row: 1 / 1;
+  grid-column: 1 / 1;
+}
+#sprites-panel > *:nth-child(2) {
+  grid-row: 1 / 1;
+  grid-column: 2 / 2;
+}
+#sprites-panel > *:nth-child(3) {
+  grid-row: 1 / 1;
+  grid-column: 3 / 3;
+}
+#sprites-panel > *:nth-child(4) {
+  grid-row: 2 / 2;
+  grid-column: 2 / 2;
+}
+
+#sprite-editor-tools {
+  display: flex;
+  flex-direction: column;
+  margin-right: 1rem;
+  height: 30rem;
+}
+.sprite-editor-tool {
+  margin-bottom: 0.25rem;
+}
+button.sprite-editor-tool {
+  text-align: center;
+}
+#sprite-editor-container {
+  --grid-color: rgb(0, 0, 0, 0);
+  position: relative;
+  display: flex;
+  width: 25rem;
+  height: 25rem;
+}
+#sprite-editor-canvas {
+  background-image: 
+    repeating-linear-gradient(
+      -45deg, 
+      transparent, 
+      transparent 5rem,
+      rgba(255, 255, 255, 0.05) 5rem,
+      rgba(255, 255, 255, 0.05) 10rem
+    );
+  background-size: 200% 200%;
+  animation: barberpole 30s linear infinite;
+}
+
+@keyframes barberpole {
+  100% {
+    background-position: 100% 100%;
+  }
+}
+
+#sprite-editor-canvas, #sprite-editor-grid {
+  border: 3px solid var(--grid-color);
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+#sprite-editor-canvas, .sprite-item {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+#sprite-editor-grid {
+  pointer-events: none;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  grid-template-rows: repeat(16, 1fr);
+}
+.sprite-editor-cell {
+  border: 0.5px solid var(--grid-color);
+}
+.sprite-editor-cell:active {
+	pointer-events: none;
+}
+.sprite-editor-cell:hover {
+  background: #000000;
+}
+#sprite-editor-color-picker-label {
+  width: 3rem;
+  height: 1rem;
+  background: white;
+  border-radius: 0.2rem;
+}
+#sprite-editor-color-picker {
+  visibility: hidden;
+}
+
+#sprites-container {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: 1fr 1fr;
+  gap: 0;
+  width: min-content;
+  border: 5px solid white;
+}
+
+#sprite-palette {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 0;
+  width: min-content;
+  margin-right: 5rem;
+}
+
+.sprite-item {
+  background: rgba(0, 0, 0, 0.137);
+  width: 3rem;
+  height: 3rem;
+}
+.sprite-item.active, .sprite-color.active {
+}
+
+.sprite-color {
+  width: 2rem;
+  height: 2rem;
+  transition: transform 0.2s ease-in-out;
+}
+.sprite-color.active {
+  transform: scale(1.2);
+  box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, 0.5);
+}
+
+/* ################################ Audio ##############################*/
+#audio-panel.active {
+  display: flex;
+  flex-direction: column;
+}
+#audio-panel {
+  position: relative;
+  margin: 2rem;
+  height: calc(100% - 5rem);
+  width: calc(100% - 4rem);
+  font-size: 0.8em;
+}
+#audio-toolbar {
+  display: flex;
+  align-items: center;
+  width: calc(100% - 2rem);
+  padding: 0.5rem 1rem;
+  color: var(--main);
+  background-color: var(--background-secondary);
+  border-bottom: 6px solid rgb(189, 189, 189);
+}
+#audio-toolbar > * {
+  margin-right: 1rem;
+}
+.audio-toolbar-input {
+  display: flex;
+  flex-direction: column;
+  max-width: 8rem;
+}
+
+#audio-melody {
+  width: 100%;
+  height: 40rem;
+  margin: 1rem 0;
+  background: var(--background-secondary);
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+.audio-melody-row {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  width: 100%;
+  height: 2rem;
+  cursor: pointer;
+  background-color: #f4f4f4;
+  color: #979797;
+  padding-left: 0.5rem;
+  vertical-align: middle;
+  letter-spacing: 0.005em;
+  user-select: none;
+}
+.audio-melody-row:nth-child(even) {
+  filter: brightness(0.98);
+}
+.audio-melody-row.black {
+  filter: brightness(0.96);
+}
+.audio-melody-row-seprator {
+  position: absolute;
+  border-right: 1px solid #00000022;
+  width: 1px;
+  height: 100%;
+  pointer-events: none;
+}
+.audio-melody-note {
+  position: absolute;
+  z-index: 10;
+  width: 3rem;
+  height: calc(100% - 6px);
+  top: 0;
+  background-color: var(--primary);
+  border: 3px solid var(--primary-darker);
+  transition: filter 0.2s ease-in-out;
+  filter: brightness(1);
+}
+.audio-melody-note:hover {
+  cursor: move;
+  filter: brightness(1.2);
+}
+.audio-melody-note:active {
+  cursor: grabbing !important;;
+}
+.audio-melody-note-resizer {
+  z-index: 1;
+  position: absolute;
+  right: 0;
+  height: 100%;
+  width: 1rem;
+  background-color: var(--primary-selected);
+  cursor: e-resize;
+}
+
+#audio-nodes {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+}
+.audio-node, .audio-add-node {
+  position: relative;
+  padding: 1rem;
+  margin: 1rem;
+}
+.audio-node {
+  width: 15rem;
+  padding-bottom: 0;
+
+  border: solid 1px var(--background-secondary);
+  background: var(--background);
+  
+  color: var(--main);
+  background-color: var(--background-secondary);
+  border-bottom: 6px solid rgb(189, 189, 189);
+}
+.audio-add-node {
+  position: relative;
+  height: calc(100% - 3.2rem);
+  font-size: 2em;
+  margin-left: 0;
+}
+.audio-node-label {
+  padding: 0.1rem 0rem;
+  position: absolute;
+  height: 1rem;
+  top: -0.5rem;
+  position: relative;
+  font-size: 1.3em;
+}
+.audio-node-input {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 100%;
+}
+.audio-node-input input {
+  font-size: 0.6em;
+  height: 0.5rem;
+}
+.audio-node-input label {
+  text-align: left;
+}
+.audio-node-input p {
+  text-align: center;
+}
+
+.audio-node-input.horizontal {
+  flex-direction: row;
+  align-items: center;
+}
+
+#audio-keyboard {
+  display: flex;
+  justify-content: center;
+  display: none;
+}
+.audio-key {
+  --border-height: 8px;
+  transition: 0.1s ease-in-out;
+}
+.audio-key.white {
+  width: 4rem;
+  height: 10rem;
+  margin: 0 0.2rem;
+  background-color: var(--background-secondary);
+  border-bottom: var(--border-height) solid rgb(189, 189, 189);
+}
+.audio-key.black {
+  width: 3rem;
+  height: 6rem;
+  margin-left: -1.5rem;
+  margin-right: -1.5rem;
+  z-index: 2;
+  background-color: rgb(177, 177, 177);
+  border-bottom: var(--border-height) solid rgb(117, 117, 117);
+}
+.audio-key:hover {
+  filter: brightness(1.1);
+}
+.audio-key:active, .audio-key.active {
+  filter: brightness(0.9);
+}
+.audio-key.white.active {
+  border-bottom: 2px solid rgb(189, 189, 189);
+}
+.audio-key.audio-key.black.active.active {
+  border-bottom: 2px solid rgb(117, 117, 117);
+}
+.audio-keyboard-octave {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+}
+@media (max-width: 1000px) { 
+  .audio-key.second {
+    display: none;
+  }
+}
+
+@font-face { 
+    font-family: "Chary";
+    /* Add other properties here, as needed. For example: */
+    /*
+    font-weight: 100 900;
+    font-style: normal italic;
+    */
+    src: url(data:application/octet-stream;base64,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);
+}
+@font-face { 
+    font-family: "Graph";
+    /* Add other properties here, as needed. For example: */
+    /*
+    font-weight: 100 900;
+    font-style: normal italic;
+    */
+    src: url(data:application/octet-stream;base64,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AEcAAAEAAAADRwAAA0cBAANHAIADRwAAA0cAAANHAAADRwAAA0cAgANHAIADRwCAA0cAgANHAAADRwCAA0cAAANHAIADRwAAA0cAAANHAIADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAIADRwCAA0cAAANHAAADRwCAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAIADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAIADRwAAA0cAgANHAAADRwAAA0cAgANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAgANHAAADRwAAA0cAgANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAQADRwEAA0cAAANHAQADRwAAA0cAAANHAAADRwAAA0cBAANHAAADRwCAA0cAAANHAAADRwAAA0cAAANHAIADRwAAA0cAAANHAAADRwAAA0cAgANHAIADRwEAA0cAAANHAAADRwEAA0cAgANHAIADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAgANHAIADRwCAA0cAgANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwCAA0cAgANHAIADRwCAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAACRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAgANHAAACxwAAA0cAAALHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAIADRwAAA0cAgANHAAADRwCAAUcAAANHAAADRwAAA0cAAANHAAADRwAAA0cAAANHAAADRwAAA0cAgANHAIADRwAAA0cAAANHAIADRwAAA0cAAANHAIADRwCAA0cAAANHAAAAAQAAAPkALAALAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAACIBngABAAAAAAAAABcAAAABAAAAAAABAA0AFwABAAAAAAACAAcAJAABAAAAAAADABgAKwABAAAAAAAEABUAQwABAAAAAAAFAAsAWAABAAAAAAAGAA0AYwABAAAAAAAHADwAcAABAAAAAAAIABUArAABAAAAAAAJAAgAwQABAAAAAAAKAC4AyQABAAAAAAALABcA9wABAAAAAAAMADABDgABAAAAAAANACgBPgABAAAAAAAOAC4BZgABAAAAAAATACkBlAABAAAAAAEAAAgBvQADAAEECQAAAC4BxQADAAEECQABABoB8wADAAEECQACAA4CDQADAAEECQADADACGwADAAEECQAEACoCSwADAAEECQAFABYCdQADAAEECQAGABoCiwADAAEECQAHAHgCpQADAAEECQAIACoDHQADAAEECQAJABADRwADAAEECQAKAFwDVwADAAEECQALAC4DswADAAEECQAMAGAD4QADAAEECQANAFAEQQADAAEECQAOAFwEkQADAAEECQATAFIE7QADAAEECQEAABAFP0NvcHlyaWdodCAzMDEwMGZsbyAyMDEyR3JhcGggMzUrIHBpeFJlZ3VsYXJGb250U3RydWN0IEdyYXBoIDM1KyBwaXhHcmFwaCAzNSsgcGl4IFJlZ3VsYXJWZXJzaW9uIDEuMEdyYXBoLTM1Ky1waXhGb250U3RydWN0IGlzIGEgdHJhZGVtYXJrIG9mIEZTSSBGb250U2hvcCBJbnRlcm5hdGlvbmFsIEdtYkhodHRwOi8vZm9udHN0cnVjdC5jb20zMDEwMGZsbxrE+kdyYXBoIDM1KyBwaXgaxPkgd2FzIGJ1aWx0IHdpdGggRm9udFN0cnVjdApodHRwOi8vd3d3LmZvbnRzaG9wLmNvbWh0dHA6Ly9mb250c3RydWN0LmNvbS9mb250c3RydWN0aW9ucy9zaG93LzY2NDA2MkNyZWF0aXZlIENvbW1vbnMgQXR0cmlidXRpb24gU2hhcmUgQWxpa2VodHRwOi8vY3JlYXRpdmVjb21tb25zLm9yZy9saWNlbnNlcy9ieS1zYS8zLjAvRml2ZSBiaWcgcXVhY2tpbmcgemVwaHlycyBqb2x0IG15IHdheCBiZWRCQThNZFY5bQBDAG8AcAB5AHIAaQBnAGgAdAAgADMAMAAxADAAMABmAGwAbwAgADIAMAAxADIARwByAGEAcABoACAAMwA1ACsAIABwAGkAeABSAGUAZwB1AGwAYQByAEYAbwBuAHQAUwB0AHIAdQBjAHQAIABHAHIAYQBwAGgAIAAzADUAKwAgAHAAaQB4AEcAcgBhAHAAaAAgADMANQArACAAcABpAHgAIABSAGUAZwB1AGwAYQByAFYAZQByAHMAaQBvAG4AIAAxAC4AMABHAHIAYQBwAGgALQAzADUAKwAtAHAAaQB4AEYAbwBuAHQAUwB0AHIAdQBjAHQAIABpAHMAIABhACAAdAByAGEAZABlAG0AYQByAGsAIABvAGYAIABGAFMASQAgAEYAbwBuAHQAUwBoAG8AcAAgAEkAbgB0AGUAcgBuAGEAdABpAG8AbgBhAGwAIABHAG0AYgBIAGgAdAB0AHAAOgAvAC8AZgBvAG4AdABzAHQAcgB1AGMAdAAuAGMAbwBtADMAMAAxADAAMABmAGwAbyAaAMQA+gBHAHIAYQBwAGgAIAAzADUAKwAgAHAAaQB4IBoAxAD5ACAAdwBhAHMAIABiAHUAaQBsAHQAIAB3AGkAdABoACAARgBvAG4AdABTAHQAcgB1AGMAdAAKAGgAdAB0AHAAOgAvAC8AdwB3AHcALgBmAG8AbgB0AHMAaABvAHAALgBjAG8AbQBoAHQAdABwADoALwAvAGYAbwBuAHQAcwB0AHIAdQBjAHQALgBjAG8AbQAvAGYAbwBuAHQAcwB0AHIAdQBjAHQAaQBvAG4AcwAvAHMAaABvAHcALwA2ADYANAAwADYAMgBDAHIAZQBhAHQAaQB2AGUAIABDAG8AbQBtAG8AbgBzACAAQQB0AHQAcgBpAGIAdQB0AGkAbwBuACAAUwBoAGEAcgBlACAAQQBsAGkAawBlAGgAdAB0AHAAOgAvAC8AYwByAGUAYQB0AGkAdgBlAGMAbwBtAG0AbwBuAHMALgBvAHIAZwAvAGwAaQBjAGUAbgBzAGUAcwAvAGIAeQAtAHMAYQAvADMALgAwAC8ARgBpAHYAZQAgAGIAaQBnACAAcQB1AGEAYwBrAGkAbgBnACAAegBlAHAAaAB5AHIAcwAgAGoAbwBsAHQAIABtAHkAIAB3AGEAeAAgAGIAZQBkAEIAQQA4AE0AZABWADkAbQAAAAACAl0BkAAFAAQCAAIAAAAAAAIAAgAAAAIAADMAzAAAAAAEAAAAAAAAAKAAAA8AAAAKAAAAAAAAAABGU1RSAEAAICEiA4AAAAAAA4AAgAAAAf8AAAAAAoADgAAAACAAAAADAAAAAAAAAGYAMwAAAAAAAAAAAAAAAAAAAAAAAAAAAAUAAAAAA4ADgAADAAcACwASABYAAAEBAQEBAQEBAQEBAQEBAQABAAEBAQEBAcAAAP9xAAABHQAA/uMAAACPAAD/cQAAAR0AAP9y/8T/1//WAAD+zwAAA4AAAAB/AI4AAP9yAKYAjwAA/3EApgCPAAD/cQCnAI0AAAAA/9f/1v/G/Y4DgAAA/IAAAAAAAgEAAAABgAOAAAMABwAAAQEBAQEBAQEBAAAAAIAAAP+AAAAAgAAAAAAAgAAA/4ABAAKAAAD9gAACAIACAAIAA4AAAwAHAAABAQEBAQEBAQCAAAAAgAAAAIAAAACAAAACAAGAAAD+gAAAAYAAAP6AAAIAAAAAAoADgAADAB8AAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAYAAAP+AAAD/gAAA/4AAAACAAAD/gAAAAIAAAACAAAAAgAAAAIAAAACAAAD/gAAAAIAAAP+AAAD/gAAA/4AAAAGAAIAAAP+A/oABAAAAAIAAAACAAAAAgAAAAQAAAP8AAAABAAAA/wAAAP+AAAD/gAAA/4AAAP8AAAABAAAA/wAAAwAAAAACgAOAAAMABwAjAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAAAAAIAAAP2AAAAAgAAAAIAAAP8AAAABAAAA/4AAAACAAAD/gAAAAIAAAACAAAABAAAA/wAAAACAAAD/gAAAAIAAAP+AAAABAACAAAD/gAEAAIAAAP+A/gAAgAAAAIAAAACAAAAAgAAAAIAAAACAAAAAgAAA/4AAAP+AAAD/gAAA/4AAAP+AAAD/gAAA/4AAAAAHAAAAAAKAA4AAAwAHAAsADwATABcAGwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAQAAAAEAAAD+AAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAP2AAAABAAAAAIAAgAAA/4D/gAEAAAD/AAEAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAAABAAAA/wAAAAALAAAAAAKAA4AAAwAHAAsADwATABcAGwAfACMAJwArAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABAAAAAIAAAACAAAD/AAAAAIAAAP4AAAAAgAAAAIAAAACAAAAAgAAAAIAAAP4AAAAAgAAAAAAAAACAAAD+gAAAAIAAAAEAAAAAgAAA/oAAAAEAAAAAAACAAAD/gAAAAIAAAP+AAIAAgAAA/4AAAAEAAAD/AACAAIAAAP+AAAAAgAAA/4AAgACAAAD/gACAAIAAAP+AAAABAAAA/wAAgACAAAD/gACAAIAAAP+AAAAAAgCAAgABgAOAAAMACQAAAQEBAQEBAQEBAQCAAAAAgAAAAAAAAP+AAAABAAAAAgAAgAAA/4AAgACAAAAAgAAA/wAAAAAFAIAAAAIAA4AAAwAHAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQGAAAAAgAAA/wAAAACAAAD/AAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAACAAAD/gACAAIAAAP+AAIABgAAA/oABgACAAAD/gACAAIAAAP+AAAAABQCAAAACAAOAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAAAAAAAAgAAAAAAAAACAAAD/AAAAAIAAAP8AAAAAgAAAAAAAgAAA/4AAgACAAAD/gACAAYAAAP6AAYAAgAAA/4AAgACAAAD/gAAAAAUAgAGAAgADAAADAAcACwAPABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAACAAAAAgAAAAIAAAP8AAAAAgAAA/wAAAACAAAAAgAAAAIAAAAGAAIAAAP+AAAAAgAAA/4AAgACAAAD/gACAAIAAAP+AAAAAgAAA/4AAAAABAAAAgAKAAwAACwAAAQEBAQEBAQEBAQEBAQAAAP8AAAABAAAAAIAAAAEAAAD/AAAAAIABAAAAAIAAAAEAAAD/AAAA/4AAAP8AAAAAAgCAAAABgAGAAAMACQAAAQEBAQEBAQEBAQCAAAAAgAAAAAAAAP+AAAABAAAAAAAAgAAA/4AAgACAAAAAgAAA/wAAAAABAAABgAKAAgAAAwAAAQEBAQAAAAACgAAAAYAAgAAA/4AAAAABAIAAAAGAAQAAAwAAAQEBAQCAAAABAAAAAAABAAAA/wAAAAAFAAAAgAKAAwAAAwAHAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAgACAAAD/gACAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAAAABQAAAAACgAOAAAMABwAPABcAGwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABgAAA/wAAAACAAAD+gAAAAIAAAACAAAD/gAAAAYAAAP+AAAAAgAAAAIAAAP4AAAABgAAAAAAAgAAA/4ABgACAAAD/gP8AAoAAAP6AAAD/gAAA/4AAAAGAAAAAgAAAAIAAAP2AAoAAgAAA/4AAAAABAIAAAAIAA4AACwAAAQEBAQEBAQEBAQEBAIAAAACAAAD/gAAAAIAAAACAAAAAgAAAAAAAgAAAAgAAAACAAAAAgAAA/QAAAP+AAAAABgAAAAACgAOAAAcACwAPABMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAAAgAAAAYAAAP6AAAAAgAAAAAAAAACAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAAAAACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAgACAAAD/gAEAAIAAAP+A/4ABAAAA/wABAACAAAD/gAAGAAAAAAKAA4AAAwAHAAsADwATABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD/AAAAAIAAAP8AAAAAgAAAAAAAAP6AAAACgAAA/4AAAAAAAIAAAP+AAIAAgAAA/4AAAAEAAAD/AAEAAIAAAP+AAIAAgAAA/4AAgACAAAAAgAAA/4AAAP+AAAIAAAAAAoADgAADABUAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAACAAAD+gAAAAIAAAAEAAAD/gAAAAIAAAACAAAAAgAAA/4AAAAIAAIAAAP+A/gABAAAAAQAAAP+AAAABAAAAAIAAAACAAAD+AAAA/4AAAP8AAAAABAAAAAACgAOAAAMABwALABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/YAAAAKAAAD+AAAAAYAAAAAAAIAAAP+AAIAAgAAA/4AAAAGAAAD+gAGAAYAAAP+AAAD/gAAA/4AABQAAAAACgAOAAAMABwAPABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAAAAAAAAIAAAP2AAAAAgAAAAYAAAP6AAAAAAAAAAIAAAAAAAAABAAAAAAAAgAAA/4AAgAEAAAD/AAAAAgAAAP+AAAD/gAAA/wACAACAAAD/gACAAIAAAP+AAAAAAwAAAAACgAOAAAMABwANAAABAQEBAQEBAQEBAQEBAQEAAAAAgAAAAAAAAACAAAAAAAAA/gAAAAKAAAAAAAIAAAD+AAIAAIAAAP+AAIAAgAAAAIAAAP8AAAcAAAAAAoADgAADAAcACwAPABMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAAAAACAAAD/gACAAQAAAP8AAAABAAAA/wABAACAAAD/gACAAQAAAP8AAAABAAAA/wABAACAAAD/gAAAAAUAAAAAAoADgAADAAcACwATABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABAAAAAAAAAACAAAD+AAAAAIAAAAGAAAD+gAAAAYAAAACAAAD+AAAAAYAAAAAAAIAAAP+AAIAAgAAA/4ABgAEAAAD/AP8AAIAAAACAAAABAAAA/gACAACAAAD/gAAAAAIAgACAAYADAAADAAcAAAEBAQEBAQEBAIAAAAEAAAD/AAAAAQAAAACAAQAAAP8AAYABAAAA/wAAAwCAAAABgAMAAAMACQANAAABAQEBAQEBAQEBAQEBAQCAAAAAgAAAAAAAAP+AAAABAAAA/wAAAAEAAAAAAACAAAD/gACAAIAAAACAAAD/AAGAAQAAAP8AAAcAAAAAAgADgAADAAcACwAPABMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAYAAAACAAAD/AAAAAIAAAP8AAAAAgAAA/wAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAACAAAD/gACAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAIAAgAAA/4AAgACAAAD/gAAAAAIAAAEAAoACgAADAAcAAAEBAQEBAQEBAAAAAAKAAAD9gAAAAoAAAAEAAIAAAP+AAQAAgAAA/4AABwCAAAACgAOAAAMABwALAA8AEwAXABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAAAAAAAAgAAAAAAAAACAAAAAAAAAAIAAAP8AAAAAgAAA/wAAAACAAAD/AAAAAIAAAAAAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAAAABgAAAAACgAOAAAMABwALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAIAAAP+AAAAAgAAAAAAAAACAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAAAAACAAAD/gAEAAIAAAP+AAIAAgAAA/4ABAACAAAD/gP+AAQAAAP8AAQAAgAAA/4AABQAAAAACgAOAAAMADQARABUAGQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAAAAAAAgAAA/4AAAAEAAAAAgAAA/gAAAACAAAABgAAAAIAAAP4AAAABgAAAAIABAAAA/wD/gACAAAABAAAAAIAAAP6AAAD/gAKAAIAAAP+A/gACgAAA/YACgACAAAD/gAACAAAAAAKAA4AACwAPAAABAQEBAQEBAQEBAQEBAQEBAAAAAACAAAABgAAAAIAAAP+AAAD+gAAAAAAAAAGAAAAAAAMAAAD/AAAAAQAAAP0AAAABgAAA/oADAACAAAD/gAADAAAAAAKAA4AAAwAHABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAgAAAACAAAD/gAAAAIAAAP2AAAACAAAA/oAAAAGAAAD+gAAAAYAAAACAAQAAAP8AAYABAAAA/wD+AAOAAAD/gAAA/wAAAP+AAAD/AAAA/4AAAAAFAAAAAAKAA4AAAwAHAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABgAAAAAAAAACAAAD9gAAAAIAAAAGAAAAAgAAA/gAAAAGAAAAAAACAAAD/gACAAIAAAP+AAAACgAAA/YACAACAAAD/gACAAIAAAP+AAAAABAAAAAACgAOAAAMABwALABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAYAAAACAAAAAAAAAAIAAAP8AAAAAgAAA/gAAAAGAAAD/AAAAAQAAAACAAIAAAP+AAIABgAAA/oABgACAAAD/gP2AA4AAAP+AAAD9gAAA/4AAAQAAAAACgAOAAAsAAAEBAQEBAQEBAQEBAQAAAAACgAAA/gAAAAGAAAD+gAAAAgAAAAAAA4AAAP+AAAD/AAAA/4AAAP8AAAD/gAAAAAEAAAAAAoADgAAJAAABAQEBAQEBAQEBAAAAAAKAAAD+AAAAAYAAAP6AAAAAAAOAAAD/gAAA/wAAAP+AAAD+gAAEAAAAAAKAA4AABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP8AAAABgAAA/YAAAACAAAABgAAAAIAAAP4AAAABgAAAAAAAgAAAAQAAAACAAAD+AACAAoAAAP2AAgAAgAAA/4AAgACAAAD/gAABAAAAAAKAA4AACwAAAQEBAQEBAQEBAQEBAAAAAACAAAABgAAAAIAAAP+AAAD+gAAAAAADgAAA/oAAAAGAAAD8gAAAAYAAAP6AAAAAAQCAAAACAAOAAAsAAAEBAQEBAQEBAQEBAQCAAAAAgAAA/4AAAAGAAAD/gAAAAIAAAAAAAIAAAAKAAAAAgAAA/4AAAP2AAAD/gAAAAAMAAAAAAoADgAADAAcADwAAAQEBAQEBAQEBAQEBAQEBAQCAAAABAAAA/oAAAACAAAABAAAA/4AAAAGAAAD/gAAAAAAAgAAA/4AAgACAAAD/gAAAAoAAAACAAAD/gAAA/YAAAAAHAAAAAAKAA4AAAwAHAAsADwATABsAHwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAAAAAIAAAP8AAAAAgAAA/wAAAACAAAD/gAAAAIAAAAAAAAAAgAAA/gAAAACAAAAAgAAA/4AAAAGAAAAAgAAAAAAAgAAA/4AAgACAAAD/gACAAIAAAP+AAQAAgAAA/4AAgACAAAD/gP2AA4AAAP6AAAD/gAAA/oADAACAAAD/gAAAAAEAAAAAAoADgAAFAAABAQEBAQEAAAAAAIAAAAIAAAAAAAOAAAD9AAAA/4AAAwAAAAACgAOAAAMACwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAgAAA/oAAAACAAAAAgAAA/4AAAAGAAAD/gAAAAIAAAACAAAABgAEAAAD/AP6AA4AAAP+AAAD/gAAA/YAAAAKAAAAAgAAAAIAAAPyAAAAAAwAAAAACgAOAAAMACwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAgAAA/oAAAACAAAAAgAAA/4AAAAGAAAD/gAAAAIAAAACAAAABgACAAAD/gP6AA4AAAP+AAAD/AAAA/gAAAAEAAAAAgAAAAgAAAPyAAAAABAAAAAACgAOAAAMABwALAA8AAAEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAYAAAAAAAIAAAP+AAIACgAAA/YAAAAKAAAD9gAKAAIAAAP+AAAIAAAAAAoADgAADAA0AAAEBAQEBAQEBAQEBAQEBAgAAAACAAAD9gAAAAgAAAP6AAAABgAAA/oAAAAIAAQAAAP8A/gADgAAA/4AAAP8AAAD/gAAA/oAAAAAHAAAAAAKAA4AAAwAHAAsADwATABcAGwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABAAAAAIAAAACAAAD/AAAAAIAAAP8AAAAAgAAA/oAAAACAAAABgAAAAIAAAP4AAAABgAAAAAAAgAAA/4AAAACAAAD/gACAAIAAAP+AAIAAgAAA/4D/gAKAAAD9gACAAgAAAP4AAgAAgAAA/4AAAAAEAAAAAAKAA4AAAwAHAAsAGQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAAAAAIAAAP8AAAAAgAAAAAAAAACAAAD9gAAAAgAAAP6AAAABgAAA/4AAAP+AAAD/gAAAAAAAgAAA/4AAgACAAAD/gAGAAQAAAP8A/gADgAAA/4AAAP8AAAD/gAAA/4AAAACAAAD+gAAAAAcAAAAAAoADgAADAAcACwAPABMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAAAAACAAAD/gACAAIAAAP+AAAABAAAA/wABAACAAAD/gACAAQAAAP8AAIAAgAAA/4AAgACAAAD/gAAAAAEAAAAAAoADgAAHAAABAQEBAQEBAQEAAAD/AAAAAoAAAP8AAAAAAAMAAAAAgAAA/4AAAP0AAAAAAwAAAAACgAOAAAMABwALAAABAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAAAAACAAAD/gACAAwAAAP0AAAADAAAA/QAAAAAFAAAAAAKAA4AAAwAHAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAgAAA/wAAAACAAAAAgAAAAIAAAP4AAAAAgAAAAYAAAACAAAAAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAgAKAAAD9gAAAAoAAAP2AAAAABQAAAAACgAOAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAACAAAAAgAAA/wAAAACAAAD+gAAAAIAAAAGAAAAAgAAAAAAAgAAA/4AAAACAAAD/gACAAYAAAP6AAAADAAAA/QAAAAMAAAD9AAAAAAkAAAAAAoADgAADAAcACwAPABMAFwAbAB8AIwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAABgAAAAIAAAP4AAAAAgAAAAIAAAACAAAD/AAAAAIAAAP8AAAAAgAAAAIAAAACAAAD+AAAAAIAAAAGAAAAAgAAAAAABAAAA/wAAAAEAAAD/AAEAAIAAAP+AAAAAgAAA/4AAgACAAAD/gACAAIAAAP+AAAAAgAAA/4AAgAEAAAD/AAAAAQAAAP8AAAAABQAAAAACgAOAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAIAAAP8AAAAAgAAAAIAAAACAAAD+AAAAAIAAAAGAAAAAgAAAAAABgAAA/oABgACAAAD/gAAAAIAAAP+AAIABgAAA/oAAAAGAAAD+gAAAAAUAAAAAAoADgAAFAAkADQARABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAgAAAP4AAAAAgAAAAAAAAACAAAAAAAAAAIAAAAAAAAD+AAAAAoAAAAAAAQAAAP+AAAD/gAEAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAACAAAD/AAAAAAEAgAAAAgADgAAHAAABAQEBAQEBAQCAAAABgAAA/wAAAAEAAAAAAAOAAAD/gAAA/YAAAP+AAAAABQAAAIACgAMAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQECAAAAAIAAAP8AAAAAgAAA/wAAAACAAAD/AAAAAIAAAP8AAAAAgAAAAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAIAAgAAA/4AAgACAAAD/gAAAAAEAgAAAAgADgAAHAAABAQEBAQEBAQCAAAABAAAA/wAAAAGAAAAAAACAAAACgAAAAIAAAPyAAAAABQAAAgACgAOAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAGAAAAAgAAA/gAAAACAAAAAgAAAAIAAAP8AAAAAgAAAAgAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAgACAAAD/gAAAAAEAAAAAAoAAgAADAAABAQEBAAAAAAKAAAAAAACAAAD/gAAAAAIAgAIAAgADgAADAAkAAAEBAQEBAQEBAQEBgAAAAIAAAP8AAAD/gAAAAQAAAAIAAIAAAP+AAIAAgAAAAIAAAP8AAAAAAwAAAAACgAKAAAMADQARAAABAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAAAAAABgAAA/oAAAAGAAAAAgAAA/gAAAAGAAAAAgACAAAD/gP+AAIAAAACAAAAAgAAAAIAAAP4AAgAAgAAA/4AAAwAAAAACgAOAAAMABwARAAABAQEBAQEBAQEBAQEBAQEBAQECAAAAAIAAAP6AAAABAAAA/gAAAACAAAAAgAAA/4AAAAGAAAAAgAGAAAD+gAGAAIAAAP+A/gADgAAA/oAAAP+AAAD/AAAA/4AABAAAAAACgAKAAAMABwALAA8AAAEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAAAAAAAAgAAA/YAAAACAAAAAAAAAAYAAAAAAAIAAAP+AAIAAgAAA/4AAAAGAAAD+gAGAAIAAAP+AAAMAAAAAAoADgAADAAcAEQAAAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAAAAAAAAQAAAP8AAAABgAAA/4AAAACAAAAAgAAAAIABgAAA/oABgACAAAD/gP4AAIAAAAEAAAAAgAAAAYAAAPyAAAMAAAAAAoACgAADAA0AEQAAAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAAAAAABgAAAAAAAgAAA/4AAgAGAAAD/gAAAAIAAAP8AAAD/gAGAAIAAAP+AAAIAAAAAAgADgAALAA8AAAEBAQEBAQEBAQEBAQEBAQEAgAAA/4AAAACAAAAAgAAAAIAAAP+AAAAAAAAAAQAAAAAAAgAAAACAAAAAgAAA/4AAAP+AAAD+AAMAAIAAAP+AAAMAAAAAAoACgAADAAcAEQAAAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAD+gAAAAYAAAP6AAAACAAAAAAAAgAAA/4ABgACAAAD/gP8AAIAAAACAAAAAgAAAAIAAAP4AAAMAAAAAAoADgAADAAcADwAAAQEBAQEBAQEBAQEBAQEBAQIAAAAAgAAA/oAAAAEAAAD+AAAAAIAAAACAAAD/gAAAAAACAAAA/gACAACAAAD/gP4AA4AAAP6AAAD/gAAA/oAAAAACAIAAAAIAA4AACQANAAABAQEBAQEBAQEBAQEBAQCAAAAAgAAA/4AAAAEAAAAAgAAA/wAAAACAAAAAAACAAAABgAAAAIAAAP4AAAD/gAMAAIAAAP+AAAAABAAAAAACAAOAAAMABwANABEAAAEBAQEBAQEBAQEBAQEBAQEBAQCAAAABAAAA/oAAAACAAAABAAAA/4AAAAEAAAD/gAAAAIAAAAAAAIAAAP+AAIAAgAAA/4AAAAGAAAAAgAAA/gACgACAAAD/gAAAAAUAAAAAAgADgAADAAcACwAPABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQGAAAAAgAAA/wAAAACAAAD/gAAAAIAAAAAAAAAAgAAA/gAAAACAAAAAgAAA/4AAAAAAAIAAAP+AAIAAgAAA/4ABAACAAAD/gACAAIAAAP+A/gADgAAA/gAAAP+AAAD/AAAAAAEAgAAAAgADgAAJAAABAQEBAQEBAQEBAIAAAACAAAD/gAAAAQAAAACAAAAAAACAAAACgAAAAIAAAP0AAAD/gAAEAAAAAAKAAoAAAwAHAA0AEQAAAQEBAQEBAQEBAQEBAQEBAQEBAQAAAACAAAAAgAAAAIAAAP2AAAABAAAA/4AAAAEAAAAAgAAAAAACAAAA/gAAAAIAAAD+AAAAAoAAAP+AAAD+AAIAAIAAAP+AAAAAAwAAAAACgAKAAAMACwAPAAABAQEBAQEBAQEBAQEBAQEBAgAAAACAAAD9gAAAAIAAAACAAAD/gAAAAIAAAAEAAAAAAAIAAAD+AAAAAoAAAP+AAAD/gAAA/oACAACAAAD/gAAAAAQAAAAAAoACgAADAAcACwAPAAABAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAAAAACAAAD/gACAAYAAAP6AAAABgAAA/oABgACAAAD/gAACAAAAAAKAAoAAAwANAAABAQEBAQEBAQEBAQEBAQIAAAAAgAAA/YAAAAIAAAD+gAAAAYAAAP6AAAABgACAAAD/gP6AAoAAAP+AAAD/gAAA/4AAAP8AAAAAAgAAAAACgAKAAAMADQAAAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAGAAAD+gAAAAYAAAP6AAAACAAAAAYAAgAAA/4D+gAEAAAAAgAAAAIAAAACAAAD9gAAAAAMAAAAAAoACgAADAAsADwAAAQEBAQEBAQEBAQEBAQEBAQIAAAAAgAAA/YAAAACAAAAAgAAA/4AAAACAAAABAAAAAYAAgAAA/4D+gAKAAAD/gAAA/4AAAP6AAgAAgAAA/4AAAAAFAAAAAAKAAoAAAwAHAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAACAAAAAAAAAACAAAD+AAAAAYAAAP4AAAAAgAAAAAAAAAIAAAAAAACAAAD/gACAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAAAAAwAAAAACgAOAAAMABwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAABAAAAAAAAAACAAAD+AAAA/4AAAACAAAAAgAAAAIAAAP+AAAAAAACAAAD/gACAAIAAAP+AAAACAAAAAIAAAACAAAD/gAAA/4AAAP4AAAAAAwAAAAACgAKAAAMABwAPAAABAQEBAQEBAQEBAQEBAQEBAIAAAAEAAAD+gAAAAIAAAAGAAAD/gAAAAIAAAACAAAAAAACAAAD/gACAAgAAAP4A/4AAgAAAAIAAAAGAAAD9gAAAAAUAAAAAAoACgAADAAcACwAPABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAACAAAD/AAAAAIAAAACAAAAAgAAA/gAAAACAAAABgAAAAIAAAAAAAIAAAP+AAIABAAAA/wAAAAEAAAD/AAEAAQAAAP8AAAABAAAA/wAAAAAFAAAAAAKAAoAAAwAHAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAAAgAAAAIAAAACAAAD/AAAAAIAAAP6AAAAAgAAAAYAAAACAAAAAAACAAAD/gAAAAIAAAP+AAIABAAAA/wAAAAIAAAD+AAAAAgAAAP4AAAAABQAAAAACgAKAAAMABwAPABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAABAAAAAQAAAP4AAAAAgAAAAQAAAP+AAAD+gAAAAQAAAAEAAAAAgAAAAAAAgAAA/4AAAACAAAD/gACAAIAAAAEAAAD/gAAA/wABgACAAAD/gAAAAIAAAP+AAAAABQAAAAACgAKAAAMACQANABEAFQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAABAAAAAAAAAAEAAAD/gAAA/wAAAACAAAD/AAAAAIAAAAGAAAAAgAAAAAAAgAAA/4AAgAEAAAD/gAAA/4ABAACAAAD/gACAAIAAAP+A/4ABAAAA/wAAAwAAAAACgAKAAAcACwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAIAAAAGAAAD+gAAAAIAAAAAAAAD+gAAAAoAAAP+AAAAAAACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAgACAAAAAgAAA/4AAAP+AAAAABQAAAAABgAOAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAIAAAP8AAAAAgAAA/wAAAACAAAAAAAAAAIAAAAAAAAAAgAAAAAAAgAAA/4AAgAEAAAD/AAEAAIAAAP+AAIABAAAA/wABAACAAAD/gAAAAAEBAAAAAYADgAADAAABAQEBAQAAAACAAAAAAAOAAAD8gAAAAAUBAAAAAoADgAADAAcACwAPABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAACAAAAAAAAAAIAAAAAAAAAAgAAA/wAAAACAAAD/AAAAAIAAAAAAAIAAAP+AAIABAAAA/wABAACAAAD/gACAAQAAAP8AAQAAgAAA/4AAAAAFAAABAAKAAoAAAwAHAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQGAAAAAgAAA/gAAAACAAAAAgAAAAIAAAP8AAAAAgAAAAQAAAACAAAABAACAAAD/gAAAAQAAAP8AAIAAgAAA/4AAgACAAAD/gP+AAQAAAP8AAAAAAgEAAAABgAOAAAMABwAAAQEBAQEBAQEBAAAAAIAAAP+AAAAAgAAAAAACgAAA/YADAACAAAD/gAADAAAAAAKAA4AAAwAHABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAGAAAAAgAAA/oAAAP+AAAAAgAAA/4AAAACAAAAAgAAAAIAAAP+AAAAAgAAA/4AAAAEAAYAAAP6AAQAAgAAA/4D+AACAAAAAgAAAAYAAAACAAAAAgAAA/4AAAP+AAAD+gAAA/4AAAP+AAAAAAwAAAAACgAOAAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAP+AAAAAgAAAAIAAAACAAAD/gAAAAYAAAP+AAAAAgAAA/oAAAAEAAAAAAACAAAABAAAAAIAAAAEAAAD/AAAA/4AAAP8AAAD/gAKAAIAAAP+AAIAAgAAA/4AAAAAGAAAAgAKAAwAAAwAHAAsADwATABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAYAAAACAAAD/AAAA/4AAAP+AAAABgAAA/gAAAACAAAABgAAAAIAAAACAAIAAAP+AAAAAgAAA/4ABAACAAAD/gP+AAYAAAP6AAYAAgAAA/4AAAACAAAD/gAAFAAAAAAKAA4AAEwAXABsAHwAjAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAA/wAAAAEAAAD/AAAAAQAAAACAAAABAAAA/wAAAAEAAAD/AAAA/wAAAACAAAAAgAAAAIAAAP4AAAAAgAAAAYAAAACAAAAAAACAAAAAgAAAAIAAAACAAAAAgAAA/4AAAP+AAAD/gAAA/4AAAP+AAoAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAAAACAQAAAAGAA4AAAwAHAAABAQEBAQEBAQEAAAAAgAAA/4AAAACAAAAAAAGAAAD+gAIAAYAAAP6AAAgAAAAAAoADgAADAAcACwARABcAGwAfACMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABgAAA/gAAAACAAAABgAAAAIAAAP6AAAAAgAAAAIAAAP6AAAABAAAA/4AAAP8AAAAAgAAAAYAAAACAAAD+AAAAAYAAAAAAAIAAAP+AAIAAgAAA/4AAAACAAAD/gACAAIAAAACAAAD/AACAAQAAAP+AAAD/gAEAAIAAAP+AAAAAgAAA/4AAgACAAAD/gAACAIADAAIAA4AAAwAHAAABAQEBAQEBAQCAAAAAgAAAAIAAAACAAAADAACAAAD/gAAAAIAAAP+AAAIAAAAAAoADgAATABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQGAAAAAgAAA/4AAAP+AAAAAgAAAAIAAAP+AAAD/gAAA/4AAAACAAAD/AAAAAoAAAACAAIAAAACAAAD/gAAAAYAAAP+AAAAAgAAAAIAAAP+AAAD+gAAA/4D/gAOAAAD8gAAEAAAAAAKAA4AAAwAHABEAFQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAACgAAA/YAAAACAAAAAAAAAAYAAAP6AAAABgAAAAIAAAP4AAAABgAAAAAAAgAAA/4ABgACAAAD/gP+AAIAAAACAAAAAgAAAAIAAAP4AAgAAgAAA/4AAAAAKAAAAgAKAA4AAAwAHAAsADwATABcAGwAfACMAJwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAgAAAAIAAAACAAAD+AAAAAIAAAACAAAAAgAAA/gAAAACAAAAAgAAAAIAAAP8AAAAAgAAAAIAAAACAAAD/AAAAAIAAAACAAAAAgAAAAIAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAgAEAAAD/AAAAAQAAAP8AAQAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAAQAAAgACgAMAAAUAAAEBAQEBAQIAAAD+AAAAAoAAAAIAAIAAAACAAAD/AAABAIABgAIAAgAAAwAAAQEBAQCAAAABgAAAAYAAgAAA/4AAAAADAAAAAAKAA4AAAwARABUAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAIAAAACAAAD/gAAAAIAAAP+AAAD/AAAAAIAAAACAAAD+gAAAAoAAAAIAAIAAAP+A/oABAAAAAIAAAACAAAAAgAAA/YAAAAEAAAD/AP+AA4AAAPyAAAEAAAMAAoADgAADAAABAQEBAAAAAAKAAAADAACAAAD/gAAAAAQAAAGAAgADgAADAAcACwAPAAABAQEBAQEBAQEBAQEBAQEBAIAAAAEAAAD+gAAAAIAAAAEAAAAAgAAA/oAAAAEAAAABgACAAAD/gACAAQAAAP8AAAABAAAA/wABAACAAAD/gAACAAAAAAKAA4AAAwAPAAABAQEBAQEBAQEBAQEBAQEBAAAAAAKAAAD+gAAA/wAAAAEAAAAAgAAAAQAAAP8AAAAAAACAAAD/gAEAAQAAAACAAAABAAAA/wAAAP+AAAD/AAABAIABAAIAA4AACwAAAQEBAQEBAQEBAQEBAIAAAAEAAAD/AAAAAYAAAP8AAAABAAAAAQABgAAAAIAAAACAAAD+gAAA/4AAAP+AAAAAAQCAAQACAAOAAAsAAAEBAQEBAQEBAQEBAQCAAAABAAAA/wAAAAEAAAD/AAAAAYAAAAEAAIAAAACAAAAAgAAAAIAAAACAAAD9gAAAAAIBAAIAAoADgAADAAkAAAEBAQEBAQEBAQEBAAAAAIAAAAAAAAABAAAA/4AAAAIAAIAAAP+AAIABAAAA/4AAAP+AAAAAAwAAAAACgAKAAAMACwAPAAABAQEBAQEBAQEBAQEBAQEBAgAAAACAAAD9gAAAAIAAAAEAAAD/AAAAAQAAAACAAAABAACAAAD/gP8AAoAAAP8AAAD/gAAA/wABgAEAAAD/AAAAAAEAAAAAAoADgAAJAAABAQEBAQEBAQEBAQAAAP8AAAACgAAA/4AAAP+AAAAAAAIAAAABgAAA/IAAAAMAAAD9AAABAQABgAGAAgAAAwAAAQEBAQEAAAAAgAAAAYAAgAAA/4AAAAABAIABAAIAA4AACwAAAQEBAQEBAQEBAQEBAIAAAACAAAD/gAAAAIAAAACAAAAAgAAAAQAAgAAAAQAAAACAAAAAgAAA/gAAAP+AAAAAAgCAAQACAAOAAAMABwAAAQEBAQEBAQEBgAAA/4AAAP+AAAABgAAAAYABgAAA/oD/gAKAAAD9gAAKAAAAgAKAA4AAAwAHAAsADwATABcAGwAfACMAJwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAIAAAACAAAD/AAAAAIAAAACAAAAAgAAA/wAAAACAAAAAgAAAAIAAAP4AAAAAgAAAAIAAAACAAAD+AAAAAIAAAACAAAAAgAAAAIAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAgAEAAAD/AAAAAQAAAP8AAQAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AABQAAAAACgAOAAAMAEQAVABkAIQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAYAAAP8AAAD/gAAAAIAAAACAAAAAgAAAAIAAAP8AAAAAgAAAAAAAAACAAAD+AAAA/4AAAACAAAAAgAAAAIAAgAAA/4D/gACAAAAAgAAAAIAAAACAAAD/AAAAAIAAAP6AAgAAgAAA/4AAgACAAAD/gP+AAIAAAACAAAAAgAAA/oAABgAAAAACgAOAAAMACwAPABkAHQAlAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAIAAAACAAAAAgAAAAIAAAP+AAAAAgAAA/gAAAACAAAAAgAAAAIAAAP+AAAAAgAAAAIAAAP4AAAD/gAAAAIAAAACAAAAAgACAAAD/gP+AAIAAAACAAAD/gAAA/4ABAACAAAD/gAAAAIAAAACAAAAAgAAA/wAAAP+AAYAAgAAA/4D/gACAAAAAgAAAAIAAAP6AAAAABgAAAAACgAOAAAMABwALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAAAAAAAAgAAA/YAAAACAAAAAAAAAAIAAAAAAAAAAgAAA/4AAAACAAAAAAACAAAD/gACAAIAAAP+AAAABAAAA/wABAACAAAD/gACAAIAAAP+AAQAAgAAA/4AAAwAAAAACgAOAAAsAEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAGAAAAAgAAA/4AAAP6AAAAAAAAAAIAAAACAAAAAgAAA/oAAAACAAAAAAAIAAAD/gAAAAIAAAP4AAAABAAAA/wACAACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAAAADAAAAAAKAA4AACwATABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAYAAAACAAAD/gAAA/oAAAAAAAAAAgAAAAIAAAACAAAD/gAAAAIAAAAAAAgAAAP+AAAAAgAAA/gAAAAEAAAD/AAIAAIAAAACAAAD/gAAA/4ABAACAAAD/gAAAAAMAAAAAAoADgAALABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAABgAAAAIAAAP+AAAD+gAAAAAAAAACAAAAAgAAAAIAAAP8AAAAAgAAAAAACAAAA/4AAAACAAAD+AAAAAQAAAP8AAgABAAAA/4AAAACAAAD/AAEAAIAAAP+AAAAABQAAAAACgAOAAAsADwAVABkAHQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAABgAAAAIAAAP+AAAD+gAAA/4AAAACAAAAAAAAAAIAAAAEAAAD+gAAAAIAAAAEAAAAAgAAAAAACAAAA/4AAAACAAAD+AAAAAQAAAP8AAoAAgAAA/4D/gACAAAAAgAAA/wABAACAAAD/gAAAAIAAAP+AAAQAAAAAAoADgAALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAGAAAAAgAAA/4AAAP6AAAAAAAAAAYAAAP6AAAAAgAAAAIAAAACAAAAAAAIAAAD/gAAAAIAAAP4AAAABAAAA/wACAACAAAD/gAEAAIAAAP+AAAAAgAAA/4AAAwAAAAACgAOAAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAYAAAACAAAD/gAAA/oAAAAEAAAD/gAAA/4AAAAGAAAAAAAIAAAD/gAAAAIAAAP4AAAABAAAA/wACgACAAAD/gP+AAYAAAP6AAAAAAQAAAAACgAOAABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAIAAAP+AAAAAgAAAAYAAAP8AAAABAAAA/wAAAAEAAAD+gAAA/4AAAAAAAoAAAP8AAAABAAAAAIAAAACAAAD/gAAA/wAAAP+AAAD/AAAA/4AAAAEAAAD/AAAAAAMAAAAAAoADgAALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAQAAAP8AAAACAAAA/4AAAACAAAD9gAAAAIAAAAAAAAACAAAAAAAAgAAAAIAAAACAAAD/gAAA/4AAAP+AAYABgAAA/oABgACAAAD/gAAAAAIAAAAAAoADgAAPABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAEAAAAAgAAAAQAAAP4AAAABgAAA/oAAAAIAAAD+AAAAAIAAAAAAAoAAAACAAAD/gAAA/4AAAP+AAAD/gAAA/4AAAP+AAwAAgAAA/4AAAgAAAAACgAOAAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAQAAAACAAAABAAAA/gAAAAGAAAD+gAAAAgAAAP8AAAAAgAAAAAACgAAAAIAAAP+AAAD/gAAA/4AAAP+AAAD/gAAA/4ADAACAAAD/gAACAAAAAAKAA4AAEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAACAAAAAgAAAAIAAAACAAAD+AAAAAYAAAP6AAAACAAAA/oAAAACAAAAAAAKAAAAAgAAA/4AAAACAAAD/gAAA/4AAAP+AAAD/gAAA/4AAAP+AAwAAgAAA/4AAAwAAAAACgAOAAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAACgAAA/gAAAAGAAAD+gAAAAgAAAP4AAAAAgAAAAIAAAACAAAAAAAKAAAD/gAAA/4AAAP+AAAD/gAAA/4ADAACAAAD/gAAAAIAAAP+AAAAAAgCAAAACAAOAAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAP+AAAAAgAAAAIAAAACAAAD/gAAAAIAAAP6AAAAAgAAAAAAAgAAAAYAAAACAAAAAgAAA/4AAAP+AAAD+gAAA/4ADAACAAAD/gAACAIAAAAIAA4AADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAAAgAAA/4AAAACAAAAAgAAAAIAAAP+AAAAAgAAA/4AAAACAAAAAAACAAAABgAAAAIAAAACAAAD/gAAA/4AAAP6AAAD/gAMAAIAAAP+AAAIAgAAAAgADgAAPABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAACAAAD/gAAAAIAAAACAAAAAgAAA/4AAAACAAAD/AAAAAIAAAAAAAIAAAAGAAAABAAAA/4AAAACAAAD/AAAA/oAAAP+AAwAAgAAA/4AAAwCAAAACAAOAAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAAAgAAA/4AAAAGAAAD/gAAAAIAAAP6AAAAAgAAAAIAAAACAAAAAAACAAAABgAAAAIAAAP+AAAD+gAAA/4ADAACAAAD/gAAAAIAAAP+AAAAABAAAAAACgAOAAAMABwALABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBgAAAAIAAAAAAAAAAgAAA/wAAAACAAAD+gAAA/4AAAACAAAABAAAA/4AAAACAAAD/gAAAAIAAAACAAIAAAP+AAIABgAAA/oABgACAAAD/gP2AAYAAAACAAAABgAAA/4AAAP8AAAD/gAAA/wAAAP+AAAYAAAAAAoADgAADAAsAEwAXABsAHwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAIAAAACAAAD/gAAAAIAAAACAAAD9gAAAAIAAAACAAAD/gAAAAIAAAAEAAAD+gAAAAIAAAAEAAAAAgAAAAQAAgAAA/4D/AACAAAAAgAAAAYAAAP2AAAADAAAA/wAAAP+AAAD+gAKAAIAAAP+AAIAAgAAA/4AAAACAAAD/gAAFAAAAAAKAA4AAAwAHAAsAEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAIAAAACAAAAAgAAA/oAAAACAAAAAAACAAAD/gACAAYAAAP6AAAABgAAA/oABgACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAAAAFAAAAAAKAA4AAAwAHAAsAEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAIAAAACAAAAAgAAA/4AAAACAAAAAAACAAAD/gACAAYAAAP6AAAABgAAA/oABgACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAAAAFAAAAAAKAA4AAAwAHAAsAEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAIAAAACAAAAAgAAA/wAAAACAAAAAAACAAAD/gACAAYAAAP6AAAABgAAA/oABgAEAAAD/gAAAAIAAAP8AAQAAgAAA/4AAAAAHAAAAAAKAA4AAAwAHAAsADwAVABkAHQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/YAAAACAAAAAAAAAAIAAAAEAAAD+gAAAAIAAAAEAAAAAgAAAAAAAgAAA/4AAgAGAAAD+gAAAAYAAAP6AAgAAgAAA/4D/gACAAAAAgAAA/wABAACAAAD/gAAAAIAAAP+AAAYAAAAAAoADgAADAAcACwAPABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAD+gAAAAIAAAACAAAAAgAAAAAAAgAAA/4AAgAGAAAD+gAAAAYAAAP6AAYAAgAAA/4ABAACAAAD/gAAAAIAAAP+AAAkAAACAAoADAAADAAcACwAPABMAFwAbAB8AIwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAABgAAAAIAAAP4AAAAAgAAAAIAAAACAAAD/AAAAAIAAAP8AAAAAgAAAAIAAAACAAAD+AAAAAIAAAAGAAAAAgAAAAIAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAgACAAAD/gACAAIAAAP+AAAAAgAAA/4AAgACAAAD/gAAAAIAAAP+AAAAAAwAAAAACgAOAAAMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAACAAAD/AAAA/4AAAACAAAAAgAAAAIAAAACAAAAAgAAA/4AAAP+AAAD/gAAAAAAAAACAAAAAAACAAAD/gACAAIAAAACAAAABgAAA/wAAAAEAAAD/gAAA/4AAAP6AAAABAAAA/wACgACAAAD/gAAAAAUAAAAAAoADgAADAAcACwAPABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/oAAAACAAAD/AAAAAIAAAAAAAIAAAP+AAIACAAAA/gAAAAIAAAD+AAIAAIAAAP+AAIAAgAAA/4AAAAAFAAAAAAKAA4AAAwAHAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABgAAA/gAAAACAAAABgAAAAIAAAP6AAAAAgAAAAAAAAACAAAAAAACAAAD/gACAAgAAAP4AAAACAAAA/gACAACAAAD/gACAAIAAAP+AAAAABgAAAAACgAOAAAMABwALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAIAAAACAAAAAgAAA/wAAAACAAAAAAACAAAD/gACAAgAAAP4AAAACAAAA/gACAACAAAD/gAAAAIAAAP+AAIAAgAAA/4AABQAAAAACgAOAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAIAAAACAAAAAgAAAAAAAgAAA/4AAgAIAAAD+AAAAAgAAAP4AAoAAgAAA/4AAAACAAAD/gAAAAAcAAAAAAoADgAADAAcACwAPABMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAACAAAD/AAAAAIAAAACAAAAAgAAA/gAAAACAAAABgAAAAIAAAP6AAAAAgAAAAAAAAACAAAAAAAGAAAD+gAGAAIAAAP+AAAAAgAAA/4AAgACAAAD/gAAAAIAAAP+AAIAAgAAA/4AAgACAAAD/gAAAAAIAAAAAAoADgAADAA8AAAEBAQEBAQEBAQEBAQEBAQECAAAAAIAAAP2AAAAAgAAAAYAAAP6AAAABgAAA/oAAAAGAAQAAAP8A/oADgAAA/4AAAP+AAAD/AAAA/4AAAP8AAAYAAAAAAoADAAADAAcACwAVABkAHQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAABAAAAAIAAAAAAAAAAgAAA/gAAAACAAAABAAAA/wAAAACAAAAAgAAAAIAAAP6AAAABAAAAAAAAgAAA/4AAAACAAAD/gACAAQAAAP8AAAACAAAA/4AAAP+AAAD/gAAA/4ABgACAAAD/gACAAIAAAP+AAAAABAAAAAACgAOAAAMADQAVABkAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAAAAAAAAYAAAP6AAAABgAAAAIAAAP4AAAAAgAAAAIAAAACAAAD+gAAAAIAAAACAAIAAAP+A/4AAgAAAAIAAAACAAAAAgAAA/gACAACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAAAAEAAAAAAKAA4AAAwANABUAGQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAAAAAABgAAA/oAAAAGAAAAAgAAA/gAAAACAAAAAgAAAAIAAAP+AAAAAgAAAAIAAgAAA/4D/gACAAAAAgAAAAIAAAACAAAD+AAIAAIAAAACAAAD/gAAA/4ABAACAAAD/gAAAAAUAAAAAAoADgAADAA0AEQAVABkAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAAAAAAAAYAAAP6AAAABgAAAAIAAAP4AAAABgAAA/oAAAACAAAAAgAAAAIAAAACAAIAAAP+A/4AAgAAAAIAAAACAAAAAgAAA/gACAACAAAD/gAEAAIAAAP+AAAAAgAAA/4AABgAAAAACgAOAAAMADQARABcAGwAfAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAAAAAAGAAAD+gAAAAYAAAACAAAD9gAAAAIAAAAAAAAAAgAAAAQAAAP6AAAAAgAAAAQAAAACAAAAAgACAAAD/gP+AAIAAAACAAAAAgAAAAIAAAP4AAoAAgAAA/4D/gACAAAAAgAAA/wABAACAAAD/gAAAAIAAAP+AAAUAAAAAAoADgAADAA0AEQAVABkAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAAAAAAAAYAAAP6AAAABgAAAAIAAAP4AAAABgAAA/oAAAACAAAAAgAAAAIAAAACAAIAAAP+A/4AAgAAAAIAAAACAAAAAgAAA/gACAACAAAD/gAEAAIAAAP+AAAAAgAAA/4AABAAAAAACgAOAAAMADQARABUAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAAAAAABgAAA/oAAAAGAAAAAgAAA/wAAAP+AAAD/gAAAAYAAAACAAIAAAP+A/4AAgAAAAIAAAACAAAAAgAAA/gACgACAAAD/gP+AAYAAAP6AAAAAAwAAAAACgAKAABMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAAAgAAA/4AAAACAAAAAgAAAAIAAAACAAAD/AAAAAQAAAP2AAAABAAAAAIAAAACAAAAAAAEAAAD/gAAAAIAAAACAAAAAgAAA/4AAAACAAAD/AAAA/4AAAP+AAgAAgAAA/4AAAACAAAD/gAAAAAMAAAAAAgADAAAJAA0AEQAAAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAEAAAD/gAAAAYAAAP+AAAD+gAAAAIAAAAAAAAABgAAAAAAAgAAAAIAAAACAAAD/gAAA/wABgAEAAAD/AAEAAIAAAP+AAAQAAAAAAoADgAADAA0AFQAZAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABgAAA/gAAAACAAAABgAAAAIAAAP4AAAAAAAAAAIAAAACAAAAAgAAA/oAAAACAAAAAAACAAAD/gACAAYAAAP+AAAAAgAAA/wAAAP+AAYAAgAAAAIAAAP+AAAD/gAEAAIAAAP+AAAAABAAAAAACgAOAAAMADQAVABkAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAAAAAAAgAAAAIAAAACAAAD/gAAAAIAAAAAAAIAAAP+AAIABgAAA/4AAAACAAAD/AAAA/4ABgACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAAAAEAAAAAAKAA4AAAwANABUAGQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAAAAAACAAAAAgAAAAIAAAP8AAAAAgAAAAAAAgAAA/4AAgAGAAAD/gAAAAIAAAP8AAAD/gAGAAQAAAP+AAAAAgAAA/wABAACAAAD/gAAAAAUAAAAAAoADgAADAA0AEQAVABkAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAAAAAABgAAA/oAAAACAAAAAgAAAAIAAAAAAAIAAAP+AAIABgAAA/4AAAACAAAD/AAAA/4ABgACAAAD/gAEAAIAAAP+AAAAAgAAA/4AAAwCAAAACAAOAAAkADQARAAABAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAP+AAAABAAAAAIAAAP8AAAAAgAAA/wAAAACAAAAAAACAAAABAAAAAIAAAP6AAAD/gAKAAIAAAP+AAIAAgAAA/4AAAwCAAAACAAOAAAkADQARAAABAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAP+AAAABAAAAAIAAAP8AAAAAgAAAAAAAAACAAAAAAACAAAABAAAAAIAAAP6AAAD/gAKAAIAAAP+AAIAAgAAA/4AABACAAAACAAOAAAkADQARABUAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAP+AAAABAAAAAIAAAP6AAAAAgAAAAIAAAACAAAD/AAAAAIAAAAAAAIAAAAEAAAAAgAAA/oAAAP+AAoAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAAwCAAAACAAOAAAkADQARAAABAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAP+AAAABAAAAAIAAAP6AAAAAgAAAAIAAAACAAAAAAACAAAABAAAAAIAAAP6AAAD/gAMAAIAAAP+AAAAAgAAA/4AAAwAAAAACgAOAAAMABwAZAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAAAAAACAAAD/gAAAAQAAAP+AAAAAgAAA/4AAAACAAAAAgAAAAIAAAP+AAAAAgAEAAAD/AAEAAIAAAP+A/oAAgAAAAIAAAACAAAABAAAAAIAAAACAAAD/gAAA/4AAAP2AAAcAAAAAAoADgAADAAsADwATABcAGwAfAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIAAAAAgAAA/YAAAACAAAAAgAAA/4AAAACAAAABAAAA/gAAAACAAAAAgAAAAQAAAP6AAAAAgAAAAQAAAACAAAAAAAGAAAD+gAAAAgAAAP+AAAD/gAAA/wABgACAAAD/gAEAAIAAAP+AAAAAgAAA/4AAgACAAAD/gAAAAIAAAP+AAAAABgAAAAACgAOAAAMABwALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAYAAAP8AAAAAgAAA/wAAAACAAAAAAACAAAD/gACAAQAAAP8AAAABAAAA/wABAACAAAD/gAEAAIAAAP+AAIAAgAAA/4AABgAAAAACgAOAAAMABwALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAYAAAP8AAAAAgAAAAAAAAACAAAAAAACAAAD/gACAAQAAAP8AAAABAAAA/wABAACAAAD/gAEAAIAAAP+AAIAAgAAA/4AABwAAAAACgAOAAAMABwALAA8AEwAXABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAYAAAP6AAAAAgAAAAIAAAACAAAD/AAAAAIAAAAAAAIAAAP+AAIABAAAA/wAAAAEAAAD/AAEAAIAAAP+AAQAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAACAAAAAACgAOAAAMABwALAA8AEwAXABsAHwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD+AAAAAYAAAP4AAAAAgAAAAIAAAAEAAAD+gAAAAIAAAAEAAAAAgAAAAAAAgAAA/4AAgAEAAAD/AAAAAQAAAP8AAQAAgAAA/4ABAACAAAD/gAAAAIAAAP+AAIAAgAAA/4AAAACAAAD/gAAGAAAAAAKAA4AAAwAHAAsADwATABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABgAAA/gAAAACAAAABgAAAAIAAAP4AAAABgAAA/oAAAACAAAAAgAAAAIAAAAAAAIAAAP+AAIABAAAA/wAAAAEAAAD/AAEAAIAAAP+AAYAAgAAA/4AAAACAAAD/gAADAAAAgAKAAwAAAwAHAAsAAAEBAQEBAQEBAQEBAQEAAAAAgAAA/oAAAAKAAAD+gAAAAIAAAACAAIAAAP+AAQAAgAAA/4ABAACAAAD/gAAAAAMAAAAAAoACgAADABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAACAAAD+gAAAAIAAAACAAAAAgAAAAQAAAP+AAAD/gAAA/4AAAAAAAAAAgAAAAAAAgAAA/4AAgACAAAABAAAA/4AAAACAAAD/gAAA/wAAAACAAAD/gAGAAIAAAP+AAAAABQAAAAACgAOAAAMABwAPABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAEAAAD+gAAAAIAAAAGAAAD/gAAAAIAAAACAAAD+gAAAAIAAAP8AAAAAgAAAAAAAgAAA/4AAgAGAAAD+gP+AAIAAAACAAAABAAAA/gACgACAAAD/gACAAIAAAP+AAAAABQAAAAACgAOAAAMABwAPABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAEAAAD+gAAAAIAAAAGAAAD/gAAAAIAAAACAAAD+gAAAAIAAAAAAAAAAgAAAAAAAgAAA/4AAgAGAAAD+gP+AAIAAAACAAAABAAAA/gACgACAAAD/gACAAIAAAP+AAAAABgAAAAACgAOAAAMABwAPABMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAEAAAD+gAAAAIAAAAGAAAD/gAAAAIAAAACAAAD+AAAAAIAAAACAAAAAgAAA/wAAAACAAAAAAACAAAD/gACAAYAAAP6A/4AAgAAAAIAAAAEAAAD+AAKAAIAAAP+AAAAAgAAA/4AAgACAAAD/gAAFAAAAAAKAA4AAAwAHAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAQAAAP6AAAAAgAAAAYAAAP+AAAAAgAAAAIAAAP4AAAAAgAAAAIAAAACAAAAAAACAAAD/gACAAYAAAP6A/4AAgAAAAIAAAAEAAAD+AAMAAIAAAP+AAAAAgAAA/4AAAAAHAAAAAAKAA4AAAwAJAA0AEQAVABkAHQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAEAAAAAAAAAAQAAAP+AAAD/AAAAAIAAAP8AAAAAgAAAAYAAAACAAAD+gAAAAIAAAAAAAAAAgAAAAAAAgAAA/4AAgAEAAAD/gAAA/4ABAACAAAD/gACAAIAAAP+A/4ABAAAA/wABAACAAAD/gACAAIAAAP+AAAIAAAAAAoADAAADAA8AAAEBAQEBAQEBAQEBAQEBAQECAAAAAIAAAP2AAAAAgAAAAYAAAP6AAAABgAAA/oAAAAGAAIAAAP+A/oADAAAA/4AAAP+AAAD/gAAA/4AAAP8AAAcAAAAAAoADgAADAAkADQARABUAGQAdAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAQAAAAAAAAABAAAA/4AAAP8AAAAAgAAA/wAAAACAAAABgAAAAIAAAP4AAAAAgAAAAIAAAACAAAAAAACAAAD/gACAAQAAAP+AAAD/gAEAAIAAAP+AAIAAgAAA/4D/gAEAAAD/AAGAAIAAAP+AAAAAgAAA/4AABAAAAAACgAOAAAsADwATABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAYAAAACAAAD/gAAA/oAAAAAAAAABgAAA/gAAAACAAAABgAAAAIAAAAAAAgAAAP+AAAAAgAAA/gAAAAEAAAD/AAIAAQAAAP8AAQAAgAAA/4AAAACAAAD/gAAFAAAAAAKAA4AAAwANABEAFQAZAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAAAAAAGAAAD+gAAAAYAAAACAAAD+AAAAAYAAAP4AAAAAgAAAAYAAAACAAAAAgACAAAD/gP+AAIAAAACAAAAAgAAAAIAAAP4AAgABAAAA/wABAACAAAD/gAAAAIAAAP+AAAMAAAAAAoADgAAFABEAFQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQGAAAAAgAAAAIAAAP2AAAAAgAAAAYAAAACAAAD/gAAA/oAAAAAAAAABgAAAAAABAAAA/4AAAP+AAQACAAAA/4AAAACAAAD+AAAAAQAAAP8AAgAAgAAA/4AAAwAAAAACgAOAAAMAEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAEAAAD/AAAAAYAAAP6AAAABgAAAAIAAAP+AAAAAgAAA/gAAAAGAAAABgACAAAD/gP6AAQAAAACAAAAAgAAAAIAAAACAAAD+AAAA/4AAAP+AAwAAgAAA/4AAAAADAAAAAAKAA4AAAwAHABkAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAAAAAAAAIAAAP+AAAABAAAA/4AAAACAAAD/gAAAAIAAAACAAAAAgAAA/4AAAACAAQAAAP8AAQAAgAAA/4D+gACAAAAAgAAAAIAAAAEAAAAAgAAAAIAAAP+AAAD/gAAA/YAAAQAAAAACgAOAABEAAAEBAQEBAQEBAQEBAQEBAQEBAQGAAAD+gAAAAoAAAP4AAAABgAAA/oAAAAIAAAD/gAAAAIAAAAAAAQAAAAKAAAD/gAAA/4AAAP+AAAD/gAAA/4AAAP+AAAD/gAADAAAAAAKAA4AABwARABUAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBgAAA/wAAAAGAAAAAgAAA/YAAAACAAAABgAAAAIAAAP4AAAAAAAAAAYAAAAAAAQAAAACAAAD/AAAA/4ABgAGAAAD/gAAAAIAAAP8AAAD/gAGAAIAAAP+AAAMAAAAAAoADgAAPABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAEAAAAAgAAAAQAAAP4AAAABgAAA/oAAAAIAAAD+AAAAAIAAAACAAAAAgAAAAAACgAAAAIAAAP+AAAD/gAAA/4AAAP+AAAD/gAAA/4ADAACAAAD/gAAAAIAAAP+AAAAABQAAAAACgAOAAAMADQAVABkAHQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAAAAAAAgAAAAIAAAACAAAD+gAAAAIAAAACAAAAAgAAAAAAAgAAA/4AAgAGAAAD/gAAAAIAAAP8AAAD/gAGAAIAAAACAAAD/gAAA/4ABAACAAAD/gAAAAIAAAP+AAAEAAAAAAoADgAANAAABAQEBAQEBAQEBAQEBAQCAAAD/gAAAAIAAAACAAAAAgAAA/4AAAAGAAAAAAAGAAAAAgAAAAYAAAP8AAAD/gAAA/oAAAP+AAAEAAAAAAYADgAARAAABAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAP+AAAAAgAAA/4AAAAEAAAAAgAAA/4AAAACAAAAAAACAAAABAAAAAIAAAAEAAAAAgAAA/wAAAP+AAAD+gAAA/4AABQAAAAACgAOAAAMACwATABcAGwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAgAAA/oAAAACAAAAAgAAA/4AAAAGAAAD/gAAAAIAAAACAAAD+gAAAAIAAAAAAAAAAgAAAAQAAgAAA/4D/AAKAAAD/gAAA/4AAAP6AAAAAgAAAAIAAAAGAAAD9gAKAAIAAAP+AAIAAgAAA/4AAAAAFAAAAAAKAA4AAAwALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQECAAAAAIAAAP2AAAAAgAAAAIAAAP+AAAAAgAAAAQAAAP8AAAAAgAAAAAAAAACAAAAAAAGAAAD+gAAAAgAAAP+AAAD/gAAA/wABgACAAAD/gAEAAIAAAP+AAIAAgAAA/4AAAAAGAAAAAAKAA4AAAwALABMAFwAbAB8AAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAACAAAD+gAAAAIAAAACAAAD/gAAAAYAAAP+AAAAAgAAAAIAAAP6AAAAAgAAA/wAAAACAAAAAgAAAAIAAAAEAAIAAAP+A/wACgAAA/4AAAP+AAAD+gAAAAIAAAACAAAABgAAA/YACgACAAAD/gACAAIAAAP+AAAAAgAAA/4AABgAAAAACgAOAAAMACwAPABMAFwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgAAAACAAAD9gAAAAIAAAACAAAD/gAAAAIAAAAEAAAD/AAAAAIAAAP8AAAAAgAAAAIAAAACAAAAAAAGAAAD+gAAAAgAAAP+AAAD/gAAA/wABgACAAAD/gAEAAIAAAP+AAIAAgAAA/4AAAACAAAD/gAAHAAAAAAKAA4AAAwAHAAsADwAVABkAHQAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/YAAAACAAAAAAAAAAQAAAACAAAD+gAAAAIAAAAEAAAAAgAAAAAAAgAAA/4AAgAGAAAD+gAAAAYAAAP6AAgAAgAAA/4D/gACAAAAAgAAA/wABAACAAAD/gAAAAIAAAP+AAAgAAAAAAoADgAADAAcACwAPABMAFwAbAB8AAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAAGAAAD+AAAAAIAAAAEAAAAAgAAA/oAAAACAAAABAAAAAIAAAAAAAIAAAP+AAIABAAAA/wAAAAEAAAD/AAEAAIAAAP+AAQAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAAgAAAAACgAOAAAMAEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAAAAAAAgAAA/4AAAAIAAAD/AAAAAQAAAP8AAAABAAAAAIACgAAA/YD/gACAAAACgAAAAIAAAP+AAAD/AAAA/4AAAP8AAAD/gAAGAAAAAAKAAoAAAwAHAAsAFQAZAB0AAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAAAgAAAAIAAAAEAAAD9gAAAAIAAAACAAAAAgAAAAIAAAACAAAD/AAAA/wAAAACAAAAAgAAAAIAAAAAAAIAAAP+AAAAAgAAA/4AAgAGAAAD+gAAAAYAAAP+AAAAAgAAA/wAAAP+AAYAAgAAA/4AAAACAAAD/gAAAAAUAAAAAAoADgAADAAcAFwAbAB8AAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAgAAAACAAAD/gAAAAIAAAP2AAAABAAAAAIAAAACAAAD+gAAAAYAAAP+AAAD/AAAAAAAAAACAAAAAgAAAAIAAAAAAAIAAAP+AAYAAgAAA/4D+gAKAAAAAgAAA/4AAAP+AAAD/gAAA/wAAAACAAAD/AAMAAIAAAP+AAAAAgAAA/4AAAAAFAIAAAAKAA4AABwALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAACAAAD/gAAAAIAAAAEAAAD+gAAAAIAAAP8AAAAAgAAAAIAAAACAAAAAAAIAAAD/gAAA/4AAAP8AAYAAgAAA/4ABAACAAAD/gACAAIAAAP+AAAAAgAAA/4AAAAAGAAAAAAKAA4AAAwAHAAsADwAXABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAgAAAAAAAAAAgAAA/gAAAAGAAAD+AAAAAIAAAAAAAAAAgAAAAIAAAAEAAAD/AAAAAIAAAAAAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAIAAgAAAAIAAAP+AAAD/gAEAAIAAAP+AAAYAAAAAAgADgAADAAcACwAPABcAGwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAABgAAAAAAAAACAAAD+gAAAAQAAAP6AAAAAgAAAAAAAAACAAAAAgAAAAIAAAP+AAAAAgAAAAAAAgAAA/4AAgACAAAD/gACAAIAAAP+AAIAAgAAA/4AAgACAAAAAgAAA/4AAAP+AAQAAgAAA/4AABwAAAAACgAOAAAMABwALAA8AFwAbAB8AAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAAIAAAAAAAAAAIAAAP4AAAABgAAA/gAAAACAAAAAAAAAAIAAAACAAAABAAAA/gAAAACAAAAAgAAAAIAAAAAAAIAAAP+AAIAAgAAA/4AAgACAAAD/gACAAIAAAP+AAIAAgAAAAIAAAP+AAAD/gAEAAIAAAP+AAAAAgAAA/4AAAAAHAAAAAAIAA4AAAwAHAAsADwAXABsAHwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAYAAAAAAAAAAgAAA/oAAAAEAAAD+gAAAAIAAAAAAAAAAgAAAAIAAAACAAAD+gAAAAIAAAACAAAAAgAAAAAAAgAAA/4AAgACAAAD/gACAAIAAAP+AAIAAgAAA/4AAgACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAAACAAAD/gAAAAAMAAAAAAoADgAALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAA/wAAAAEAAAAAgAAAAQAAAP8AAAD/AAAAAIAAAACAAAAAgAAAAAACAAAAAIAAAACAAAD/gAAA/4AAAP4AAwAAgAAA/4AAAACAAAD/gAAAAAQAAAAAAoADgAADAAcAEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAIAAAAAAAAAAgAAA/oAAAP+AAAAAgAAAAIAAAACAAAD/gAAAAQAAAACAAAAAAACAAAD/gACAAIAAAP+AAAABgAAAAIAAAACAAAD/gAAA/4AAAP6AAgABAAAA/wAABQAAAAACgAOAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAYAAAP4AAAAAgAAAAYAAAACAAAD/AAAA/4AAAP+AAAABgAAAAAAAgAAA/4AAgAGAAAD+gAAAAYAAAP6AAgAAgAAA/4D/gAGAAAD+gAAAAAUAAAAAAoADgAADAAcADwATABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABAAAA/oAAAACAAAABgAAA/4AAAACAAAAAgAAA/wAAAP+AAAD/gAAAAYAAAAAAAIAAAP+AAIABgAAA/oD/gACAAAAAgAAAAQAAAP4AAoAAgAAA/4D/gAGAAAD+gAAAAAYAAAAAAoADgAADAAcACwAPABMAFwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAAAAAAAAIAAAP2AAAAAgAAAAQAAAACAAAD+gAAAAIAAAAEAAAAAgAAAAAAAgAAA/4AAgAIAAAD+AAAAAoAAAP2AAgAAgAAA/4AAgACAAAD/gAAAAIAAAP+AAAcAAAAAAoADgAADAAcADwATABcAGwAfAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAABAAAA/oAAAACAAAABgAAA/4AAAACAAAAAgAAA/YAAAACAAAABAAAAAIAAAP6AAAAAgAAAAQAAAACAAAAAAACAAAD/gACAAYAAAP6A/4AAgAAAAIAAAAEAAAD+AAKAAIAAAP+AAAAAgAAA/4AAgACAAAD/gAAAAIAAAP+AAAAABwAAAAACgAOAAAMABwALAA8AEwAXABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAIAAAP8AAAAAgAAAAIAAAACAAAD+AAAAAIAAAAGAAAAAgAAA/gAAAACAAAAAgAAAAIAAAAAAAYAAAP6AAYAAgAAA/4AAAACAAAD/gACAAIAAAP+AAAAAgAAA/4ABAACAAAD/gAAAAIAAAP+AAAAABAAAAAACgAOAAAcACwAXABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAACAAAABgAAA/oAAAACAAAAAAAAA/oAAAAEAAAAAgAAAAQAAAP+AAAD/gAAAAIAAAAAAAIAAAACAAAD/gAAA/4ABAACAAAD/gACAAIAAAACAAAAAgAAA/4AAAP+AAAD/gAGAAIAAAP+AAAQAgAAAAoADgAAHAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAgAAAAIAAAACAAAABAAAA/wAAAP8AAAACAAAA/4AAAP8AAAAAgAAAAAAAAACAAAAAAACAAAAAgAAA/4AAAP+AAQAAgAAAAIAAAP+AAAD/gAGAAIAAAP+AAIAAgAAA/4AABAAAAAACgAOAAAcACwATABcAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAIAAAAGAAAD+gAAAAIAAAAAAAAD+gAAAAoAAAP+AAAD/AAAAAIAAAAAAAIAAAACAAAD/gAAA/4ABAACAAAD/gACAAIAAAACAAAD/gAAA/4ABgACAAAD/gAADAIAAAAKAA4AABwAPABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAACAAAAAgAAAAQAAAP8AAAD/AAAAAgAAAP+AAAD/AAAAAIAAAAAAAIAAAACAAAD/gAAA/4ABAACAAAAAgAAA/4AAAP+AAgAAgAAA/4AAAAAFAAAAAAKAA4AABwALABcAGwAfAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAIAAAAGAAAD+gAAAAIAAAAAAAAD+gAAAAQAAAACAAAABAAAA/4AAAP6AAAAAgAAAAIAAAACAAAAAAACAAAAAgAAA/4AAAP+AAQAAgAAA/4AAgACAAAAAgAAAAIAAAP+AAAD/gAAA/4ABgACAAAD/gAAAAIAAAP+AAAAABQCAAAACgAOAAAcADwATABcAGwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQCAAAAAgAAAAIAAAAEAAAD/AAAA/wAAAAIAAAD/gAAA/wAAAACAAAD/AAAAAIAAAACAAAAAgAAAAAAAgAAAAIAAAP+AAAD/gAEAAIAAAACAAAD/gAAA/4ABgACAAAD/gACAAIAAAP+AAAAAgAAA/4AAAAABAAD/gACAAAAAAwAAAQEBAQAAAAAAgAAA/4AAgAAA/4AAAAADAAAAAAKAA4AAAwAPABMAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAIAAAAGAAAD+AAAAAIAAAAGAAAAAgAAA/4AAAP6AAAAAAAAAAYAAAAAAAIAAAP+AAIACgAAA/wAAAAEAAAD9gAAAAQAAAP8AAoAAgAAA/4AAAAAFAAAAAAKAA4AABwALAA8AEwAbAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAACAAAABgAAAAIAAAP4AAAAAgAAAAAAAAACAAAD/AAAAAIAAAP8AAAACgAAA/4AAAP6AAAAAAAEAAAD/gAAAAIAAAP8AAQAAgAAA/4AAgACAAAD/gACAAIAAAP+AAIABAAAA/wAAAACAAAD/gAAAAAQAAAAAAoADgAALAA8AEwAXAAABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAGAAAAAgAAA/4AAAP6AAAAAAAAAAYAAAP4AAAAAgAAAAYAAAACAAAAAAAIAAAD/gAAAAIAAAP4AAAABAAAA/wACAAEAAAD/AAEAAIAAAP+AAAAAgAAA/4AAAQAAAAACgAOAABUAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAEAAAD/gAAA/4AAAP+AAAACgAAA/4AAAACAAAD/gAAA/oAAAAAAAYAAAP+AAAACAAAA/oAAAAGAAAAAgAAA/4AAAP4AAAD/AAAAAIAAAP+AAAUAAAAAAoADgAADAAcACwAXABsAAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAIAAAAGAAAAAgAAA/YAAAACAAAAAgAAA/4AAAACAAAAAgAAAAIAAAP+AAAAAgAAAAIAAAAAAAYAAAP6AAAABgAAA/oACAAGAAAD+gP4AAYAAAACAAAABgAAA/oAAAP+AAAD+gAIAAYAAAP6AAAAABQAAAAACgAOAAAMABwALAA8AEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAAAAgAAAAAAAAAAgAAA/gAAAAGAAAAAAAAAAIAAAP2AAAACAAAAAAAAgAAA/4AAgAEAAAD/AAEAAIAAAP+AAIABAAAA/wABAACAAAD/gAAAAAMAAAAAAoADgAADAAsAEwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAAAAAIAAAP6AAAAAgAAAAIAAAP+AAAABgAAA/4AAAACAAAAAgAAAAYAAgAAA/4D+gAOAAAD+AAAA/4AAAP8AAAACAAAAAIAAAAEAAAD8gAAAAAYAAAAAAoADgAADAAcACwATABcAGwAAAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAAAABAAAAAAAAAACAAAD+gAAAAQAAAP4AAAAAgAAAAIAAAP+AAAABgAAAAIAAAP4AAAABgAAAAAAAgAAA/4AAgAGAAAD+gAGAAIAAAP+A/gADAAAA/gAAAP+AAAD/gAKAAIAAAP+AAIAAgAAA/4AAAgCAAgABgAOAAAUACQAAAQEBAQEBAQEBAQCAAAAAgAAAAIAAAP+AAAAAgAAAAgABAAAA/4AAAP+AAQAAgAAA/4AAAAACAIACAAGAA4AAAwAJAAABAQEBAQEBAQEBAIAAAACAAAAAAAAA/4AAAAEAAAACAACAAAD/gACAAIAAAACAAAD/AAAAAAQAAAIAAoADgAAFAAsADwATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAIAAAACAAAAAgAAAAIAAAP4AAAAAgAAAAQAAAACAAAACAAEAAAD/gAAA/4AAAAEAAAD/gAAA/4ABAACAAAD/gAAAAIAAAP+AAAQAAAIAAoADgAADAAcADQATAAABAQEBAQEBAQEBAQEBAQEBAQEBAQAAAAAAgAAAAQAAAACAAAD+gAAA/4AAAAEAAAABAAAA/4AAAAEAAAACAACAAAD/gAAAAIAAAP+AAIAAgAAAAIAAAP8A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);
+  }
+</style>
 </head>
 <body>
     <div class="tab-buttons">
@@ -78,10 +788,22 @@
         </div>
     </div>
     <div id="audio-panel" class="tab-panel center">
+        <div id="audio-selector">
+
+        </div>
         <div id="audio-toolbar">
+            <button id="audio-play-button">Play</button>
             <div class="audio-toolbar-input">
                 <label>Volume</label>
                 <input type="range" class="slider" min="0" max="100" value="50" id="audio-volume">
+            </div>
+            <div class="audio-toolbar-input">
+                <label>BPM</label>
+                <input type="number" min="0" max="300" value="120" id="audio-bpm">
+            </div>
+            <div class="audio-toolbar-input">
+                <label>Beats</label>
+                <input type="number" min="0" max="64" value="4" id="audio-beats">
             </div>
         </div>
         <div id="audio-melody">
@@ -127,9 +849,2188 @@
             </div>
         </div>
     </div>
-    <script type="module" src="./src/engine.js"></script>
-    <script type="module" src="./src/main.js"></script>
-    <script type="module" src="./src/codeParser.js"></script>
-    <script type="module" src="./src/editor.js"></script>
+<script  type="text/javascript">
+class HtmlInputManager {
+
+    constructor(document) {
+        this.keys = {};
+        document.addEventListener("keydown", event => this.__keyDownHandler(this, event), false);
+        document.addEventListener("keyup", event => this.__keyUpHandler(this, event), false);
+        document.addEventListener("keypress", event => this.__keyPressedHandler(this, event), false);
+    }
+
+    isKeyDown(key) {
+        return key in this.keys && this.keys[key] == 1;
+    }
+
+    isKeyPressed(key) {
+        return key in this.keys && this.keys[key] == 2;
+    }
+
+    isKeyUp(key) {
+        return !(key in this.keys);
+    }
+
+    __keyDownHandler(inputManager, event) {
+        inputManager.keys[event.key] = 1;
+    }
+
+    __keyPressedHandler(inputManager, event) {
+        inputManager.keys[event.key] = 2;
+    }
+
+    __keyUpHandler(inputManager, event) {
+        if (event.key in inputManager.keys)
+            delete inputManager.keys[event.key];
+    }
+}
+
+class FontUtil {
+    constructor(context) {
+        this.images = {};
+        this.bitmap = {
+            'a': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
+            'b': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+            'c': [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0],
+            'd': [0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
+            'e': [0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+            'f': [0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            'g': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0],
+            'h': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
+            'i': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'j': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+            'k': [1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0],
+            'l': [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'm': [0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            'n': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
+            'o': [0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
+            'p': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0],
+            'q': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1],
+            'r': [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            's': [0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0],
+            't': [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0],
+            'u': [0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
+            'v': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+            'w': [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            'x': [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+            'y': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0],
+            'z': [0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+            'A': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
+            'B': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+            'C': [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0],
+            'D': [0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
+            'E': [0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
+            'F': [0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            'G': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0],
+            'H': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
+            'I': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'J': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
+            'K': [1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0],
+            'L': [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'M': [0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            'N': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
+            'O': [0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
+            'P': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0],
+            'Q': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1],
+            'R': [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            'S': [0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0],
+            'T': [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0],
+            'U': [0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
+            'V': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+            'W': [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            'X': [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
+            'Y': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0],
+            'Z': [0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+            '0': [0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
+            '1': [0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+            '2': [1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
+            '3': [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+            '4': [1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0],
+            '5': [1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+            '6': [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+            '7': [1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+            '8': [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+            '9': [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+            '-': [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+            '+': [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            '_': [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
+            '/': [0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0],
+            '.': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            ',': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
+        }
+        this.setImageDatas(context);
+    }
+
+    setImageDatas(context) {
+        Object.keys(this.bitmap).forEach(char => {
+            this.images[char] = this.__getImage(context, char);
+        });
+    }
+
+    getImage(char) {
+        return this.images[char];
+    }
+
+    __getImage(context, char) {
+        let bitmap = this.bitmap[char];
+        let imageData = context.createImageData(3, 5);
+        let x = 0;
+        for (let i = 0; i < imageData.data.length; i += 4) {
+            imageData.data[i + 0] = 255;
+            imageData.data[i + 1] = 255;
+            imageData.data[i + 2] = 255;
+            imageData.data[i + 3] = bitmap[x] == 1 ? 255 : 0;
+            x++;
+        }
+        return imageData;
+    }
+}
+
+class HtmlRenderer {
+
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
+
+        this.width = this.canvas.width;
+        this.height = this.canvas.height;
+
+        this.mousePos = { x: 0, y: 0 };
+        this.setupMousePosListening();
+
+        this.fontUtil = new FontUtil(this.ctx);
+    }
+
+    setupMousePosListening() {
+        this.canvas.addEventListener('mousemove', event => {
+            let rect = this.canvas.getBoundingClientRect();
+            let scaleFactor = rect.width / this.canvas.width;
+            this.mousePos.x = Math.floor((event.clientX - rect.left) / scaleFactor);
+            this.mousePos.y = Math.floor((event.clientY - rect.top) / scaleFactor);
+        });
+    }
+
+    upscaleCanvas(width, height) {
+        this.canvas.style.width = width + 'px';
+        this.canvas.style.height = height + 'px';
+    }
+
+    setCripsPixel() {
+        this.canvas.style.imageRendering = '-moz-crisp-edges';
+        this.canvas.style.imageRendering = '-webkit-crisp-edges';
+        this.canvas.style.imageRendering = 'pixelated';
+        this.canvas.style.imageRendering = 'crisp-edges';
+    }
+
+    setBackgroundColor(color) {
+        this.canvas.style.backgroundColor = color;
+    }
+
+    clear() {
+        this.ctx.clearRect(0, 0, this.width, this.height);
+    }
+
+    drawPixel(x, y, color) {
+        this.ctx.beginPath();
+        this.ctx.rect(Math.round(x), Math.round(y), 1, 1);
+        this.ctx.fillStyle = color;
+        this.ctx.fill();
+        this.ctx.closePath();
+    }
+
+    drawImage(x, y, image) {
+        this.ctx.putImageData(image, x, y);
+    }
+
+    drawRect(x, y, width, height, color) {
+        this.ctx.beginPath();
+        this.ctx.rect(x, y, width, height);
+        this.ctx.fillStyle = color != null ? color : '#ff00fb';
+        this.ctx.fill();
+        this.ctx.closePath();
+    }
+
+    drawEclipse(x, y, radius, color) {
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+        this.ctx.fillStyle = color != null ? color : '#ff00fb';
+        this.ctx.fill();
+        this.ctx.closePath();
+    }
+
+    drawText(text, x, y, size, color) {
+        for (let i = 0; i < text.length; i++) {
+            let img = this.fontUtil.getImage(text[i]);
+            if (img != null)
+                this.drawImage(x + (4 * i), y, img);
+        }
+    }
+}
+
+class Physics2D {
+
+    constructor() {
+    }
+
+    doRectsCollides(rect_a, rect_b) {
+        let a = { x1: rect_a.x, x2: rect_a.x + rect_a.width, y1: rect_a.y, y2: rect_a.y + rect_a.height };
+        let b = { x1: rect_b.x, x2: rect_b.x + rect_b.width, y1: rect_b.y, y2: rect_b.y + rect_b.height };
+        return this.contains(a, b) || this.overlaps(a, b);
+    }
+
+    // Check if rectangle a contains rectangle b
+    contains(a, b) {
+        return !(
+            b.x1 < a.x1 ||
+            b.y1 < a.y1 ||
+            b.x2 > a.x2 ||
+            b.y2 > a.y2
+        );
+    }
+
+    // Check if rectangle a overlaps rectangle b
+    overlaps(a, b) {
+        // no horizontal overlap
+        if (a.x1 >= b.x2 || b.x1 >= a.x2) return false;
+        // no vertical overlap
+        if (a.y1 >= b.y2 || b.y1 >= a.y2) return false;
+        return true;
+    }
+
+    // Check if rectangle a touches rectangle b
+    touches(a, b) {
+        // has horizontal gap
+        if (a.x1 > b.x2 || b.x1 > a.x2) return false;
+        // has vertical gap
+        if (a.y1 > b.y2 || b.y1 > a.y2) return false;
+        return true;
+    }
+
+    doRectCircleCollides(circle, rect) {
+        let x = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
+        let y = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
+        let dx = x - circle.x;
+        let dy = y - circle.y;
+        return (dx * dx + dy * dy) <= circle.radius * circle.radius;
+    }
+
+    doCirclesCollides(circle_a, circle_b) {
+        let max = circle_a.radius + circle_b.radius;
+        let dx = circle_a.x - circle_b.x;
+        let dy = circle_a.y - circle_b.y;
+        return ((dx * dx) + (dy * dy)) <= (max * max);
+    }
+}
+
+class HtmlSynth {
+
+    constructor(audioContext) {
+        this.FREQUENCIES = {
+            'C': 16.35,
+            'C#': 17.32,
+            'D': 18.35,
+            'Eb': 19.45,
+            'E': 20.60,
+            'F': 21.83,
+            'F#': 23.12,
+            'G': 24.50,
+            'G#': 25.96,
+            'A': 27.50,
+            'Bb': 29.14,
+            'B': 30.87,
+        };
+
+        this.audioCtx = audioContext;
+
+        this.mainGainNode = this.audioCtx.createGain();
+        this.mainGainNode.gain.value = 0.2;
+        this.mainGainNode.connect(this.audioCtx.destination);
+
+        this.playingNotes = {};
+    }
+
+    setVolume(volume) {
+        this.mainGainNode.gain.value = volume;
+    }
+
+    playMelody(melody, instrumentData) {
+        let n = 1 / (melody.bpm / 60);
+        Object.values(melody.notes).forEach(note => {
+            let time = n * Math.max(0.00000001, note.time);
+            let length = n * note.length;
+            let instrument = this.getInstument(instrumentData);
+            instrument.playNote(note.octave, note.key, time, length);
+        });
+    }
+
+    getInstument(instrumentData) {
+        let previousNode = this.mainGainNode;
+        let instrument = {
+            nodes: [],
+            oscillators: [],
+        };
+
+        instrumentData.nodes.forEach(nodeData => {
+            let node = null;
+
+            if (nodeData.type == 'oscillator') {
+                node = this.__createOscillatorNode(nodeData);
+                instrument.oscillators.push(node);
+            } else if (nodeData.type == 'filter') {
+                node = this.__createFilter(nodeData);
+            }
+
+            instrument.nodes.push(node);
+
+            if (previousNode != null)
+                node.connect(previousNode)
+            previousNode = node;
+        });
+
+        instrument.playNote = (octave, note, time, length) => {
+            instrument.oscillators.forEach(osc => {
+                osc.playNote(octave + 3, note, time, length);
+            })
+        };
+
+        return instrument;
+    }
+
+    __createOscillatorNode({ waveForm, attack, decay, sustain, release }) {
+        let gainNode = this.audioCtx.createGain();
+        let osc = this.audioCtx.createOscillator();
+
+        osc.playNote = (octave, note, time, length) => {
+            if (octave <= 0) octave = 0.5;
+            osc.frequency.value = this.FREQUENCIES[note] * (octave * 2);
+
+            time = this.audioCtx.currentTime + time;
+
+            gainNode.gain.cancelScheduledValues(time);
+            gainNode.gain.setValueAtTime(0, time);
+            gainNode.gain.linearRampToValueAtTime(1, time + attack);
+            // gainNode.gain.setTargetAtTime(sustain, time + attack, decay);
+
+            // gainNode.gain.setValueAtTime(gainNode.gain.value, time + length);
+            gainNode.gain.linearRampToValueAtTime(0, time + length + release);
+
+            osc.start(time);
+            osc.stop(time + length + release);
+        }
+
+        osc.type = waveForm;
+        osc.gainNode = gainNode;
+        osc.connect(gainNode);
+        osc.connect = (node) => gainNode.connect(node);
+        return osc;
+    }
+
+    __createFilter({ type, frequency, resonance }) {
+        let filterNode = this.audioCtx.createBiquadFilter();
+        filterNode.type = type;
+        filterNode.frequency.value = frequency;
+        filterNode.Q.value = resonance;
+        return filterNode;
+    }
+}
+
+class Engine {
+
+    constructor(renderer, inputManager, sprites, audioPlayer) {
+        this.renderer = renderer;
+        this.inputManager = inputManager;
+        this.audioPlayer = audioPlayer;
+        this.gameLoop = null;
+        this.objects_img = [];
+        this.entities = [];
+        this.sprites = sprites;
+        this.mousePos = renderer.mousePos;
+
+        this.isRunning = false;
+        this.update = () => {};
+        this.draw = () => {};
+
+        this.previousTime = 0.0;
+        const gameloop = (time) => {
+            const deltaTime = time - this.previousTime;
+            this.previousTime = time;
+
+            if (this.isRunning) {
+                this.update(deltaTime);
+                this.renderer.clear();
+                this.__drawEntities();
+                this.draw();
+            }
+            window.requestAnimationFrame(gameloop);
+        }
+
+        window.requestAnimationFrame(time => {
+            this.previousTime = time;
+            window.requestAnimationFrame(gameloop);
+        });
+    }
+
+    setup(sprites) {
+        this.sprites = sprites;
+        this.clear();
+    }
+
+    clear() {
+        if (this.gameLoop != null) {
+            clearInterval(this.gameLoop);
+            this.gameLoop = null;
+            this.objects_img = [];
+            this.entities = [];
+        }
+        this.renderer.clear();
+    }
+
+    start(update, draw = null) {
+        if (draw != null) {
+            this.draw = draw;
+        } else {
+            this.draw = () => {};
+        }
+
+        if (update != null) {
+            this.update = update;
+        } else {
+            this.update = () => {};
+        }
+
+        this.isRunning = true;
+    }
+
+    stop() {
+        this.isRunning = false;
+    }
+
+    drawPixel(x, y, color) {
+        this.renderer.drawPixel(x, y, color);
+    }
+
+    drawSprite(x, y, spriteId) {
+        this.renderer.drawImage(x, y, this.sprites[spriteId]);
+    }
+
+    drawImage(x, y, image) {
+        this.renderer.drawImage(x, y, image);
+    }
+
+    drawRect(x, y, width, height, color) {
+        this.renderer.drawRect(x, y, width, height, color);
+    }
+
+    drawElipse(x, y, radius, color) {
+        this.renderer.drawEclipse(x, y, radius, color);
+    }
+
+    drawText(text, x, y, size, color) {
+        this.renderer.drawText(text, x, y, size, color);
+    }
+
+    setBackgroundColor(color) {
+        this.renderer.setBackgroundColor(color);
+    }
+
+    isKeyDown(key) {
+        return this.inputManager.isKeyDown(key);
+    }
+
+    isKeyPressed(key) {
+        return this.inputManager.isKeyPressed(key);
+    }
+
+    isKeyUp(key) {
+        return this.inputManager.isKeyUp(key);
+    }
+
+    random() {
+        return Math.random();
+    }
+
+    randomRange(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    createObjectSprite(obj = { x, y, spriteIndex }) {
+        obj.__id = this.entities.length;
+        obj.__type = 'sprite';
+        this.entities.push(obj);
+        return obj;
+    }
+
+    createObjectRect(obj = { x, y, width, height, color }) {
+        obj.__id = this.entities.length;
+        obj.__type = 'rect';
+        this.entities.push(obj);
+        return obj;
+    }
+
+    createObjectCircle(obj = { x, y, radius, color }) {
+        obj.__id = this.entities.length;
+        obj.__type = 'elipse';
+        this.entities.push(obj);
+        return obj;
+    }
+
+    deleteObject(obj) {
+        let i = this.entities.findIndex(e => e.__id == obj.__id);
+        this.entities.splice(i, 1);
+    }
+
+    isMouseOverRect(rect) {
+        if (this.mousePos.x < rect.x || this.mousePos.x > (rect.x + rect.width)) return false;
+        if (this.mousePos.y < rect.y || this.mousePos.y > (rect.y + rect.height)) return false;
+        return true;
+    }
+
+    // ================= PRIVATE METHODS ================= 
+    __drawEntities() {
+        this.entities.forEach(obj => {
+            if (obj.__type == 'rect')
+                this.drawRect(obj.x, obj.y, obj.width, obj.height, obj.color);
+            else if (obj.__type == 'elipse')
+                this.drawElipse(obj.x, obj.y, obj.radius, obj.color);
+            else if (obj.__type == 'sprite') {
+                this.drawImage(obj.x, obj.y, this.sprites[obj.spriteIndex])
+            }
+        });
+    }
+}
+
+class App {
+
+    constructor(canvas) {
+
+        this.GameData = {
+            gameCode: '',
+            palette: [
+                '#ffffff',
+                '#ff0000',
+                '#00ff00',
+                '#0000ff',
+                '#ff00ff',
+                '#ffff00',
+                '#00ffff',
+                '#aaaaaa',
+                '#aabb2e',
+            ],
+        }
+
+        this.CANVAS = canvas;
+
+        this.CANVAS.style.width = this.CANVAS.width + "px";
+        this.CANVAS.style.height = this.CANVAS.height + "px";
+
+        this.CANVAS.width /= 12;
+        this.CANVAS.height /= 12;
+
+        this.RENDERER = new HtmlRenderer(this.CANVAS);
+        this.RENDERER.setCripsPixel();
+
+        this.SPRITE_MANAGER = new SpritesManager(this.GameData.palette, 16, 8);
+        this.GameData.sprites = this.SPRITE_MANAGER.sprites;
+
+        this.INPUT_MANAGER = new HtmlInputManager(document);
+        this.PHYSICS = new Physics2D();
+        this.AUDIO_MANAGER = new HtmlSynth(new AudioContext());
+
+        this.ENGINE = new Engine(this.RENDERER, this.INPUT_MANAGER, null, this.SPRITE_MANAGER);
+
+        this.onGameDataUpdate = (gameData) => {};
+
+        this.context = {
+            PRINT: {
+                f: (a) => console.log(a),
+            },
+            SCREEN_WIDTH: {
+                f: this.CANVAS.width
+            },
+            SCREEN_HEIGHT: { 
+                f: this.CANVAS.height
+            },
+            MOUSE_POS: {
+                f: this.ENGINE.mousePos
+            },
+            STOP: {
+                f: () => this.ENGINE.stop(),
+                description: 'Stops the engine',
+            },
+            DRAW_RECT: {
+                f: (x, y, width, height, color) => this.ENGINE.drawRect(x, y, width, height, color),
+                description: 'Draws a rectangle to the screen',
+            },
+            DRAW_CIRCLE: {
+                f: (x, y, radius, color) => this.ENGINE.drawElipse(x, y, radius, color),
+                description: 'Draws a circle to the screen',
+            },
+            DRAW_PIXEL: {
+                f: (x, y, color) => this.ENGINE.drawPixel(x, y, color),
+                description: 'Draws a pixel at a specific position',
+            },
+            TEXT: {
+                f: (text, x, y, size, color) => this.ENGINE.drawText(text, x, y, size, color),
+                description: 'Draws a pixel at a specific position',
+            },
+            SET_BACKGROUND: {
+                f: (color) => this.ENGINE.setBackgroundColor(color),
+                description: 'Draws a pixel at a specific position',
+            },
+            KEY_DOWN: {
+                f: (key) => this.ENGINE.isKeyDown(key),
+                description: 'Returns true if a key is pressed down',
+            },
+            KEY_PRESSED: {
+                f: (key) => this.ENGINE.isKeyPressed(key),
+                description: 'Returns true if a key has been pressed down',
+            },
+            KEY_UP: {
+                f: (key) => this.ENGINE.isKeyUp(key),
+                description: 'Stops the engine',
+            },
+            CREATE_RECT: {
+                f: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectRect(obj),
+                description: 'Stops the engine',
+            },
+            CREATE_CIRCLE: {
+                f: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectCircle(obj),
+                description: 'Stops the engine',
+            },
+            CREATE_SPRITE: {
+                f: (obj = { x, y, spriteIndex }) => this.ENGINE.createObjectSprite(obj),
+                description: 'Stops the engine',
+            },
+            REMOVE: {
+                f: (obj = { x, y, width, height, color }) => this.ENGINE.deleteObject(obj),
+                description: 'Stops the engine',
+            },
+            IS_MOUSE_OVER: {
+                f: (rect) => this.ENGINE.isMouseOverRect(rect),
+                description: 'Stops the engine',
+            },
+            DO_RECT_COLLIDES: {
+                f: (rect_a, rect_b) => this.PHYSICS.doRectsCollides(rect_a, rect_b),
+                description: 'Stops the engine',
+            },
+            DO_RECT_CIRCLE_COLLIDES: {
+                f: (rect, circle) => this.PHYSICS.doRectCircleCollides(circle, rect),
+                description: 'Stops the engine',
+            },
+            DO_CIRCLES_COLLIDES: {
+                f: (circle_a, circle_b) => this.PHYSICS.doCirclesCollides(circle_a, circle_b),
+                description: 'Stops the engine',
+            },
+            RANDOM: {
+                f: () => this.ENGINE.random(),
+                description: 'Stops the engine',
+            },
+            RANDOM_RANGE: {
+                f: (min, max) => this.ENGINE.randomRange(min, max),
+                description: 'Stops the engine',
+            },
+            COLOR: {
+                f: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
+                description: 'Draws a rectangle to the screen',
+            },
+            COLOR_HSL: {
+                f:  (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
+                description: 'Draws a rectangle to the screen',
+            },
+        }
+    }
+
+    run() {
+        try {
+            this.ENGINE.setup(this.SPRITE_MANAGER.imageDatas);
+    
+            let gameContext = this.__getGameContext();
+            let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
+            let f = new Function(...Object.keys(gameContext), runCode);
+            let [update_f, draw_f] = f(...Object.values(gameContext));
+    
+            // if (!update_f)
+            //     throw (new Error('No "UPDATE" function found.'));
+            if (update_f && !draw_f) {
+                this.ENGINE.start(update_f, null);
+            } if (update_f && draw_f) {
+                this.ENGINE.start(update_f, draw_f);
+            }
+        } catch (error) {
+            this.ENGINE.clear();
+            console.warn("There are code errors, fix them before running the code", error);
+        }
+    }
+
+    updatedGameData() {
+        this.onGameDataUpdate(this.GameData);
+    }
+
+    setGameCode(gameCode) {
+        this.GameData.gameCode = gameCode;
+        this.updatedGameData();
+    }
+    
+    loadGameData(gameData) {
+        if (gameData.settings != null)
+            this.GameData.settings = gameData.settings;
+        this.GameData.gameCode = gameData.gameCode;
+    }
+
+    getSpriteImg(spriteId) {
+        return this.SPRITE_MANAGER.getSpriteImg(spriteId);
+    }
+
+    getPalette() {
+        return this.SPRITE_MANAGER.getPalette();
+    }
+
+    setPixel(spriteId, x, y, colorId) {
+        console.log(spriteId, x, y, colorId);
+        this.SPRITE_MANAGER.setPixel(spriteId, x, y, colorId);
+        this.updatedGameData();
+    }
+
+    __getGameContext() {
+        Array.prototype.add = function(obj) {
+            return this.push(obj);
+        };
+
+        let gameContext = {};
+        Object.keys(this.context).forEach(key => {
+            gameContext[key] = this.context[key].f;
+        });
+        return gameContext;
+    }
+}
+
+class SpritesManager {
+
+    constructor(palette, spritesCount, spriteSize = 8) {
+        this.sprites = [];
+        this.imageDatas = [];
+        this.spriteSize = spriteSize;
+        this.palette = palette;
+
+        for (let i = 0; i < spritesCount; i++) {
+            this.sprites.push(this.__createEmptySprite());
+            this.imageDatas.push(new ImageData(this.spriteSize, this.spriteSize));
+        }
+    }
+
+    loadSprites(sprites) {
+        this.__setSprites(sprites);
+    }
+
+    getSprite(spriteId) {
+        return this.sprites[spriteId];
+    }
+
+    getSpriteImg(spriteId) {
+        return this.imageDatas[spriteId];
+    }
+
+    getPalette() {
+        return palette;
+    }
+
+    setPalette(palette) {
+        this.palette = palette;
+    }
+
+    setPixel(spriteId, x, y, colorId) {
+        this.sprites[spriteId][y][x] = colorId;
+
+        let [r, g, b, a] = colorId != -1 ? this.__hexToRGB(this.palette[colorId]) : [0, 0, 0, 0];
+        let i = ((y * this.spriteSize) + x) * 4;
+        this.imageDatas[spriteId][i + 0] = r;
+        this.imageDatas[spriteId][i + 1] = g;
+        this.imageDatas[spriteId][i + 2] = b;
+        this.imageDatas[spriteId][i + 3] = a;
+    }
+
+    __createEmptySprite() {
+        let sprite = [];
+        for (let i = 0; i < this.spriteSize; i++) {
+            sprite.push([]);
+            for (let j = 0; j < this.spriteSize; j++) {
+                sprite[i].push(-1);
+            }
+        }
+        return sprite;
+    }
+
+    __hexToRGB(hex) {
+        let bigint = parseInt(hex.substring(1), 16);
+        let r = (bigint >> 16) & 255;
+        let g = (bigint >> 8) & 255;
+        let b = bigint & 255;
+        return [r, g, b, 255];
+    }
+
+    __setSprites(sprites) {
+        sprites.forEach((sprite, index) => {
+           for (let y = 0; y < this.spriteSize; y++) {
+               for (let x = 0; x < this.spriteSize; x++) {
+                   this.setPixel(index, x, y, sprite[y][x]);
+               }
+           } 
+        });
+    }
+}
+class CodeParser {
+    constructor() {
+        this.jsTokens = [
+            { regex: /^(false|true)$/, type: 'boolean', },
+            { regex: /^"[^"\\]*"$/, type: 'string', },
+            { regex: /^'[^'\\]*'$/, type: 'string', },
+            { regex: /^[0-9]+(.[0-9]+)?$/, type: 'number', },
+            { regex: /\/\/[^\n\r]+$/, type: 'comment', },
+            { regex: /\/\*(\*\/)*\*\/$/, type: 'comment', },
+            { regex: /\./, type: 'punctuation', value: '.' },
+            { regex: /,/, type: 'punctuation', value: ',' },
+            { regex: /:/, type: 'punctuation', value: ':' },
+            { regex: /;/, type: 'punctuation', value: ';' },
+            { regex: /!/, type: 'punctuation', value: '!' },
+            { regex: /\(/, type: 'separator', value: '(' },
+            { regex: /\)/, type: 'separator', value: ')' },
+            { regex: /\{/, type: 'separator', value: '{' },
+            { regex: /\}/, type: 'separator', value: '}' },
+            { regex: /\[/, type: 'separator', value: '[' },
+            { regex: /\]/, type: 'separator', value: ']' },
+            { regex: /let /, type: 'keyword', value: 'let', },
+            { regex: /var /, type: 'keyword', value: 'var', },
+            { regex: /const /, type: 'keyword', value: 'const', },
+            { regex: /if( )*\(/, type: 'keyword', value: 'if', },
+            { regex: /else( )*[{\n]/, type: 'keyword', value: 'else', },
+            { regex: /for( )*\(/, type: 'keyword', value: 'for', },
+            { regex: /do( )*\(/, type: 'keyword', value: 'do', },
+            { regex: /while( )*\(/, type: 'keyword', value: 'while', },
+            { regex: /function( )*\(/, type: 'keyword', value: 'function', },
+            { regex: /return( |;)/, type: 'keyword', value: 'return', },
+            { regex: /class /, type: 'keyword', value: 'class', },
+            { regex: /null/, type: 'keyword', value: 'null', },
+            { regex: /=/, type: 'operator', value: '=', },
+            { regex: /\+/, type: 'operator', value: '+', },
+            { regex: /-/, type: 'operator', value: '-', },
+            { regex: /\//, type: 'operator', value: '/', },
+            { regex: /\*/, type: 'operator', value: '*', },
+            { regex: /==/, type: 'comparator', value: '==', },
+            { regex: />/, type: 'comparator', value: '>', },
+            { regex: /</, type: 'comparator', value: '<', },
+            { regex: />=/, type: 'comparator', value: '>=', },
+            { regex: /<=/, type: 'comparator', value: '<=', },
+            { regex: /!=/, type: 'comparator', value: '!=', },
+            { regex: /&&/, type: 'comparator', value: '&&', },
+            { regex: /\|\|/, type: 'comparator', value: '||', },
+        ]
+
+        this.punctuations = {
+            '.': { type: 'punctuation', },
+            ':': { type: 'punctuation', },
+            ';': { type: 'punctuation', },
+            '!': { type: 'punctuation', },
+            '(': { type: 'separator', },
+            ')': { type: 'separator', },
+            '{': { type: 'separator', },
+            '}': { type: 'separator', },
+            '[': { type: 'separator', },
+            ']': { type: 'separator', },
+        }
+
+        this.literals = {
+            'boolean': {
+                type: 'boolean',
+                regex: /^(false|true)$/,
+            },
+            'quotationString': {
+                type: 'string',
+                bounding: '',
+                regex: /^"[^"\\]*"$/,
+            },
+            'apostopheString': {
+                type: 'string',
+                regex: /^'[^'\\]*'$/,
+            },
+            'number': {
+                type: 'number',
+                regex: /^[0-9]+(.[0-9]+)?$/,
+            },
+            'singleLineComment': {
+                type: 'comment',
+                regex: /^\/\/[^\n\r]+$/,
+            },
+            'multiLineComment': {
+                type: 'comment',
+                regex: /^\/\*(\*\/)*\*\/$/,
+            },
+        }
+
+        this.operators = {
+            '=': { type: 'operator', },
+            '+': { type: 'operator', },
+            '-': { type: 'operator', },
+            '/': { type: 'operator', },
+            '*': { type: 'operator', },
+            '==': { type: 'comparator', },
+            '>': { type: 'comparator', },
+            '<': { type: 'comparator', },
+            '>=': { type: 'comparator', },
+            '<=': { type: 'comparator', },
+            '!=': { type: 'comparator', },
+            '&&': { type: 'comparator', },
+            '||': { type: 'comparator', },
+        }
+
+        this.keywords = {
+            'let': { type: 'keyword', },
+            'var': { type: 'keyword', },
+            'const': { type: 'keyword', },
+            'if': { type: 'keyword', },
+            'else': { type: 'keyword', },
+            'for': { type: 'keyword', },
+            'do': { type: 'keyword', },
+            'while': { type: 'keyword', },
+            'function': { type: 'keyword', },
+            'return': { type: 'keyword', },
+            'class': { type: 'keyword', },
+            'null': { type: 'keyword', },
+        }
+
+        this.litteralMatches = [
+            /^"[^"\\]*$/,
+            /^'[^'\\]*$/,
+            /^\/\/(?!\n)$/,
+        ]
+
+        this.espaceTokens = {
+            ';': 0,
+            '.': 0,
+        }
+
+        this.espaceChars = {
+            '\n': 0,
+            '\t': 0,
+        }
+
+        this.whiteSpaces = {
+            ' ': 0,
+        }
+    }
+
+    getFullRegex() {
+        let regex = '';
+        this.jsTokens.forEach((t, index) => {
+            if (index < this.jsTokens.length - 1)
+                regex += `(?<${t.type}>${t.regex.source})|`;
+            else
+                regex += `(?<${t.type}>${t.regex.source})`;
+        });
+        return regex;
+    }
+
+    parseTokens(code) {
+        // let regex = this.getFullRegex();
+        // let matcher = new RegExp(regex);
+        // console.log(matcher);
+        // return;
+
+        this.tokens = [];
+        let currentToken = { value: '', tags: [] };
+        let char = '';
+
+        const addToken = () => {
+            currentToken.tags = this.__handleToken(currentToken.value);
+            if (currentToken.tags !== null)
+                this.__addToken(currentToken.value, currentToken.tags);
+            currentToken.value = '';
+            currentToken.tags = ['none'];
+            currentToken.data = {};
+        }
+            
+        for (let i = 0; i < code.length; i++) {
+            char = code[i];
+
+            let isInLitteral = this.__isInLitteral(currentToken.value);
+
+            if (this.espaceChars[char] == 0) {
+                addToken();
+                this.__addToken(char, ['whitespace']);
+            } else if (!isInLitteral && this.whiteSpaces[char] == 0) {
+                addToken();
+                this.__addToken(char, ['whitespace']);
+            } else if (!isInLitteral && this.punctuations[char] != null) {
+                addToken();
+                let escapeTokenType = this.__handleToken(char);
+                this.__addToken(char, escapeTokenType);
+            } else if (!isInLitteral && currentToken.tags[0] == 'none' && !this.__isAlphabetic(char)) {
+                addToken();
+                currentToken.value += char;
+            } else {
+                currentToken.value += char;
+            }
+
+            if (i == code.length - 1) {
+                addToken();
+            }
+        }
+        return this.tokens;
+    }
+
+    translate(tokens) {
+        let newTokens = [...tokens];
+        newTokens.forEach(t => {
+        });
+        return newTokens.concat(t);
+    }
+
+    generateHtml(tokens) {
+        let htmlString = '';
+        tokens.forEach(token => {
+            if (token.tags[0] != 'whitespace')
+                htmlString += `<span class="token ${token.tags.join(' ')}">${token.value}</span>`;
+            else
+                htmlString += token.value;
+        });
+        return htmlString;
+    }
+
+    // ######################################################################################
+    // #                                  - PRIVATES -                                      #
+    // ######################################################################################
+
+    __isInLitteral(token) {
+        return this.litteralMatches.some(l => token.match(l));
+    }
+
+    __isInteger(token) {
+        return token.match(/(?![0-9])[0-9]*/) != null;
+    }
+
+    __isAlphabetic(token) {
+        return token.match(/[a-zA-Z_]/) != null;
+    }
+
+    __isUpperAlphabetic(token) {
+        return token.match(/[A-Z_]/) != null;
+    }
+
+    __isFunctionParam(token) {
+        if (token.tags[0] != 'identifier') return false;
+
+
+    }
+
+    __handleToken(token) {
+        if (token.length <= 0) return null;
+
+        let tags = ['none'];
+        if (token in this.keywords)
+            tags = [this.keywords[token].type];
+        else if (token in this.punctuations)
+            tags = [this.punctuations[token].type];
+        else if (token in this.operators)
+            tags = [this.operators[token].type];
+
+        for (const l in this.literals) {
+            if (token.match(this.literals[l].regex))
+                tags = [this.literals[l].type];
+        }
+
+        if (tags[0] == 'none') {
+            if (this.__isUpperAlphabetic(token))
+                tags = ['identifier', 'upper'];
+            else if (this.__isAlphabetic(token))
+                tags = ['identifier'];
+        }
+
+        if (tags[0] == 'identifier' && this.tokens.length >= 2) {
+            let i = this.tokens.length - 1;
+            if (this.tokens[i].value == '.' && this.tokens[i - 1].tags[0] == 'identifier') {
+                tags.push('sub-identifier');
+            }
+        }
+
+        return tags;
+    }
+
+    __addToken(token, tags, data = {}) {
+        // If last token was a whitespace, concatenate token it.
+        if (tags[0] == 'whitespace' && this.tokens.length >= 1 && this.tokens[this.tokens.length - 1].tags[0] == 'whitespace')
+            this.tokens[this.tokens.length - 1].value += token;
+        else
+            this.tokens.push({ tags: tags, value: token, data: data });
+    }
+}
+
+// ==================================== UTIL =============================================
+function addEventListener(id, type, method) {
+    document.getElementById(id).addEventListener(type, method);
+}
+
+function createElement(tag, data, parent = null) {
+    let el = document.createElement(tag);
+    for (let key in data) {
+        el[key] = data[key];
+    }
+
+    if (parent != null)
+        parent.appendChild(el);
+
+    return el;
+}
+
+let templateGame = `
+
+SET_BACKGROUND('black');
+
+let pixels = [];
+let particles = [];
+let blocks = [];
+let lives = 3;
+let score = 0;
+let speed = 0.5;
+let gameOver = false;
+
+function spawnParticles(x, y) {
+	for (let i=0; i < 25; i++) {
+		particles.push({
+			x: x,
+			y: y,
+			dx: RANDOM_RANGE(-1, 0),
+			dy: RANDOM_RANGE(-0.5, 0.5),
+		});
+	}
+}
+
+let timer = 0;
+function UPDATE() {
+	if (lives <= 0) {
+		gameOver = true;
+	}
+
+	timer++;
+  
+	if (gameOver == false) {
+		score += 0.1;
+  	speed += 0.0001;
+	}
+
+	if (timer > 20) {
+		timer = 0;
+
+		blocks.push({
+			speed: speed,
+			x: SCREEN_WIDTH,
+			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
+			width: 3,
+			height: 3,
+		});
+	}
+
+	blocks = blocks.filter(b => {
+		b.x -= b.speed;
+
+		if (gameOver == false && IS_MOUSE_OVER(b)) {
+			lives--;
+			spawnParticles(b.x, b.y);
+			return false;
+		}
+		return b.x > 0;
+	});
+
+	particles = particles.filter(p => {
+		p.x += p.dx;
+		p.y += p.dy;
+		p.dy += 0.02;
+		return p.x >= 0 && p.y <= SCREEN_HEIGHT;
+	});
+
+	pixels = pixels.filter(px => {
+		px.x -= 0.5;
+		px.y += px.d;
+		return px.x >= 0;
+	});
+
+	if (gameOver == false)
+		pixels.push({x: MOUSE_POS.x, y: MOUSE_POS.y, d: RANDOM_RANGE(-0.1, 0.1)});
+}
+
+let i = 0;
+function DRAW() {
+	blocks.forEach(b => {
+		DRAW_RECT(b.x, b.y, b.width, b.height, "red");
+	})
+
+	particles.forEach(p => {
+		DRAW_PIXEL(p.x, p.y, 'red');
+	})
+	
+	if (gameOver) {
+  	TEXT('GAME OVER', SCREEN_WIDTH / 2 - 17, SCREEN_HEIGHT / 2 - 3, 15, 'white');
+		TEXT(lives.toString(), SCREEN_WIDTH / 2 - 3, SCREEN_HEIGHT / 2 + 5, 15, 'white');
+	} else {
+		TEXT(lives.toString(), 1, 1, 15, 'white');
+	}
+
+	i += 0.1 % 60;
+	for (let j=0; j < pixels.length; j++) {
+		let color = COLOR_HSL((j + i % 40) / 40 * 360, 100, 50);
+		DRAW_PIXEL(pixels[j].x, pixels[j].y, color);
+	}
+}
+
+`;
+
+// ==================================== APP =============================================
+const CANVAS = document.getElementById("main-canvas");
+const canvasContainer = document.getElementById("game-view");
+const APP = new App(CANVAS);
+
+let onCodeLoaded = () => { };
+
+function INIT() {
+    APP.onGameDataUpdate = (gameData) => {
+        sessionStorage.setItem('gameData', JSON.stringify(gameData))
+        console.log(gameData);
+    };
+
+    window.onresize = () => {
+        if (canvasContainer == null || CANVAS == null) return;
+        CANVAS.width = canvasContainer.clientWidth;
+        CANVAS.height = canvasContainer.clientHeight;
+    }
+
+    addEventListener('btn-reload', 'click', () => APP.run());
+
+    try {
+        let gameData = JSON.parse(sessionStorage.getItem('gameData'));
+        if (gameData != null) {
+            APP.loadGameData(gameData);
+            onCodeLoaded(gameData.gameCode);
+        } else {
+            APP.loadGameData({ gameCode: templateGame });
+            onCodeLoaded(templateGame);
+        }
+    } catch (error) {
+        console.warn('Error trying to load session gameData', error);
+    }
+}
+
+// ==================================== TABS =============================================
+class TabsManager {
+    constructor() {
+        this.panels = document.getElementsByClassName("tab-panel");
+        this.buttons = document.getElementsByClassName("tab-btn");
+        this.activeTab = 0;
+
+        for (let i = 0; i < this.panels.length; i++)
+            this.buttons[i].addEventListener('click', event => this.openTab(event.currentTarget, this.panels[i].id));
+
+        if (sessionStorage.getItem('activeTab'))
+            this.activeTab = sessionStorage.getItem('activeTab')
+        this.openTab(this.buttons[this.activeTab], this.panels[this.activeTab].id);
+    }
+
+    openTab(button, id) {
+        for (let i = 0; i < this.panels.length; i++) {
+            this.panels[i].classList.remove("active");
+            this.buttons[i].classList.remove("active");
+        }
+        this.activeTab = [...this.panels].findIndex(t => t.id == id);
+        document.getElementById(id).classList.add("active");
+        button.classList.add("active");
+        sessionStorage.setItem("activeTab", this.activeTab);
+    }
+}
+const tabsManager = new TabsManager();
+
+// ================================= Main ==========================================
+
+class FileManager {
+    constructor() {
+        document.getElementById('download').addEventListener('click', () => this.download());
+        document.getElementById('load').addEventListener('change', event => this.onFileLoaded(event));
+    }
+
+    static getDownloadLink(filename, url) {
+        let a = document.createElement('a');
+        a.download = filename;
+        a.href = url;
+
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+    }
+
+    download() {
+        let filename = 'game.json';
+        let file = new Blob([JSON.stringify(APP.GameData)], { type: 'json' });
+        if (window.navigator.msSaveOrOpenBlob)
+            window.navigator.msSaveOrOpenBlob(file, filename);
+        else {
+            let url = URL.createObjectURL(file);
+            FileManager.getDownloadLink(filename, url);
+        }
+    }
+
+    onFileLoaded(event) {
+        let reader = new FileReader();
+        reader.readAsText(event.target.files[0], 'UTF-8');
+        reader.onload = readerEvent => {
+            let gameData = JSON.parse(readerEvent.target.result);
+            APP.loadGameData(gameData);
+            codeInput.innerHTML = gameData.gameCode;
+            updateCode(gameData.gameCode);
+        }
+    }
+}
+const fileManager = new FileManager();
+
+// ================================= Code Editor ==========================================
+
+class CodeEditor {
+    constructor(codeParser) {
+        this.codeParser = codeParser;
+
+        this.codeInput = document.getElementById("code-area-input");
+        this.codeArea = document.getElementById("code-area");
+        this.codeAreaContent = document.getElementById("code-area-content");
+        this.lineNumbers = document.getElementById("code-line-number");
+
+        this.codeInput.addEventListener('input', (event) => this.updateCode(event.target.value));
+        this.codeInput.addEventListener('scroll', (event) => this.syncScroll(event.target));
+        this.codeInput.addEventListener('keydown', (event) => this.handleKeyInput(event));
+
+        this.setDoc();
+    }
+
+    loadCode(code) {
+        let text = code.replace('\n', '\\\n');
+        this.codeInput.innerHTML = code;
+        this.updateCode(code);
+    }
+
+    updateCode(text) {
+        let tokens = this.codeParser.parseTokens(text);
+        this.codeAreaContent.innerHTML = this.codeParser.generateHtml(tokens);
+        APP.setGameCode(text);
+        this.setLineNumbers();
+    }
+
+    syncScroll(element) {
+        this.codeArea.scrollTop = element.scrollTop;
+        this.codeArea.scrollLeft = element.scrollLeft;
+        this.lineNumbers.scrollTop = element.scrollTop;
+    }
+
+    insert(str, index) {
+        let txt = this.codeInput.innerHTML;
+        txt = txt.slice(0, index) + str + txt.slice(index);
+        this.codeInput.innerHTML = txt;
+        this.updateCode(txt);
+    }
+
+    setLineNumbers() {
+        this.lineNumbers.innerHTML = '';
+        let textLines = this.codeInput.value.split("\n");
+        for (let i = 0; i < textLines.length; i++) {
+            this.lineNumbers.innerHTML += '<span>' + i + '</span>';
+        }
+    }
+
+    handleKeyInput(event) {
+        let key = event.key;
+        let e = event.target;
+        let cursor_pos = e.selectionEnd + 1;
+
+        function insert(str) {
+            e.value = e.value.slice(0, e.selectionStart) + str + e.value.slice(e.selectionEnd, e.value.length);
+        }
+
+        function wrap(str1, str2, index = e.selectionStart) {
+            e.value = e.value.slice(0, e.selectionStart) + str1 + e.value.slice(e.selectionStart, e.selectionEnd) + str2 + e.value.slice(e.selectionEnd, e.value.length);
+        }
+
+        if (key == "Tab") {
+            event.preventDefault();
+            if (event.shiftKey) {
+
+            } else {
+                insert('\t');
+                e.selectionStart = cursor_pos;
+                e.selectionEnd = cursor_pos;
+                this.updateCode(e.value);
+            }
+        }
+
+        let chars = { '(': ')', '{': '}', '[': ']' }
+        if (key in chars) {
+            event.preventDefault();
+            wrap(key, chars[key]);
+            e.selectionStart = cursor_pos;
+            e.selectionEnd = cursor_pos;
+            this.updateCode(e.value);
+        }
+    }
+
+    setDoc() {
+        this.codeDoc = document.getElementById("code-doc");
+        this.codeDocList = [];
+
+        for (let [key, value] of Object.entries(APP.context)) {
+            let div = document.createElement('div');
+            div.className = 'code-doc-entry';
+
+            let label = document.createElement('h6');
+            label.innerHTML = key;
+            div.appendChild(label);
+
+            let description = document.createElement('p');
+            description.innerHTML = value.description;
+            div.appendChild(description);
+
+            if (typeof (value.f) == 'function') {
+                let functionStr = value.f.toString();
+                let i = functionStr.indexOf(')');
+                let args = functionStr.substring(0, i + 1);
+                args = args.replace('obj = ', '');
+                args = args.replace('(', '<span>(</span>');
+                args = args.replace(')', '<span>)</span>');
+                args = args.replace('{', '<span>{</span>');
+                args = args.replace('}', '<span>}</span>');
+
+                if (args.length > 0)
+                    label.innerHTML += args;
+            } else if (value.type == 'value') {
+
+            }
+
+            this.codeDocList.push(div);
+            this.codeDoc.appendChild(div);
+        }
+
+        addEventListener('code-doc-btn', 'click', () => this.codeDoc.classList.add('active'));
+        addEventListener('code-doc-btn-close', 'click', () => this.codeDoc.classList.remove('active'));
+    }
+}
+
+const codeParser = new CodeParser();
+const codeEditor = new CodeEditor(codeParser);
+onCodeLoaded = (code) => codeEditor.loadCode(code);
+
+// ================================= Sprite Editor ==========================================
+const spriteEditorTool = {
+    type: 'pencil',
+    canMove: true,
+    colorId: 0,
+    currentSpriteId: 0,
+    color: [0, 0, 0, 255],
+    hexColor: '#00000011',
+};
+
+class ColorPalette {
+
+    constructor() {
+        this.paletteContainer = document.getElementById('sprite-palette');
+        this.paletteItems = [];
+        this.setPalette(APP.GameData.palette);
+
+        // this.spriteEditorColorPicker = document.getElementById('sprite-editor-color-picker');
+        // this.spriteEditorColorPickerLabel = document.getElementById('sprite-editor-color-picker-label');
+    }
+
+    hexToRGB(hex) {
+        let bigint = parseInt(hex.substring(1), 16);
+        let r = (bigint >> 16) & 255;
+        let g = (bigint >> 8) & 255;
+        let b = bigint & 255;
+        return [r, g, b, 255];
+    }
+
+    getRGB(id) {
+        return this.hexToRGB(APP.GameData.palette[id]);
+    }
+
+    setColorPicker() {
+        this.spriteEditorColorPicker.value = '#000000';
+        this.spriteEditorColorPickerLabel.style.background = '#000000';
+
+        this.spriteEditorColorPicker.addEventListener("input", (event) => {
+            let inputColor = event.target.value;
+            spriteEditorTool.color = this.hexToRGB(inputColor);
+            spriteEditorTool.hexColor = inputColor;
+            this.spriteEditorColorPickerLabel.style.background = inputColor;
+        });
+    }
+
+    setPalette(colors) {
+        colors.forEach((hexColor, index) => {
+            let el = document.createElement('div');
+            el.className = 'sprite-color';
+            el.id = 'sprite-color-' + index;
+            el.style.backgroundColor = hexColor;
+
+            el.addEventListener('click', () => {
+                this.paletteItems.forEach(e => e.classList.remove('active'));
+                el.classList.add('active');
+                spriteEditorTool.color = this.hexToRGB(hexColor);
+                spriteEditorTool.colorId = index;
+            })
+            this.paletteItems.push(el);
+            this.paletteContainer.appendChild(el);
+        });
+    }
+}
+
+class DrawingCanvas {
+    constructor(palette) {
+        this.palette = palette;
+
+        this.spriteEditorCanvas = document.getElementById('sprite-editor-canvas');
+        this.spriteEditorCtx = this.spriteEditorCanvas.getContext('2d');
+        this.spriteEditorGrid = document.getElementById('sprite-editor-grid');
+
+        this.setSpriteSize(16);
+    }
+
+    setPixel(x, y, rgba, colorId) {
+        let imgData = this.spriteEditorCtx.createImageData(1, 1);
+        let d = imgData.data;
+        d[0] = rgba[0];
+        d[1] = rgba[1];
+        d[2] = rgba[2];
+        d[3] = rgba[3];
+        this.spriteEditorCtx.putImageData(imgData, x, y);
+        APP.setPixel(spriteEditorTool.currentSpriteId, x, y, colorId);
+    }
+
+    getPixel(x, y) {
+        let data = this.spriteEditorCtx.getImageData(x, y, 1, 1).data;
+        return [data[0], data[1], data[2], data[3]];
+    }
+
+    loadImage(x, y, image) {
+        this.spriteEditorCtx.drawImage(image, x, y);
+    }
+
+    loadImageData(x, y, image) {
+        this.spriteEditorCtx.putImageData(image, x, y);
+    }
+
+    clear() {
+        this.spriteEditorCtx.clearRect(0, 0, this.spriteEditorCanvas.width, this.spriteEditorCanvas.height);
+    }
+
+    getImageData() {
+        return this.spriteEditorCtx.getImageData(0, 0, this.spriteEditorCanvas.width, this.spriteEditorCanvas.height);
+    }
+
+    getImageUrl() {
+        return this.spriteEditorCanvas.toDataURL('image/png');
+    }
+
+    getClickPosition(event) {
+        let rect = this.spriteEditorCanvas.getBoundingClientRect();
+        let scaleFactor = rect.width / this.spriteEditorCanvas.width;
+        let x = Math.floor((event.clientX - rect.left) / scaleFactor);
+        let y = Math.floor((event.clientY - rect.top) / scaleFactor);
+        return [x, y];
+    }
+
+    setSpriteSize(spriteSize) {
+        this.spriteEditorCanvas.width = spriteSize;
+        this.spriteEditorCanvas.height = spriteSize;
+        this.spriteEditorGrid.innerHTML = '';
+        this.spriteEditorGrid.style.gridTemplateColumns = `repeat(${spriteSize}, 1fr)`;
+        this.spriteEditorGrid.style.gridTemplateRows = `repeat(${spriteSize}, 1fr)`;
+
+        for (let x = 0; x < spriteSize; x++) {
+            for (let y = 0; y < spriteSize; y++) {
+                let cell = document.createElement('div');
+                cell.className = 'sprite-editor-cell';
+                this.spriteEditorGrid.appendChild(cell);
+            }
+        }
+
+        this.width = this.spriteEditorCanvas.width;
+        this.height = this.spriteEditorCanvas.height;
+    }
+
+    addEventListener(event, callback) {
+        this.spriteEditorCanvas.addEventListener(event, callback);
+    }
+}
+
+class SpriteList {
+    constructor(drawingCanvas) {
+        this.drawingCanvas = drawingCanvas;
+        this.spritesContainer = document.getElementById('sprites-container');
+        this.spritesItems = [];
+
+        this.setListSize(16);
+        this.selectSprite(spriteEditorTool.currentSpriteId);
+    }
+
+    updateSelectedSprite() {
+        let i = spriteEditorTool.currentSpriteId;
+        this.spritesItems[i].src = this.__getImageSrc(APP.getSpriteImg(i));;
+        this.spritesItems[i].classList.add('active');
+    }
+
+    selectSprite(index) {
+        spriteEditorTool.currentSpriteId = index;
+        let sprite = APP.getSpriteImg(index);
+
+        this.drawingCanvas.setSpriteSize(sprite.width);
+        this.drawingCanvas.loadImageData(0, 0, sprite);
+
+        this.spritesItems.forEach(e => e.classList.remove('active'));
+        this.spritesItems[index].classList.add('active');
+    }
+
+    setListSize(size) {
+        this.spritesItems = [];
+        this.spritesContainer.innerHTML = '';
+
+        for (let i = 0; i < size; i++) {
+            let element = document.createElement('img');
+            element.classList = 'sprite-item';
+            element.addEventListener('click', () => {
+                this.selectSprite(i);
+            })
+            element.src = this.__getImageSrc(APP.getSpriteImg(i));
+            this.spritesContainer.appendChild(element);
+            this.spritesItems.push(element);
+        }
+    }
+
+    __getImageSrc(imageData) {
+        let canvas = document.createElement('canvas');
+        let ctx = canvas.getContext('2d');
+        canvas.width = imageData.width;
+        canvas.height = imageData.height;
+        ctx.putImageData(imageData, 0, 0);
+        return canvas.toDataURL();
+    }
+}
+
+class SpriteEditor {
+    constructor(drawingCanvas, colorPalette, spritesList) {
+        this.drawingCanvas = drawingCanvas;
+        this.colorPalette = colorPalette;
+        this.spritesList = spritesList;
+
+        this.toolsContainer = document.getElementById('sprite-editor-tools');
+
+        this.tools = []
+        this.currentTool = null;
+        this.isMouseDown = false;
+        this.setEvents();
+    }
+
+    setEvents() {
+        this.drawingCanvas.addEventListener("mouseup", () => this.isMouseDown = false);
+        this.drawingCanvas.addEventListener("mousedown", (e) => {
+            this.isMouseDown = true;
+            this.handleClick(e);
+        });
+        this.drawingCanvas.addEventListener("mousemove", (e) => {
+            if (this.isMouseDown && this.currentTool.canMove)
+                this.handleClick(e);
+        });
+    }
+
+    setSelectedTool(tool) {
+        this.currentTool = tool;
+
+        for (let i = 0; i < this.tools.length; i++) {
+            if (this.tools[i].innerHTML == tool.name)
+                this.tools[i].classList.add('active');
+            else
+                this.tools[i].classList.remove('active');
+        }
+    }
+
+    addTool(tool) {
+        let btn = document.createElement('button');
+        btn.innerHTML = tool.name;
+        btn.className = 'btn sprite-editor-tool';
+        btn.id = `sprite-editor-${tool.name}`;
+
+        btn.addEventListener('click', () => {
+            this.setSelectedTool(tool);
+        });
+
+        this.toolsContainer.appendChild(btn);
+        this.tools.push(btn);
+    }
+
+    handleClick(event) {
+        let pos = this.drawingCanvas.getClickPosition(event);
+        this.currentTool.callback(this.drawingCanvas, pos[0], pos[1], spriteEditorTool.color);
+        this.spritesList.updateSelectedSprite();
+    }
+}
+
+const drawingCanvas = new DrawingCanvas();
+const spritesList = new SpriteList(drawingCanvas);
+const colorPalette = new ColorPalette();
+const spriteEditor = new SpriteEditor(drawingCanvas, colorPalette, spritesList);
+
+const pencil = {
+    name: 'pencil',
+    canMove: true,
+    callback: (drawingCanvas, x, y, color) => {
+        drawingCanvas.setPixel(x, y, color, spriteEditorTool.colorId);
+    }
+}
+spriteEditor.addTool(pencil);
+spriteEditor.setSelectedTool(pencil);
+
+spriteEditor.addTool({
+    name: 'eraser',
+    canMove: true,
+    callback: (drawingCanvas, x, y, color) => {
+        drawingCanvas.setPixel(x, y, [0, 0, 0, 0], -1);
+    }
+});
+
+spriteEditor.addTool({
+    name: 'bucket',
+    canMove: false,
+    callback: (drawingCanvas, x, y, color) => {
+        const areColorEquals = (a, b) => {
+            return a.length === b.length && a.every((value, index) => value === b[index]);
+        }
+
+        const areColorSimilar = (a, b) => {
+            return a.length === b.length && a.every((value, index) => value === b[index]);
+        }
+
+        const floodFill = (x, y, oldColor, newColor) => {
+            if (x < 0 || y < 0 || x >= drawingCanvas.width || y >= drawingCanvas.height) return;
+            if (areColorEquals(drawingCanvas.getPixel(x, y), newColor)) return;
+            if (!areColorSimilar(drawingCanvas.getPixel(x, y), oldColor)) return;
+
+            drawingCanvas.setPixel(x, y, newColor, spriteEditorTool.colorId);
+            floodFill(x + 1, y, oldColor, newColor);  // then i can either go south
+            floodFill(x - 1, y, oldColor, newColor);  // or north
+            floodFill(x, y + 1, oldColor, newColor);  // or east
+            floodFill(x, y - 1, oldColor, newColor);  // or west
+            return;
+        }
+
+        let oldColor = drawingCanvas.getPixel(x, y);
+        if (areColorEquals(oldColor, color)) return;
+        floodFill(x, y, oldColor, color);
+    }
+});
+
+// ================================= Audio ==========================================
+
+class InstrumentBuilder {
+
+    constructor() {
+        this.container = document.getElementById('audio-nodes');
+        this.instrument = {
+            nodes: [{
+                type: 'oscillator',
+                waveForm: 'sawtooth',
+                attack: 0.01,
+                decay: 0,
+                sustain: 1,
+                release: 1,
+            }]
+        };
+
+        this.container.innerHTML = '';
+        this.draw(this.instrument);
+    }
+
+    draw(instrument) {
+        this.container.appendChild(createElement('button', { innerText: '+', className: 'audio-add-node' }));
+        instrument.nodes.forEach(node => {
+            if (node.type == 'oscillator') {
+                let nodeElement = this.createOscillatorNode(node);
+                this.container.appendChild(nodeElement);
+            }
+        })
+    }
+
+    createOscillatorNode(node) {
+        let nodeElement = this.createNode("Oscillator");
+
+        let waveFormSelect = this.createNodeInputSelector(['sine', 'square', 'sawtooth', 'triangle']);
+        waveFormSelect.addEventListener('input', (event) => node.waveForm = event.target.value);
+        nodeElement.appendChild(waveFormSelect);
+
+        const createOscilatorSlider = (label, max, key) => {
+            let [_, input] = this.createNodeInput(label, 'range', { min: 0, max: 100 });
+            input.addEventListener('input', (event) => node[key] = parseFloat(event.target.value) / 100.0 * max);
+            input.value = node[key] * (100.0 / max);
+            nodeElement.appendChild(_);
+        }
+
+        createOscilatorSlider('Attack', 3.0, 'attack');
+        createOscilatorSlider('Decay', 3.0, 'decay');
+        createOscilatorSlider('Sustain', 1.0, 'sustain');
+        createOscilatorSlider('Release', 5.0, 'release');
+
+        return nodeElement;
+    }
+
+    createNode(label) {
+        let nodeElement = createElement('div', { className: 'audio-node' });
+        createElement('p', { className: 'audio-node-label', innerText: label }, parent = nodeElement);
+        return nodeElement;
+    }
+
+    createNodeInput(label, type, data) {
+        let inputContainer = createElement('div', { className: 'audio-node-input horizontal' });
+        createElement('label', { innerText: label }, parent = inputContainer);
+
+        let input = createElement('input', { type: type }, parent = inputContainer);
+        for (let key in data) {
+            input[key] = data[key];
+        }
+        return [inputContainer, input];
+    }
+
+    createNodeInputSelector(values) {
+        let nodeElement = createElement('select', { className: 'audio-node-input' });
+        values.forEach(val => createElement('option', { value: val, text: val }, parent = nodeElement));
+        return nodeElement;
+    }
+}
+
+// --------------------------------- Melody Writer ------------------------------------------
+class MelodyWriter {
+    constructor() {
+        this.container = document.getElementById('audio-melody');
+        this.NOTES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+        this.NOTES_COLOR = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
+        this.NOTES_DATA = [];
+
+        this.octaveCount = 6;
+        this.containerWidth = 0;
+        this.containerHeight = 0;
+
+        this.rows = {};
+        this.melody = {
+            notes: {},
+            beatCount: 8,
+            bpm: 150,
+        };
+
+        this.noteElements = {};
+        this.currentDraggedNote = null;
+        this.currentDraggedResizer = null;
+
+        this.__setNotesData();
+        this.__setRows();
+
+        this.container.addEventListener('dragover', (event) => this.__dragNoteX(event));
+        this.onMelodyChange = () => { console.log(this.melody) };
+    }
+
+    __setNotesData() {
+        for (let i = 0; i < this.octaveCount; i++) {
+            for (let j = 0; j < this.NOTES.length; j++) {
+                this.NOTES_DATA[this.NOTES.length * i + j] = {
+                    key: this.NOTES[this.NOTES.length - 1 - j],
+                    octave: this.octaveCount - i,
+                    color: this.NOTES_COLOR[this.NOTES.length - 1 - j],
+                }
+            }
+        }
+    }
+
+    __setRows() {
+        this.container.innerHTML = "";
+        this.rows = {};
+
+        for (let i = 0; i < this.NOTES_DATA.length; i++) {
+            const row = createElement('div', {
+                className: 'audio-melody-row ' + this.NOTES_DATA[i].color,
+                id: i,
+                innerText: `${this.NOTES_DATA[i].octave}${this.NOTES_DATA[i].key}`,
+            }, parent = this.container);
+            this.rows[i] = row;
+
+            for (let k = 0; k < this.melody.beatCount; k++) {
+                const separator = createElement('span', { className: 'audio-melody-row-seprator' }, parent = row);
+                separator.style.left = `${(k / this.melody.beatCount) * 100}%`;
+                separator.style.width = `${(1 / this.melody.beatCount) * 100}%`;
+            }
+
+            row.addEventListener('click', event => {
+                if (event.detail === 2) {
+                    let time = Math.round(event.clientX / row.offsetWidth * this.melody.beatCount) - 1;
+                    this.__addNote(i, time);
+                }
+            });
+            row.addEventListener('dragover', (event) => this.__dragNoteY(event, i));
+        }
+
+        this.containerWidth = this.container.clientWidth;
+        this.containerHeight = this.container.clientHeight;
+    }
+
+    __addNote(index, time) {
+        let id = Date.now();
+        let note = {
+            index: index,
+            octave: this.NOTES_DATA[index].octave,
+            key: this.NOTES_DATA[index].key,
+            time: time,
+            endTime: 1,
+            length: 1,
+        };
+        this.melody.notes[id] = note;
+
+        const noteElement = createElement('div', { className: 'audio-melody-note', draggable: true }, parent = this.rows[index]);
+        noteElement.style.left = `${time / this.melody.beatCount * 100}%`;
+        noteElement.style.width = `calc(${note.length / this.melody.beatCount * 100}% - 6px)`;
+        this.noteElements[id] = noteElement;
+
+        noteElement.addEventListener('click', (event) => {
+            event.stopPropagation();
+            if (event.detail === 2) {
+                noteElement.remove();
+                delete this.melody.notes[id];
+            }
+        });
+
+        noteElement.addEventListener('dragstart', (event) => {
+            event.dataTransfer.setDragImage(event.target, window.outerWidth, window.outerHeight);
+            this.currentDraggedNote = {
+                id: id,
+                note: note,
+                element: noteElement,
+                startX: event.clientX,
+                startY: event.clientY,
+            };
+        });
+
+        noteElement.addEventListener('dragend', () => {
+            if (this.currentDraggedNote == null) return;
+            this.setNote(this.currentDraggedNote.id);
+            this.currentDraggedNote = null;
+        });
+
+        const noteResizeElement = createElement('div', { className: 'audio-melody-note-resizer' }, parent = noteElement);
+        noteResizeElement.draggable = true;
+
+        noteResizeElement.addEventListener('dragstart', (event) => {
+            event.stopPropagation();
+            event.dataTransfer.setDragImage(event.target, window.outerWidth, window.outerHeight);
+            this.currentDraggedResizer = {
+                id: id,
+                note: note,
+                element: noteElement,
+                startX: noteElement.clientX,
+            };
+        });
+        noteResizeElement.addEventListener('dragend', () => {
+            if (this.currentDraggedResizer == null) return;
+            this.setNote(this.currentDraggedResizer.id);
+            this.currentDraggedResizer = null;
+        });
+    }
+
+    __dragNoteX(event) {
+        event.preventDefault();
+        if (this.currentDraggedResizer != null) {
+            let x = event.clientX / this.container.offsetWidth * this.melody.beatCount;
+            let id = this.currentDraggedResizer.id;
+            this.setNoteLength(id, Math.round(Math.max(x, 0)) - this.melody.notes[id].time);
+        } else if (this.currentDraggedNote != null) {
+            let x = event.clientX / this.container.offsetWidth * this.melody.beatCount;
+            this.setNoteTime(this.currentDraggedNote.id, Math.round(Math.max(x - 1, 0)));
+        }
+    }
+
+    __dragNoteY(event, rowIndex) {
+        event.preventDefault();
+        if (this.currentDraggedNote == null || this.currentDraggedResizer != null)
+            return;
+        this.setNoteRow(this.currentDraggedNote.id, rowIndex);
+    }
+
+    setNoteRow(id, index) {
+        let note = this.melody.notes[id];
+        note.index = index;
+        note.octave = this.NOTES_DATA[index].octave;
+        note.key = this.NOTES_DATA[index].key;
+        this.rows[index].appendChild(this.noteElements[id]);
+    }
+
+    setNoteTime(id, time) {
+        this.melody.notes[id].time = time;
+        this.noteElements[id].style.left = `${time / this.melody.beatCount * 100}%`;
+    }
+
+    setNoteLength(id, length) {
+        let note = this.melody.notes[id];
+        note.length = length;
+        note.endTime = note.time + length;
+        this.noteElements[id].style.width = `calc(${length / this.melody.beatCount * 100}% - 6px)`;
+    }
+
+    setNote(id) {
+        let note = this.melody.notes[id];
+        this.setNoteTime(id, Math.min(note.time, this.melody.beatCount - 1));
+        this.setNoteLength(id, Math.min(note.length, this.melody.beatCount - note.time));
+        this.onMelodyChange();
+    }
+}
+const instrumentBuilder = new InstrumentBuilder();
+const melodyWriter = new MelodyWriter();
+
+addEventListener('audio-play-button', 'click', (event) => {
+    APP.AUDIO_MANAGER.playMelody(melodyWriter.melody, instrumentBuilder.instrument);
+});
+
+
+class AudioPanel {
+
+    constructor() {
+        const WAVE_FORMS = [
+            'sine',
+            'square',
+            'sawtooth',
+            'triangle',
+        ]
+
+        let selectedWaveForm = 0;
+        let octave = 4;
+
+        let instrument = {
+            waveForm: 'sine',
+            enveloppe: {
+                'attack': 0.01,
+                'decay': 0.1,
+                'sustain': 0,
+                'release': 0.5,
+            },
+            filter: {
+                type: 'none',
+                frequency: 4400,
+                resonance: 1,
+            }
+        };
+
+        function setInstrumentEnveloppe(param, value) {
+            instrument.enveloppe[param] = value;
+        }
+
+        function setWaveForm(newWaveForm) {
+            selectedWaveForm = Math.min(Math.max(0, newWaveForm), WAVE_FORMS.length - 1);
+            let s = WAVE_FORMS[selectedWaveForm];
+            instrument.waveForm = WAVE_FORMS[selectedWaveForm];
+            document.getElementById('audio-type').innerHTML = s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        function setOctave(newOctave) {
+            octave = Math.min(Math.max(0, newOctave), 25);
+            document.getElementById('audio-octave').innerHTML = octave;
+        }
+
+        let notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+        let notesColors = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
+        let keyboard = document.getElementById('audio-keyboard');
+
+        let keysMap = { 'q': 'C', 'z': 'C#', 's': 'D', 'e': 'Eb', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'Bb', 'j': 'B' };
+        let keys = {};
+
+        for (let keyOctave = 0; keyOctave < 2; keyOctave++) {
+            for (let i = 0; i < notes.length; i++) {
+                let key = document.createElement('button');
+                key.className = 'audio-key ' + notesColors[i];
+                key.dataset.note = notes[i];
+                key.dataset.octave = keyOctave;
+
+                key.addEventListener('mousedown', () => {
+                    key.classList.add('active');
+                    synth.playNote(instrument, octave + keyOctave, key.dataset.note);
+                });
+
+                key.addEventListener('mouseup', () => {
+                    key.classList.remove('active');
+                    synth.stopNote(octave + keyOctave, key.dataset.note);
+                })
+
+                keyboard.appendChild(key);
+                if (keyOctave == 0)
+                    keys[key.dataset.note] = key;
+            }
+        }
+
+        document.addEventListener('keydown', (event) => {
+            if (tabsManager.activeTab !== 3 || event.repeat) return;
+            event.preventDefault();
+
+            let key = event.key.toLowerCase();
+            if (!(key in keysMap)) return;
+
+            let note = keysMap[key];
+            keys[note].classList.add('active');
+            synth.playNote(instrument, octave, note);
+
+            if (event.key == 'ArrowUp') {
+                setOctave(octave + 1);
+            } else if (event.key == 'ArrowDown') {
+                setOctave(octave - 1);
+            }
+        });
+
+        document.addEventListener('keyup', (event) => {
+            if (tabsManager.activeTab !== 3) return;
+            event.preventDefault();
+
+            let key = event.key.toLowerCase();
+            if (key in keysMap) {
+                keys[keysMap[key]].classList.remove('active');
+                synth.stopNote(octave, keysMap[key]);
+            }
+        })
+
+        addEventListener('audio-volume', 'input', (event) => synth.setVolume(parseFloat(event.target.value) / 100.0 * 0.1));
+
+        addEventListener('audio-octave-plus', 'click', () => setOctave(octave + 1));
+        addEventListener('audio-octave-minus', 'click', () => setOctave(octave - 1));
+
+        addEventListener('audio-type-plus', 'click', () => setWaveForm(selectedWaveForm + 1));
+        addEventListener('audio-type-minus', 'click', () => setWaveForm(selectedWaveForm - 1));
+
+        addEventListener('audio-attack', 'input', (event) => setInstrumentEnveloppe('attack', parseFloat(event.target.value) / 100.0 * 1));
+        addEventListener('audio-decay', 'input', (event) => setInstrumentEnveloppe('decay', parseFloat(event.target.value) / 100.0 * 1));
+        addEventListener('audio-sustain', 'input', (event) => setInstrumentEnveloppe('sustain', parseFloat(event.target.value) / 100.0 * 1));
+        addEventListener('audio-release', 'input', (event) => setInstrumentEnveloppe('release', parseFloat(event.target.value) / 100.0 * 3));
+
+        addEventListener('audio-filter-frequency', 'input', (event) => instrument.filter.frequency = (parseFloat(event.target.value) / 100.0 * 1));
+
+        setOctave(4);
+        setWaveForm(0);
+    }
+}
+
+// ================================= Short Cuts ==========================================
+document.addEventListener('keypress', (event) => {
+    // if (event.ctrlKey && event.shiftKey) {
+    //     event.preventDefault();
+    //     activeTab = (activeTab + 1) % tabPanels.length;
+    //     openTab(tabButtons[activeTab], tabPanels[activeTab].id);
+    // }
+    // if (event.ctrlKey && event.key == 'A') {
+    // }
+});
+
+INIT();
+</script>
 </body>
 </html>
