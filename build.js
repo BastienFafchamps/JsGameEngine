@@ -28,6 +28,7 @@ function getFullHtml() {
     });
     css += '</style>\n</head>\n';
     html = html.replace('</head>\r\n', css);
+    console.log('Css loaded.');
 
     // Add js
     const jsFiles = [
@@ -46,10 +47,11 @@ function getFullHtml() {
     });
     js += '</script>\n</body>\n';
     html = html.replace('</body>\r\n', js);
+    console.log('Js loaded.');
 
+    // Output file
     const outputFilePath = './index.html';
     fs.writeFileSync(outputFilePath, html);
-
     console.log('Build finished!');
 }
 
