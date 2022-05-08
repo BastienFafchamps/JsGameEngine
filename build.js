@@ -8,7 +8,7 @@ function getFullHtml() {
     console.log('Running build...');
     let output = '';
 
-    let html = readFile('./lib/index.html');
+    let html = readFile('./src/index.html');
     html = html.replace(/( )*<link [a-zA-Z0-9.,:;'"/= ]*>\r\n/g, '');
     html = html.replace(/( )*<script [a-zA-Z0-9.,:;'"/= ]*><\/script>\r\n/g, '');
     
@@ -16,9 +16,9 @@ function getFullHtml() {
 
     // Add css
     const cssFiles = [
-        './lib/main.css',
-        './lib/fonts/chary.css',
-        './lib/fonts/graph.css',
+        './src/main.css',
+        './src/fonts/chary.css',
+        './src/fonts/graph.css',
     ];
 
     let css = '<style>\n';
@@ -31,10 +31,10 @@ function getFullHtml() {
 
     // Add js
     const jsFiles = [
-        './lib/src/engine.js',
-        './lib/src/main.js',
-        './lib/src/codeParser.js',
-        './lib/src/editor.js',
+        './src/js/engine.js',
+        './src/js/main.js',
+        './src/js/codeParser.js',
+        './src/js/editor.js',
     ];
 
     let js = '<script  type="text/javascript">\n';
