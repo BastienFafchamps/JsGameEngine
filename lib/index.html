@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Js Game Engine</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel="icon" href="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+    <link rel='stylesheet' type='text/css' media='screen' href='./fonts/chary.css'>
+    <link rel='stylesheet' type='text/css' media='screen' href='./fonts/graph.css'>
+    <link rel='stylesheet' type='text/css' media='screen' href='./main.css'>
+</head>
+<body>
+    <div class="tab-buttons">
+        <div class="tab-select tab-push-btn">
+            <button class="btn">File</button>
+            <ul class="select-list">
+                <li><button class="btn" id="download">Save</button></li>
+                <li><label class="btn" for="load">Load</label><input id="load" type="file" /></li>
+            </ul>
+        </div>
+        <button class="btn tab-push-btn contained" id="btn-reload">Reload</button>
+        <span class="w2"></span>
+        <button class="btn tab-btn">Game</button>
+        <button class="btn tab-btn">Code</button>
+        <button class="btn tab-btn">Sprites</button>
+        <button class="btn tab-btn">Audio</button>
+        <button class="btn menu-btn">M</button>
+        <!-- <button id="btn-host" class="btn contained">Host</button>
+        <button id="btn-connect" class="btn contained">Connect</button> -->
+    </div>
+    <div id="game-view-panel" class="tab-panel center">
+        <canvas id="main-canvas" width="840" height="580">
+            Your browser doesn't support WebGL, please use a more recent one.
+        </canvas>
+    </div>
+    <div id="code-editor-panel" class="tab-panel center">
+        <div class="code-editor">
+            <div id="code-line-number"></div>
+            <textarea id="code-area-input" spellcheck="false"></textarea>
+            <pre id="code-area" class="language-javascript" aria-hidden="true"><code id="code-area-content"></code></pre>
+        </div>
+        <button id="code-doc-btn">?</button>
+        <div id="code-doc">
+            <div class="code-doc-header">
+                <h5>DOC</h5>
+                <button id="code-doc-btn-close">X</button>
+            </div>
+        </div>
+    </div>
+    <div id="sprites-panel" class="tab-panel center">
+        <div class="grid-center">
+            <div id="sprite-editor-tools">
+                <!-- <button class="btn contained sprite-editor-tool" id="sprite-editor-download">Download</button>
+                <label class="btn contained sprite-editor-tool" for="sprite-editor-load">Load</label><input id="sprite-editor-load" type="file" />    
+                <hr>
+                <div class="sprite-editor-tool">
+                    <label>Color</label>
+                    <label id="sprite-editor-color-picker-label" for="sprite-editor-color-picker">
+                    <input type="color" id="sprite-editor-color-picker" name="sprite-editor-color-picker">
+                </div>
+                <hr> -->
+            </div>
+        </div>
+        <div class="grid-center">
+            <div id="sprite-editor-container">
+                <div id="sprite-editor-grid"></div>
+                <canvas id="sprite-editor-canvas" width="16" height="16">
+                    Your browser doesn't support WebGL, please use a more recent one.
+                </canvas>
+            </div>
+        </div>
+        <div class="grid-center">
+            <div id="sprite-palette">
+            </div>
+        </div>
+        <div class="grid-center">
+            <div id="sprites-container"></div>
+        </div>
+    </div>
+    <div id="audio-panel" class="tab-panel center">
+        <div id="audio-selector">
+
+        </div>
+        <div id="audio-toolbar">
+            <button id="audio-play-button">Play</button>
+            <div class="audio-toolbar-input">
+                <label>Volume</label>
+                <input type="range" class="slider" min="0" max="100" value="50" id="audio-volume">
+            </div>
+            <div class="audio-toolbar-input">
+                <label>BPM</label>
+                <input type="number" min="0" max="300" value="120" id="audio-bpm">
+            </div>
+            <div class="audio-toolbar-input">
+                <label>Beats</label>
+                <input type="number" min="0" max="64" value="4" id="audio-beats">
+            </div>
+        </div>
+        <div id="audio-melody">
+        </div>
+        <div id="audio-nodes">
+            <div class="audio-node">
+                <p class="audio-node-label">Oscilliator</p>
+                <div class="audio-node-input">
+                    <button id="audio-type-minus" class="btn">&lt;</button>
+                    <p id="audio-type">Sine</p>
+                    <button id="audio-type-plus" class="btn">&gt;</button>
+                </div>
+                <div class="audio-node-input">
+                    <label>Attack</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-attack">
+                </div>
+                <div class="audio-node-input">
+                    <label>Decay</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-decay">
+                </div>
+                <div class="audio-node-input">
+                    <label>Sustain</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-sustain">
+                </div>
+                <div class="audio-node-input">
+                    <label>Release</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-release">
+                </div>
+            </div>
+            <div class="audio-node">
+                <p class="audio-node-label">Filter</p>
+                <div class="audio-node-input">
+                    <label>Frequency</label>
+                    <input type="range" class="slider" min="0" max="100" value="50" id="audio-filter-frequency">
+                </div>
+            </div>
+            <div id="audio-keyboard">
+                <div class="audio-keyboard-octave">
+                    <button id="audio-octave-plus" class="btn">+</button>
+                    <p id="audio-octave">0</p>
+                    <button id="audio-octave-minus" class="btn">-</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="./src/engine.js"></script>
+    <script type="module" src="./src/main.js"></script>
+    <script type="module" src="./src/codeParser.js"></script>
+    <script type="module" src="./src/editor.js"></script>
+</body>
+</html>
