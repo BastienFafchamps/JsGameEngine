@@ -16,9 +16,9 @@ function getFullHtml() {
 
     // Add css
     const cssFiles = [
-        './src/main.css',
-        './src/fonts/chary.css',
-        './src/fonts/graph.css',
+        './src/css/main.css',
+        './src/css/chary.css',
+        './src/css/graph.css',
     ];
 
     let css = '<style>\n';
