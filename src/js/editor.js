@@ -20,7 +20,6 @@ function createElement(tag, data, parent = null) {
 }
 
 let templateGame = `
-
 SET_BACKGROUND('black');
 
 let pixels = [];
@@ -671,11 +670,71 @@ spriteEditor.addTool({
 
 // ================================= Audio ==========================================
 
-class InstrumentBuilder {
+class GraphView {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.canvas.style.imageRendering = '-moz-crisp-edges';
+        this.canvas.style.imageRendering = '-webkit-crisp-edges';
+        this.canvas.style.imageRendering = 'pixelated';
+        this.canvas.style.imageRendering = 'crisp-edges';
 
+        this.ctx = canvas.getContext('2d');
+    }
+
+    clear() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
+
+    setPixel(x, y) {
+        this.ctx.fillStyle = "#ffffff";
+        this.ctx.fillRect(x, y, 1, 1);
+    }
+
+    drawLine(x0, y0, x1, y1) {
+        x0 = parseInt(x0);
+        x1 = parseInt(x1);
+        y0 = parseInt(this.canvas.height - (y0 * this.canvas.height));
+        y1 = parseInt(this.canvas.height - (y1 * this.canvas.height));
+
+        const dx = x1 - x0;
+        const dy = y1 - y0;
+        const absdx = Math.abs(dx);
+        const absdy = Math.abs(dy);
+
+        let x = x0;
+        let y = y0;
+
+        this.setPixel(x, y);
+
+        const handle = (x, y, dx, dy, absdx, absdy, setPixel) => {
+            let d = 2 * absdy - absdx;
+            for (let i = 0; i < absdx; i++) {
+                x = dx < 0 ? x - 1 : x + 1;
+                if (d < 0) {
+                    d = d + 2 * absdy
+                } else {
+                    y = dy < 0 ? y - 1 : y + 1;
+                    d = d + (2 * absdy - 2 * absdx);
+                }
+                setPixel(x, y);
+            }
+        }
+
+        // slope < 1
+        if (absdx > absdy) {
+            handle(x, y, dx, dy, absdx, absdy, (x, y) => this.setPixel(x, y));
+        } else { // case when slope is greater than or equals to 1
+            handle(y, x, dy, dx, absdy, absdx, (y, x) => this.setPixel(x, y));
+        }
+    }
+}
+
+class InstrumentBuilder {
     constructor() {
+        this.maxs = { attack: 3, decay: 3, sustain: 1, release: 10, total: 17 }
         this.container = document.getElementById('audio-nodes');
         this.instrument = {
+            volume: 0.6,
             nodes: [{
                 type: 'oscillator',
                 waveForm: 'sawtooth',
@@ -688,6 +747,18 @@ class InstrumentBuilder {
 
         this.container.innerHTML = '';
         this.draw(this.instrument);
+
+        this.inputVolume = document.getElementById('audio-volume');
+        this.inputBpm = document.getElementById('audio-bpm');
+        this.inputBeats = document.getElementById('audio-beats');
+
+        this.inputVolume.addEventListener('input', event => {
+            let min = 0, max = 1;
+            this.instrument.volume = parseFloat(event.target.value) / 100.0 * max - min;
+            console.log(this.instrument.volume);
+        });
+
+        this.inputBpm.addEventListener('input', event => this.instrument.volume = parseFloat(event.target.value));
     }
 
     draw(instrument) {
@@ -707,17 +778,40 @@ class InstrumentBuilder {
         waveFormSelect.addEventListener('input', (event) => node.waveForm = event.target.value);
         nodeElement.appendChild(waveFormSelect);
 
-        const createOscilatorSlider = (label, max, key) => {
+        let canvas = createElement('canvas', { className: 'audio-oscillator', width: 50, height: 10 });
+        nodeElement.appendChild(canvas);
+
+        let graph = new GraphView(canvas);
+        const updateCanvas = () => {
+            graph.clear();
+            const relativeToWidth = (v) => v / this.maxs.total * 50;
+            let attackX = relativeToWidth(node.attack);
+            let decayX = relativeToWidth(node.decay);
+            let sustainY = node.sustain;
+            let sustainX = relativeToWidth(3);
+            let releaseX = relativeToWidth(node.release);
+
+            graph.drawLine(0, 0, attackX, 1);
+            graph.drawLine(attackX, 1, attackX + decayX, sustainY);
+            graph.drawLine(attackX + decayX, sustainY, attackX + decayX + sustainX, sustainY);
+            graph.drawLine(attackX + decayX + sustainX, sustainY, attackX + decayX + sustainX + releaseX, 0);
+        };
+        updateCanvas();
+
+        const createOscilatorSlider = (label, key) => {
             let [_, input] = this.createNodeInput(label, 'range', { min: 0, max: 100 });
-            input.addEventListener('input', (event) => node[key] = parseFloat(event.target.value) / 100.0 * max);
-            input.value = node[key] * (100.0 / max);
+            input.addEventListener('input', (event) => {
+                node[key] = parseFloat(event.target.value) / 100.0 * this.maxs[key];
+                updateCanvas();
+            });
+            input.value = node[key] * (100.0 / this.maxs[key]);
             nodeElement.appendChild(_);
         }
 
-        createOscilatorSlider('Attack', 3.0, 'attack');
-        createOscilatorSlider('Decay', 3.0, 'decay');
-        createOscilatorSlider('Sustain', 1.0, 'sustain');
-        createOscilatorSlider('Release', 5.0, 'release');
+        createOscilatorSlider('Attack', 'attack');
+        createOscilatorSlider('Decay', 'decay');
+        createOscilatorSlider('Sustain', 'sustain');
+        createOscilatorSlider('Release', 'release');
 
         return nodeElement;
     }
@@ -774,6 +868,27 @@ class MelodyWriter {
 
         this.container.addEventListener('dragover', (event) => this.__dragNoteX(event));
         this.onMelodyChange = () => { console.log(this.melody) };
+
+        this.inputBpm = document.getElementById('audio-bpm');
+        this.inputBpm.addEventListener('input', event => this.melody.bpm = parseInt(event.target.value));
+
+        this.inputBeats = document.getElementById('audio-beats');
+        this.inputBeats.addEventListener('input', event => {
+            this.melody.beatCount = parseInt(event.target.value);
+            this.__setRows();
+            this.setMelody(this.melody);
+        });
+    }
+
+    setMelody(melody) {
+        this.melody = melody;
+        this.inputBpm.value = this.melody.bpm;
+        this.inputBeats.value = this.melody.beatCount;
+
+        Object.values(this.melody.notes).forEach(note => {
+            let noteData = this.__addNote(note.index, note.time, note.length);
+            this.setNote(noteData.id);
+        });
     }
 
     __setNotesData() {
@@ -819,7 +934,7 @@ class MelodyWriter {
         this.containerHeight = this.container.clientHeight;
     }
 
-    __addNote(index, time) {
+    __addNote(index, time, length = 1) {
         let id = Date.now();
         let note = {
             index: index,
@@ -827,7 +942,7 @@ class MelodyWriter {
             key: this.NOTES_DATA[index].key,
             time: time,
             endTime: 1,
-            length: 1,
+            length: length,
         };
         this.melody.notes[id] = note;
 
@@ -879,6 +994,8 @@ class MelodyWriter {
             this.setNote(this.currentDraggedResizer.id);
             this.currentDraggedResizer = null;
         });
+
+        return note;
     }
 
     __dragNoteX(event) {
@@ -927,64 +1044,31 @@ class MelodyWriter {
         this.onMelodyChange();
     }
 }
-const instrumentBuilder = new InstrumentBuilder();
-const melodyWriter = new MelodyWriter();
-
-addEventListener('audio-play-button', 'click', (event) => {
-    APP.AUDIO_MANAGER.playMelody(melodyWriter.melody, instrumentBuilder.instrument);
-});
-
 
 class AudioPanel {
 
-    constructor() {
-        const WAVE_FORMS = [
-            'sine',
-            'square',
-            'sawtooth',
-            'triangle',
-        ]
+    constructor(melodyWriter, instrumentBuilder) {
+        this.melodyWriter = melodyWriter;
+        this.instrumentBuilder = instrumentBuilder;
 
-        let selectedWaveForm = 0;
-        let octave = 4;
+        this.keyboard = document.getElementById('audio-keyboard');
+        this.playButton = document.getElementById('audio-play-button');
 
-        let instrument = {
-            waveForm: 'sine',
-            enveloppe: {
-                'attack': 0.01,
-                'decay': 0.1,
-                'sustain': 0,
-                'release': 0.5,
-            },
-            filter: {
-                type: 'none',
-                frequency: 4400,
-                resonance: 1,
-            }
-        };
+        this.notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+        this.notesColors = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
+        this.keysMap = { 'q': 'C', 'z': 'C#', 's': 'D', 'e': 'Eb', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'Bb', 'j': 'B' };
+        this.keys = {};
 
-        function setInstrumentEnveloppe(param, value) {
-            instrument.enveloppe[param] = value;
-        }
+        this.playButton.addEventListener('click', () => {
+            APP.AUDIO_MANAGER.playMelody(this.melodyWriter.melody, this.instrumentBuilder.instrument);
+        });
 
-        function setWaveForm(newWaveForm) {
-            selectedWaveForm = Math.min(Math.max(0, newWaveForm), WAVE_FORMS.length - 1);
-            let s = WAVE_FORMS[selectedWaveForm];
-            instrument.waveForm = WAVE_FORMS[selectedWaveForm];
-            document.getElementById('audio-type').innerHTML = s.charAt(0).toUpperCase() + s.slice(1);
-        }
+        // this.setKeyboard();
+    }
 
-        function setOctave(newOctave) {
-            octave = Math.min(Math.max(0, newOctave), 25);
-            document.getElementById('audio-octave').innerHTML = octave;
-        }
-
-        let notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
-        let notesColors = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
-        let keyboard = document.getElementById('audio-keyboard');
-
-        let keysMap = { 'q': 'C', 'z': 'C#', 's': 'D', 'e': 'Eb', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'Bb', 'j': 'B' };
-        let keys = {};
+    setKeyboard() {
+        // addEventListener('audio-octave-plus', 'click', () => setOctave(octave + 1));
+        // addEventListener('audio-octave-minus', 'click', () => setOctave(octave - 1));
 
         for (let keyOctave = 0; keyOctave < 2; keyOctave++) {
             for (let i = 0; i < notes.length; i++) {
@@ -1037,26 +1121,12 @@ class AudioPanel {
                 synth.stopNote(octave, keysMap[key]);
             }
         })
-
-        addEventListener('audio-volume', 'input', (event) => synth.setVolume(parseFloat(event.target.value) / 100.0 * 0.1));
-
-        addEventListener('audio-octave-plus', 'click', () => setOctave(octave + 1));
-        addEventListener('audio-octave-minus', 'click', () => setOctave(octave - 1));
-
-        addEventListener('audio-type-plus', 'click', () => setWaveForm(selectedWaveForm + 1));
-        addEventListener('audio-type-minus', 'click', () => setWaveForm(selectedWaveForm - 1));
-
-        addEventListener('audio-attack', 'input', (event) => setInstrumentEnveloppe('attack', parseFloat(event.target.value) / 100.0 * 1));
-        addEventListener('audio-decay', 'input', (event) => setInstrumentEnveloppe('decay', parseFloat(event.target.value) / 100.0 * 1));
-        addEventListener('audio-sustain', 'input', (event) => setInstrumentEnveloppe('sustain', parseFloat(event.target.value) / 100.0 * 1));
-        addEventListener('audio-release', 'input', (event) => setInstrumentEnveloppe('release', parseFloat(event.target.value) / 100.0 * 3));
-
-        addEventListener('audio-filter-frequency', 'input', (event) => instrument.filter.frequency = (parseFloat(event.target.value) / 100.0 * 1));
-
-        setOctave(4);
-        setWaveForm(0);
     }
 }
+
+const instrumentBuilder = new InstrumentBuilder();
+const melodyWriter = new MelodyWriter();
+const audioPanel = new AudioPanel();
 
 // ================================= Short Cuts ==========================================
 document.addEventListener('keypress', (event) => {
