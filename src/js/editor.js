@@ -733,49 +733,28 @@ class InstrumentBuilder {
     constructor() {
         this.maxs = { attack: 3, decay: 3, sustain: 1, release: 10, total: 17 }
         this.container = document.getElementById('audio-nodes');
-        this.instrument = {
-            volume: 0.6,
-            nodes: [{
-                type: 'oscillator',
-                waveForm: 'sawtooth',
-                attack: 0.01,
-                decay: 0,
-                sustain: 1,
-                release: 1,
-            }]
-        };
+        this.instrument = {};
 
-        this.container.innerHTML = '';
-        this.draw(this.instrument);
-
-        this.inputVolume = document.getElementById('audio-volume');
-        this.inputBpm = document.getElementById('audio-bpm');
-        this.inputBeats = document.getElementById('audio-beats');
-
-        this.inputVolume.addEventListener('input', event => {
-            let min = 0, max = 1;
-            this.instrument.volume = parseFloat(event.target.value) / 100.0 * max - min;
-            console.log(this.instrument.volume);
-        });
-
-        this.inputBpm.addEventListener('input', event => this.instrument.volume = parseFloat(event.target.value));
     }
 
-    draw(instrument) {
+    selectInstrument(instrument) {
+        this.instrument = instrument;
+        this.container.innerHTML = '';
         this.container.appendChild(createElement('button', { innerText: '+', className: 'audio-add-node' }));
         instrument.nodes.forEach(node => {
             if (node.type == 'oscillator') {
-                let nodeElement = this.createOscillatorNode(node);
+                let nodeElement = this.__createOscillatorNode(node);
                 this.container.appendChild(nodeElement);
             }
         })
     }
 
-    createOscillatorNode(node) {
-        let nodeElement = this.createNode("Oscillator");
+    __createOscillatorNode(node) {
+        let nodeElement = this.__createNode("Oscillator");
 
-        let waveFormSelect = this.createNodeInputSelector(['sine', 'square', 'sawtooth', 'triangle']);
+        let waveFormSelect = this.__createNodeInputSelector(['sine', 'square', 'sawtooth', 'triangle']);
         waveFormSelect.addEventListener('input', (event) => node.waveForm = event.target.value);
+        waveFormSelect.value = node.waveForm;
         nodeElement.appendChild(waveFormSelect);
 
         let canvas = createElement('canvas', { className: 'audio-oscillator', width: 50, height: 10 });
@@ -799,7 +778,7 @@ class InstrumentBuilder {
         updateCanvas();
 
         const createOscilatorSlider = (label, key) => {
-            let [_, input] = this.createNodeInput(label, 'range', { min: 0, max: 100 });
+            let [_, input] = this.__createNodeInput(label, 'range', { min: 0, max: 100 });
             input.addEventListener('input', (event) => {
                 node[key] = parseFloat(event.target.value) / 100.0 * this.maxs[key];
                 updateCanvas();
@@ -816,13 +795,13 @@ class InstrumentBuilder {
         return nodeElement;
     }
 
-    createNode(label) {
+    __createNode(label) {
         let nodeElement = createElement('div', { className: 'audio-node' });
         createElement('p', { className: 'audio-node-label', innerText: label }, parent = nodeElement);
         return nodeElement;
     }
 
-    createNodeInput(label, type, data) {
+    __createNodeInput(label, type, data) {
         let inputContainer = createElement('div', { className: 'audio-node-input horizontal' });
         createElement('label', { innerText: label }, parent = inputContainer);
 
@@ -833,7 +812,7 @@ class InstrumentBuilder {
         return [inputContainer, input];
     }
 
-    createNodeInputSelector(values) {
+    __createNodeInputSelector(values) {
         let nodeElement = createElement('select', { className: 'audio-node-input' });
         values.forEach(val => createElement('option', { value: val, text: val }, parent = nodeElement));
         return nodeElement;
@@ -849,15 +828,9 @@ class MelodyWriter {
         this.NOTES_DATA = [];
 
         this.octaveCount = 6;
-        this.containerWidth = 0;
-        this.containerHeight = 0;
 
         this.rows = {};
-        this.melody = {
-            notes: {},
-            beatCount: 8,
-            bpm: 150,
-        };
+        this.melody = {};
 
         this.noteElements = {};
         this.currentDraggedNote = null;
@@ -869,9 +842,6 @@ class MelodyWriter {
         this.container.addEventListener('dragover', (event) => this.__dragNoteX(event));
         this.onMelodyChange = () => { console.log(this.melody) };
 
-        this.inputBpm = document.getElementById('audio-bpm');
-        this.inputBpm.addEventListener('input', event => this.melody.bpm = parseInt(event.target.value));
-
         this.inputBeats = document.getElementById('audio-beats');
         this.inputBeats.addEventListener('input', event => {
             this.melody.beatCount = parseInt(event.target.value);
@@ -882,11 +852,13 @@ class MelodyWriter {
 
     setMelody(melody) {
         this.melody = melody;
-        this.inputBpm.value = this.melody.bpm;
-        this.inputBeats.value = this.melody.beatCount;
 
+        this.inputBeats.value = this.melody.beatCount;
+        this.__setRows();
+
+        console.log(this.melody.notes);
         Object.values(this.melody.notes).forEach(note => {
-            let noteData = this.__addNote(note.index, note.time, note.length);
+            let noteData = this.__addNote(note);
             this.setNote(noteData.id);
         });
     }
@@ -923,31 +895,27 @@ class MelodyWriter {
 
             row.addEventListener('click', event => {
                 if (event.detail === 2) {
-                    let time = Math.round(event.clientX / row.offsetWidth * this.melody.beatCount) - 1;
-                    this.__addNote(i, time);
+                    this.__addNote({
+                        id: Date.now(),
+                        index: i,
+                        octave: this.NOTES_DATA[i].octave,
+                        key: this.NOTES_DATA[i].key,
+                        time: Math.round(event.clientX / row.offsetWidth * this.melody.beatCount) - 1,
+                        endTime: 1,
+                        length: 1,
+                    });
                 }
             });
             row.addEventListener('dragover', (event) => this.__dragNoteY(event, i));
         }
-
-        this.containerWidth = this.container.clientWidth;
-        this.containerHeight = this.container.clientHeight;
     }
 
-    __addNote(index, time, length = 1) {
-        let id = Date.now();
-        let note = {
-            index: index,
-            octave: this.NOTES_DATA[index].octave,
-            key: this.NOTES_DATA[index].key,
-            time: time,
-            endTime: 1,
-            length: length,
-        };
+    __addNote(note) {
+        let id = note.id;
         this.melody.notes[id] = note;
 
-        const noteElement = createElement('div', { className: 'audio-melody-note', draggable: true }, parent = this.rows[index]);
-        noteElement.style.left = `${time / this.melody.beatCount * 100}%`;
+        const noteElement = createElement('div', { className: 'audio-melody-note', draggable: true }, parent = this.rows[note.index]);
+        noteElement.style.left = `${note.time / this.melody.beatCount * 100}%`;
         noteElement.style.width = `calc(${note.length / this.melody.beatCount * 100}% - 6px)`;
         this.noteElements[id] = noteElement;
 
@@ -1051,19 +1019,77 @@ class AudioPanel {
         this.melodyWriter = melodyWriter;
         this.instrumentBuilder = instrumentBuilder;
 
-        this.keyboard = document.getElementById('audio-keyboard');
+        this.sounds = APP.GameData.sounds;
+        this.selectedSound = {};
+        this.btns = [];
+
         this.playButton = document.getElementById('audio-play-button');
-
-        this.notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
-        this.notesColors = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
-        this.keysMap = { 'q': 'C', 'z': 'C#', 's': 'D', 'e': 'Eb', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'Bb', 'j': 'B' };
-        this.keys = {};
-
         this.playButton.addEventListener('click', () => {
-            APP.AUDIO_MANAGER.playMelody(this.melodyWriter.melody, this.instrumentBuilder.instrument);
+            APP.AUDIO_PLAYER.playSound(this.selectedSound);
         });
 
+        this.selectorContainer = document.getElementById('audio-selector');
+        this.setSelectors();
+
+        this.inputVolume = document.getElementById('audio-volume');
+        this.inputVolume.addEventListener('input', event => {
+            let min = 0, max = 1;
+            this.selectedSound.volume = parseFloat(event.target.value) / 100.0 * max - min;
+        });
+
+        this.inputBpm = document.getElementById('audio-bpm');
+        this.inputBpm.addEventListener('input', event => this.selectedSound.bpm = parseInt(event.target.value));
+
+        // this.notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+        // this.notesColors = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
+        // this.keysMap = { 'q': 'C', 'z': 'C#', 's': 'D', 'e': 'Eb', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'Bb', 'j': 'B' };
+        // this.keys = {};
+        // this.keyboard = document.getElementById('audio-keyboard');
         // this.setKeyboard();
+    }
+
+    selectSound(index) {
+        if (APP.GameData.sounds[index] == null) {
+            APP.GameData.sounds[index] = {
+                bpm: 120,
+                volume: 0.8,
+                melody: {
+                    notes: {},
+                    beatCount: 8,
+                },
+                instrument: {
+                    nodes: [{
+                        type: 'oscillator',
+                        waveForm: 'sawtooth',
+                        attack: 0.01,
+                        decay: 0,
+                        sustain: 1,
+                        release: 1,
+                    }]
+                },
+            };
+        }
+
+        this.selectedSound = APP.GameData.sounds[index];
+        this.melodyWriter.setMelody(this.selectedSound.melody);
+        this.instrumentBuilder.selectInstrument(this.selectedSound.instrument);
+
+        for (let j = 0; j < this.btns.length; j++)
+            this.btns[j].classList.remove('selected');
+        this.btns[index].classList.add('selected');
+    }
+
+    setSelectors() {
+        for (let i = 0; i < 16; i++) {
+            let btn = createElement('button', { className: 'audio-selector-btn', innerText: i });
+            this.selectorContainer.appendChild(btn);
+            this.btns.push(btn);
+
+            btn.addEventListener('click', () => {
+                this.selectSound(i);
+            });
+        }
+        this.selectSound(0);
     }
 
     setKeyboard() {
@@ -1126,7 +1152,7 @@ class AudioPanel {
 
 const instrumentBuilder = new InstrumentBuilder();
 const melodyWriter = new MelodyWriter();
-const audioPanel = new AudioPanel();
+const audioPanel = new AudioPanel(melodyWriter, instrumentBuilder);
 
 // ================================= Short Cuts ==========================================
 document.addEventListener('keypress', (event) => {

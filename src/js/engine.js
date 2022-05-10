@@ -213,6 +213,35 @@ export class HtmlRenderer {
                 this.drawImage(x + (4 * i), y, img);
         }
     }
+
+    drawLine(x0, y0, x1, y1) {
+        this.setPixel(x0, y0);
+        const handle = (x, y, dx, dy, absdx, absdy, setPixel) => {
+            let d = 2 * absdy - absdx;
+            for (let i = 0; i < absdx; i++) {
+                x = dx < 0 ? x - 1 : x + 1;
+                if (d < 0) {
+                    d = d + 2 * absdy
+                } else {
+                    y = dy < 0 ? y - 1 : y + 1;
+                    d = d + (2 * absdy - 2 * absdx);
+                }
+                setPixel(x, y);
+            }
+        }
+
+        const dx = x1 - x0;
+        const dy = y1 - y0;
+        const absdx = Math.abs(dx);
+        const absdy = Math.abs(dy);
+
+        // slope < 1
+        if (absdx > absdy) {
+            handle(x0, y0, dx, dy, absdx, absdy, (x, y) => this.setPixel(x, y));
+        } else { // case when slope is greater than or equals to 1
+            handle(y0, x0, dy, dx, absdy, absdx, (y, x) => this.setPixel(x, y));
+        }
+    }
 }
 
 export class Physics2D {
@@ -301,13 +330,16 @@ export class HtmlSynth {
         this.mainGainNode.gain.value = volume;
     }
 
-    playMelody(melody, instrumentData) {
-        let n = 1 / (melody.bpm / 60);
+    playSound(sound) {
+        this.playMelody(sound.melody, sound.instrument, sound.volume, sound.bpm);
+    }
+
+    playMelody(melody, instrument, volume, bpm) {
+        let n = 1 / (bpm / 60);
         Object.values(melody.notes).forEach(note => {
             let time = n * Math.max(0.00000001, note.time);
             let length = n * note.length;
-            let instrument = this.getInstument(instrumentData);
-            instrument.playNote(note.octave, note.key, time, length);
+            this.getInstument(instrument).playNote(note.octave, note.key, time, length);
         });
     }
 
@@ -384,14 +416,14 @@ export class HtmlSynth {
 
 export class Engine {
 
-    constructor(renderer, inputManager, sprites, audioPlayer) {
+    constructor(renderer, inputManager, audioPlayer) {
         this.renderer = renderer;
         this.inputManager = inputManager;
         this.audioPlayer = audioPlayer;
         this.gameLoop = null;
-        this.objects_img = [];
         this.entities = [];
-        this.sprites = sprites;
+        this.sounds = [];
+        this.sprites = [];
         this.mousePos = renderer.mousePos;
 
         this.isRunning = false;
@@ -418,8 +450,9 @@ export class Engine {
         });
     }
 
-    setup(sprites) {
+    setup(sprites, sounds) {
         this.sprites = sprites;
+        this.sounds = sounds;
         this.clear();
     }
 
@@ -427,7 +460,6 @@ export class Engine {
         if (this.gameLoop != null) {
             clearInterval(this.gameLoop);
             this.gameLoop = null;
-            this.objects_img = [];
             this.entities = [];
         }
         this.renderer.clear();
@@ -531,6 +563,10 @@ export class Engine {
         if (this.mousePos.x < rect.x || this.mousePos.x > (rect.x + rect.width)) return false;
         if (this.mousePos.y < rect.y || this.mousePos.y > (rect.y + rect.height)) return false;
         return true;
+    }
+
+    playSound(id) {
+        this.audioPlayer.playSound(this.sounds[id]);
     }
 
     // ================= PRIVATE METHODS ================= 

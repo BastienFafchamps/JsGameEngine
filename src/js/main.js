@@ -17,6 +17,26 @@ export class App {
                 '#aaaaaa',
                 '#aabb2e',
             ],
+            sounds: [
+                {
+                    bpm: 120,
+                    volume: 0.8,
+                    melody: {
+                        notes: {},
+                        beatCount: 8,
+                    },
+                    instrument: {
+                        nodes: [{
+                            type: 'oscillator',
+                            waveForm: 'sawtooth',
+                            attack: 0.01,
+                            decay: 0,
+                            sustain: 1,
+                            release: 1,
+                        }]
+                    },
+                }
+            ]
         }
 
         this.CANVAS = canvas;
@@ -34,10 +54,10 @@ export class App {
         this.GameData.sprites = this.SPRITE_MANAGER.sprites;
 
         this.INPUT_MANAGER = new HtmlInputManager(document);
+        this.AUDIO_PLAYER = new HtmlSynth(new AudioContext());
         this.PHYSICS = new Physics2D();
-        this.AUDIO_MANAGER = new HtmlSynth(new AudioContext());
 
-        this.ENGINE = new Engine(this.RENDERER, this.INPUT_MANAGER, null, this.SPRITE_MANAGER);
+        this.ENGINE = new Engine(this.RENDERER, this.INPUT_MANAGER, this.AUDIO_PLAYER);
 
         this.onGameDataUpdate = (gameData) => {};
 
@@ -130,6 +150,10 @@ export class App {
                 f: (min, max) => this.ENGINE.randomRange(min, max),
                 description: 'Stops the engine',
             },
+            PLAY_SOUND: {
+                f:  (id) => this.ENGINE.playSound(id),
+                description: 'Plays a sound',
+            },
             COLOR: {
                 f: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
                 description: 'Draws a rectangle to the screen',
@@ -143,7 +167,7 @@ export class App {
 
     run() {
         try {
-            this.ENGINE.setup(this.SPRITE_MANAGER.imageDatas);
+            this.ENGINE.setup(this.SPRITE_MANAGER.imageDatas, this.GameData.sounds);
     
             let gameContext = this.__getGameContext();
             let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
