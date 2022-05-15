@@ -490,18 +490,18 @@ button.sprite-editor-tool {
 }
 
 /* ################################ Audio ##############################*/
-#audio-panel.active {
+#melody-panel.active, #instrument-panel.active {
   display: flex;
   flex-direction: column;
 }
-#audio-panel {
+#instrument-panel {
   position: relative;
   margin: 2rem;
   height: calc(100% - 5rem);
   width: calc(100% - 4rem);
   font-size: .8em;
 }
-#audio-toolbar {
+#melody-toolbar {
   display: flex;
   align-items: center;
   width: calc(100% - 2rem);
@@ -510,16 +510,16 @@ button.sprite-editor-tool {
   background-color: var(--background-secondary);
   border-bottom: 6px solid rgb(189, 189, 189);
 }
-#audio-toolbar > * {
+#melody-toolbar > * {
   margin-right: 1rem;
 }
-.audio-toolbar-input {
+.melody-toolbar-input {
   display: flex;
   flex-direction: column;
   max-width: 8rem;
 }
 
-#audio-melody {
+#melody-container {
   width: 100%;
   height: 40rem;
   margin: 1rem 0;
@@ -527,7 +527,7 @@ button.sprite-editor-tool {
   overflow-y: scroll;
   overflow-x: hidden;
 }
-.audio-melody-row {
+.melody-container-row {
   position: relative;
   display: flex;
   flex-wrap: nowrap;
@@ -541,20 +541,20 @@ button.sprite-editor-tool {
   letter-spacing: .005em;
   user-select: none;
 }
-.audio-melody-row:nth-child(even) {
+.melody-container-row:nth-child(even) {
   filter: brightness(0.98);
 }
-.audio-melody-row.black {
+.melody-container-row.black {
   filter: brightness(0.96);
 }
-.audio-melody-row-seprator {
+.melody-container-row-seprator {
   position: absolute;
   border-right: 1px solid #00000022;
   width: 1px;
   height: 100%;
   pointer-events: none;
 }
-.audio-melody-note {
+.melody-container-note {
   position: absolute;
   z-index: 10;
   width: 3rem;
@@ -565,14 +565,14 @@ button.sprite-editor-tool {
   transition: filter .2s ease-in-out;
   filter: brightness(1);
 }
-.audio-melody-note:hover {
+.melody-container-note:hover {
   cursor: move;
   filter: brightness(1.2);
 }
-.audio-melody-note:active {
+.melody-container-note:active {
   cursor: grabbing !important;;
 }
-.audio-melody-note-resizer {
+.melody-container-note-resizer {
   z-index: 1;
   position: absolute;
   right: 0;
@@ -582,19 +582,19 @@ button.sprite-editor-tool {
   cursor: e-resize;
 }
 
-#audio-nodes {
+#instrument-nodes {
   width: 100%;
   height: 100%;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
 }
-.audio-node, .audio-add-node {
+.instrument-node, .instrument-add-node {
   position: relative;
   padding: 1rem;
   margin: 1rem;
 }
-.audio-node {
+.instrument-node {
   display: flex;
   flex-direction: column;
   width: 15rem;
@@ -607,13 +607,13 @@ button.sprite-editor-tool {
   background-color: var(--background-secondary);
   border-bottom: 6px solid rgb(189, 189, 189);
 }
-.audio-add-node {
+.instrument-add-node {
   position: relative;
   height: calc(100% - 2rem);
   font-size: 2em;
   margin-left: 0;
 }
-.audio-node-label {
+.instrument-node-label {
   padding: .1rem 0rem;
   position: absolute;
   height: 1rem;
@@ -621,7 +621,7 @@ button.sprite-editor-tool {
   position: relative;
   font-size: 1.3em;
 }
-.audio-node-input {
+.instrument-node-input {
   font-size: 0.8em;
   margin-bottom: .5rem;
   display: flex;
@@ -629,22 +629,22 @@ button.sprite-editor-tool {
   justify-content: space-between;
   width: 100%;
 }
-.audio-node-input input {
+.instrument-node-input input {
   height: .5rem;
   font-size: 0.6em;
 }
-.audio-node-input label {
+.instrument-node-input label {
   text-align: left;
 }
-.audio-node-input p {
+.instrument-node-input p {
   text-align: center;
 }
-.audio-node-input.horizontal {
+.instrument-node-input.horizontal {
   flex-direction: row;
   align-items: center;
 }
 
-.audio-oscillator {
+.instrument-oscillator {
   background-color: var(--background);
   position: relative;
   border: 5px solid var(--text-hightlight);
@@ -653,23 +653,23 @@ button.sprite-editor-tool {
   padding: .5rem;
 }
 
-#audio-keyboard {
+#instrument-keyboard {
   display: flex;
   justify-content: center;
   display: none;
 }
-.audio-key {
+.instrument-key {
   --border-height: 8px;
   transition: .1s ease-in-out;
 }
-.audio-key.white {
+.instrument-key.white {
   width: 4rem;
   height: 10rem;
   margin: 0 .2rem;
   background-color: var(--background-secondary);
   border-bottom: var(--border-height) solid rgb(189, 189, 189);
 }
-.audio-key.black {
+.instrument-key.black {
   width: 3rem;
   height: 6rem;
   margin-left: -1.5rem;
@@ -678,26 +678,26 @@ button.sprite-editor-tool {
   background-color: rgb(177, 177, 177);
   border-bottom: var(--border-height) solid rgb(117, 117, 117);
 }
-.audio-key:hover {
+.instrument-key:hover {
   filter: brightness(1.1);
 }
-.audio-key:active, .audio-key.active {
+.instrument-key:active, .instrument-key.active {
   filter: brightness(0.9);
 }
-.audio-key.white.active {
+.instrument-key.white.active {
   border-bottom: 2px solid rgb(189, 189, 189);
 }
-.audio-key.audio-key.black.active.active {
+.instrument-key.instrument-key.black.active.active {
   border-bottom: 2px solid rgb(117, 117, 117);
 }
-.audio-keyboard-octave {
+.instrument-keyboard-octave {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-around;
 }
 @media (max-width: 1000px) { 
-  .audio-key.second {
+  .instrument-key.second {
     display: none;
   }
 }

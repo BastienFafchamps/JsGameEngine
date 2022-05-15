@@ -732,7 +732,7 @@ class GraphView {
 class InstrumentBuilder {
     constructor() {
         this.maxs = { attack: 3, decay: 3, sustain: 1, release: 10, total: 17 }
-        this.container = document.getElementById('audio-nodes');
+        this.container = document.getElementById('instrument-nodes');
         this.instrument = {
             volume: 0.6,
             nodes: [{
@@ -748,9 +748,9 @@ class InstrumentBuilder {
         this.container.innerHTML = '';
         this.draw(this.instrument);
 
-        this.inputVolume = document.getElementById('audio-volume');
-        this.inputBpm = document.getElementById('audio-bpm');
-        this.inputBeats = document.getElementById('audio-beats');
+        this.inputVolume = document.getElementById('melody-volume');
+        this.inputBpm = document.getElementById('melody-bpm');
+        this.inputBeats = document.getElementById('melody-beats');
 
         this.inputVolume.addEventListener('input', event => {
             let min = 0, max = 1;
@@ -762,7 +762,7 @@ class InstrumentBuilder {
     }
 
     draw(instrument) {
-        this.container.appendChild(createElement('button', { innerText: '+', className: 'audio-add-node' }));
+        this.container.appendChild(createElement('button', { innerText: '+', className: 'instrument-add-node' }));
         instrument.nodes.forEach(node => {
             if (node.type == 'oscillator') {
                 let nodeElement = this.createOscillatorNode(node);
@@ -778,7 +778,7 @@ class InstrumentBuilder {
         waveFormSelect.addEventListener('input', (event) => node.waveForm = event.target.value);
         nodeElement.appendChild(waveFormSelect);
 
-        let canvas = createElement('canvas', { className: 'audio-oscillator', width: 50, height: 10 });
+        let canvas = createElement('canvas', { className: 'instrument-oscillator', width: 50, height: 10 });
         nodeElement.appendChild(canvas);
 
         let graph = new GraphView(canvas);
@@ -817,13 +817,13 @@ class InstrumentBuilder {
     }
 
     createNode(label) {
-        let nodeElement = createElement('div', { className: 'audio-node' });
-        createElement('p', { className: 'audio-node-label', innerText: label }, parent = nodeElement);
+        let nodeElement = createElement('div', { className: 'instrument-node' });
+        createElement('p', { className: 'instrument-node-label', innerText: label }, parent = nodeElement);
         return nodeElement;
     }
 
     createNodeInput(label, type, data) {
-        let inputContainer = createElement('div', { className: 'audio-node-input horizontal' });
+        let inputContainer = createElement('div', { className: 'instrument-node-input horizontal' });
         createElement('label', { innerText: label }, parent = inputContainer);
 
         let input = createElement('input', { type: type }, parent = inputContainer);
@@ -834,7 +834,7 @@ class InstrumentBuilder {
     }
 
     createNodeInputSelector(values) {
-        let nodeElement = createElement('select', { className: 'audio-node-input' });
+        let nodeElement = createElement('select', { className: 'instrument-node-input' });
         values.forEach(val => createElement('option', { value: val, text: val }, parent = nodeElement));
         return nodeElement;
     }
@@ -843,11 +843,17 @@ class InstrumentBuilder {
 // --------------------------------- Melody Writer ------------------------------------------
 class MelodyWriter {
     constructor() {
-        this.container = document.getElementById('audio-melody');
-        this.NOTES = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+        this.container = document.getElementById('melody-container');
+        this.NOTES = ['C', 'C#', 'D', 'E#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         this.NOTES_COLOR = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
+        this.SCALES = {
+            'g-major': ['G', 'A', 'B', 'C', 'D', 'E', 'F#'],
+            'f-major': ['F', 'G', 'A', 'A#', 'C', 'D', 'E'],
+            'b-major': ['B', 'C#', 'E#', 'E', 'F#', 'G#', 'A#'],
+            'f#-major': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
+        }
         this.NOTES_DATA = [];
-
+        
         this.octaveCount = 6;
         this.containerWidth = 0;
         this.containerHeight = 0;
@@ -869,10 +875,10 @@ class MelodyWriter {
         this.container.addEventListener('dragover', (event) => this.__dragNoteX(event));
         this.onMelodyChange = () => { console.log(this.melody) };
 
-        this.inputBpm = document.getElementById('audio-bpm');
+        this.inputBpm = document.getElementById('melody-bpm');
         this.inputBpm.addEventListener('input', event => this.melody.bpm = parseInt(event.target.value));
 
-        this.inputBeats = document.getElementById('audio-beats');
+        this.inputBeats = document.getElementById('melody-beats');
         this.inputBeats.addEventListener('input', event => {
             this.melody.beatCount = parseInt(event.target.value);
             this.__setRows();
@@ -909,14 +915,14 @@ class MelodyWriter {
 
         for (let i = 0; i < this.NOTES_DATA.length; i++) {
             const row = createElement('div', {
-                className: 'audio-melody-row ' + this.NOTES_DATA[i].color,
+                className: 'melody-container-row ' + this.NOTES_DATA[i].color,
                 id: i,
                 innerText: `${this.NOTES_DATA[i].octave}${this.NOTES_DATA[i].key}`,
             }, parent = this.container);
             this.rows[i] = row;
 
             for (let k = 0; k < this.melody.beatCount; k++) {
-                const separator = createElement('span', { className: 'audio-melody-row-seprator' }, parent = row);
+                const separator = createElement('span', { className: 'melody-container-row-seprator' }, parent = row);
                 separator.style.left = `${(k / this.melody.beatCount) * 100}%`;
                 separator.style.width = `${(1 / this.melody.beatCount) * 100}%`;
             }
@@ -946,7 +952,7 @@ class MelodyWriter {
         };
         this.melody.notes[id] = note;
 
-        const noteElement = createElement('div', { className: 'audio-melody-note', draggable: true }, parent = this.rows[index]);
+        const noteElement = createElement('div', { className: 'melody-container-note', draggable: true }, parent = this.rows[index]);
         noteElement.style.left = `${time / this.melody.beatCount * 100}%`;
         noteElement.style.width = `calc(${note.length / this.melody.beatCount * 100}% - 6px)`;
         this.noteElements[id] = noteElement;
@@ -976,7 +982,7 @@ class MelodyWriter {
             this.currentDraggedNote = null;
         });
 
-        const noteResizeElement = createElement('div', { className: 'audio-melody-note-resizer' }, parent = noteElement);
+        const noteResizeElement = createElement('div', { className: 'melody-container-note-resizer' }, parent = noteElement);
         noteResizeElement.draggable = true;
 
         noteResizeElement.addEventListener('dragstart', (event) => {
@@ -1051,12 +1057,12 @@ class AudioPanel {
         this.melodyWriter = melodyWriter;
         this.instrumentBuilder = instrumentBuilder;
 
-        this.keyboard = document.getElementById('audio-keyboard');
-        this.playButton = document.getElementById('audio-play-button');
+        this.keyboard = document.getElementById('instrument-keyboard');
+        this.playButton = document.getElementById('melody-play-button');
 
-        this.notes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'G#', 'A', 'Bb', 'B'];
+        this.notes = ['C', 'C#', 'D', 'E#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
         this.notesColors = ['white', 'black', 'white', 'black', 'white', 'white', 'black', 'white', 'black', 'white', 'black', 'white'];
-        this.keysMap = { 'q': 'C', 'z': 'C#', 's': 'D', 'e': 'Eb', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'Bb', 'j': 'B' };
+        this.keysMap = { 'q': 'C', 'z': 'C#', 's': 'D', 'e': 'E#', 'd': 'E', 'f': 'F', 't': 'F#', 'g': 'G', 'y': 'G#', 'h': 'A', 'u': 'A#', 'j': 'B' };
         this.keys = {};
 
         this.playButton.addEventListener('click', () => {
@@ -1067,13 +1073,13 @@ class AudioPanel {
     }
 
     setKeyboard() {
-        // addEventListener('audio-octave-plus', 'click', () => setOctave(octave + 1));
-        // addEventListener('audio-octave-minus', 'click', () => setOctave(octave - 1));
+        // addEventListener('instrument-octave-plus', 'click', () => setOctave(octave + 1));
+        // addEventListener('instrument-octave-minus', 'click', () => setOctave(octave - 1));
 
         for (let keyOctave = 0; keyOctave < 2; keyOctave++) {
             for (let i = 0; i < notes.length; i++) {
                 let key = document.createElement('button');
-                key.className = 'audio-key ' + notesColors[i];
+                key.className = 'instrument-key ' + notesColors[i];
                 key.dataset.note = notes[i];
                 key.dataset.octave = keyOctave;
 
@@ -1126,7 +1132,7 @@ class AudioPanel {
 
 const instrumentBuilder = new InstrumentBuilder();
 const melodyWriter = new MelodyWriter();
-const audioPanel = new AudioPanel();
+const audioPanel = new AudioPanel(melodyWriter, instrumentBuilder);
 
 // ================================= Short Cuts ==========================================
 document.addEventListener('keypress', (event) => {
