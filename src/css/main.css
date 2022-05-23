@@ -496,11 +496,29 @@ button.sprite-editor-tool {
 }
 #instrument-panel {
   position: relative;
-  margin: 2rem;
   height: calc(100% - 5rem);
-  width: calc(100% - 4rem);
+  width: calc(100% - 1rem);
   font-size: .8em;
 }
+
+#melody-selector {
+  position: relative;
+  height: 5rem;
+  width: 100%;
+  margin-bottom: .5rem;
+}
+.melody-selector-btn {
+  position: relative;
+  filter: brightness(1);
+}
+.melody-selector-btn:not(.selected) {
+  filter: brightness(0.8);
+}
+.melody-selector-btn.selected {
+  border-bottom: none;
+  top: 5px;
+}
+
 #melody-toolbar {
   display: flex;
   align-items: center;
