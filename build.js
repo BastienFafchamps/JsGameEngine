@@ -32,13 +32,16 @@ function getFullHtml() {
 
     // Add js
     const jsFiles = [
+        './src/js/core.js',
         './src/js/engine.js',
         './src/js/main.js',
         './src/js/codeParser.js',
-        './src/js/editor.js',
+        './src/js/modules/code.js',
+        './src/js/modules/sprites.js',
+        './src/js/modules/audio.js',
     ];
 
-    let js = '<script  type="text/javascript">\n';
+    let js = '<script type="text/javascript">\n';
     jsFiles.forEach(file => {
         let content = readFile(file);
         content = content.replace(/import ([{\w, \s}])* from ['"]([\w\/.])*['"];\r\n/g, '');

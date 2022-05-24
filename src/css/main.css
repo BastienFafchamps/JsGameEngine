@@ -84,6 +84,13 @@ button.active, .btn.active {
   background: var(--primary-selected);
 }
 
+button img {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  height: 1.2rem;
+}
+
 input {
   border: none;
 }
@@ -110,6 +117,18 @@ input[type=number] {
   justify-content: center;
 }
 
+#game-view-panel {
+  flex-direction: column;
+  align-items: center;
+}
+#main-canvas {
+  background-color: #171717;
+  margin-top: 5rem;
+  position: relative;
+  width: 90%;
+  max-width: 50rem;
+}
+
 .tab-panel {
   position: relative;
   margin: .5rem;
@@ -130,20 +149,6 @@ input[type=number] {
   width: auto;
   height: 2.3rem;
   display: flex;
-}
-.menu-btn {
-  position: absolute;
-  right: .5rem;
-  display: none;
-}
-
-@media screen and (max-width: 600px) { 
-  .menu-btn {
-    display: block;
-  }
-  .tab-push-btn {
-    display: none;
-  }
 }
 
 .tab-btn {
@@ -201,7 +206,9 @@ input[type="file"] {
   from {opacity: 0;}
   to {opacity: 1;}
 }
-#code-area { z-index: 1 }
+#code-area { 
+  z-index: 1;
+}
 #code-area-input {
   z-index: 2;
   white-space: pre;

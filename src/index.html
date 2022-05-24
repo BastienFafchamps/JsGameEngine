@@ -12,25 +12,19 @@
 </head>
 <body>
     <div class="tab-buttons">
-        <div class="tab-select tab-push-btn">
-            <button class="btn">File</button>
-            <ul class="select-list">
-                <li><button class="btn" id="download">Save</button></li>
-                <li><label class="btn" for="load">Load</label><input id="load" type="file" /></li>
-            </ul>
-        </div>
-        <button class="btn tab-push-btn contained" id="btn-reload">Reload</button>
+        <!-- <div class="btn tab-push-btn contained">
+            <label for="load">Load</label><input id="load" type="file" />
+        </div> -->
+        <button class="btn tab-push-btn contained" id="download"><img id="img-download"></button>
+        <button class="btn tab-push-btn contained" id="btn-reload"><img id="img-reload"></button>
         <span class="w2"></span>
-        <button class="btn tab-btn">Game</button>
-        <button class="btn tab-btn">Code</button>
-        <button class="btn tab-btn">Sprites</button>
-        <button class="btn tab-btn">Instruments</button>
-        <button class="btn tab-btn">Melodies</button>
-        <button class="btn menu-btn">M</button>
-        <!-- <button id="btn-host" class="btn contained">Host</button>
-        <button id="btn-connect" class="btn contained">Connect</button> -->
+        <button class="btn tab-btn"><img id="img-play"></button>
+        <button class="btn tab-btn"><img id="img-code"></button>
+        <button class="btn tab-btn"><img id="img-sprites"></button>
+        <button class="btn tab-btn"><img id="img-instruments"></button>
+        <button class="btn tab-btn"><img id="img-melody"></button>
     </div>
-    <div id="game-view-panel" class="tab-panel center">
+    <div id="game-view-panel" class="tab-panel">
         <canvas id="main-canvas" width="840" height="580">
             Your browser doesn't support WebGL, please use a more recent one.
         </canvas>
@@ -114,9 +108,12 @@
         <div id="melody-container">
         </div>
     </div>
+    <script type="module" src="./js/core.js"></script>
     <script type="module" src="./js/engine.js"></script>
     <script type="module" src="./js/main.js"></script>
     <script type="module" src="./js/codeParser.js"></script>
-    <script type="module" src="./js/editor.js"></script>
+    <script type="module" src="./js/modules/code.js"></script>
+    <script type="module" src="./js/modules/sprites.js"></script>
+    <script type="module" src="./js/modules/audio.js"></script>
 </body>
 </html>

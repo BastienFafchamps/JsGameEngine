@@ -1,584 +1,310 @@
-export class HtmlInputManager {
-
-    constructor(document) {
-        this.keys = {};
-        document.addEventListener("keydown", event => this.__keyDownHandler(this, event), false);
-        document.addEventListener("keyup", event => this.__keyUpHandler(this, event), false);
-        document.addEventListener("keypress", event => this.__keyPressedHandler(this, event), false);
-    }
-
-    isKeyDown(key) {
-        return key in this.keys && this.keys[key] == 1;
-    }
-
-    isKeyPressed(key) {
-        return key in this.keys && this.keys[key] == 2;
-    }
-
-    isKeyUp(key) {
-        return !(key in this.keys);
-    }
-
-    __keyDownHandler(inputManager, event) {
-        inputManager.keys[event.key] = 1;
-    }
-
-    __keyPressedHandler(inputManager, event) {
-        inputManager.keys[event.key] = 2;
-    }
-
-    __keyUpHandler(inputManager, event) {
-        if (event.key in inputManager.keys)
-            delete inputManager.keys[event.key];
-    }
-}
-
-export class FontUtil {
-    constructor(context) {
-        this.images = {};
-        this.bitmap = {
-            'a': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
-            'b': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-            'c': [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0],
-            'd': [0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
-            'e': [0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-            'f': [0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-            'g': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0],
-            'h': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
-            'i': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-            'j': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
-            'k': [1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0],
-            'l': [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-            'm': [0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-            'n': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
-            'o': [0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
-            'p': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0],
-            'q': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1],
-            'r': [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-            's': [0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0],
-            't': [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0],
-            'u': [0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
-            'v': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-            'w': [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-            'x': [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-            'y': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0],
-            'z': [0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
-            'A': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
-            'B': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-            'C': [0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0],
-            'D': [0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0],
-            'E': [0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0],
-            'F': [0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-            'G': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0],
-            'H': [1, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
-            'I': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-            'J': [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0],
-            'K': [1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 0, 0],
-            'L': [0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-            'M': [0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-            'N': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0],
-            'O': [0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
-            'P': [0, 0, 0, 1, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0],
-            'Q': [0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0, 0, 1],
-            'R': [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-            'S': [0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0],
-            'T': [0, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 0],
-            'U': [0, 0, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 0],
-            'V': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-            'W': [0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-            'X': [0, 0, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0],
-            'Y': [0, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1, 0, 0],
-            'Z': [0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
-            '0': [0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0],
-            '1': [0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0],
-            '2': [1, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0],
-            '3': [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-            '4': [1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0],
-            '5': [1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-            '6': [0, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-            '7': [1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-            '8': [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
-            '9': [0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-            '-': [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-            '+': [0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 0],
-            '_': [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
-            '/': [0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0],
-            '.': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
-            ',': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0],
-        }
-        this.setImageDatas(context);
-    }
-
-    setImageDatas(context) {
-        Object.keys(this.bitmap).forEach(char => {
-            this.images[char] = this.__getImage(context, char);
-        });
-    }
-
-    getImage(char) {
-        return this.images[char];
-    }
-
-    __getImage(context, char) {
-        let bitmap = this.bitmap[char];
-        let imageData = context.createImageData(3, 5);
-        let x = 0;
-        for (let i = 0; i < imageData.data.length; i += 4) {
-            imageData.data[i + 0] = 255;
-            imageData.data[i + 1] = 255;
-            imageData.data[i + 2] = 255;
-            imageData.data[i + 3] = bitmap[x] == 1 ? 255 : 0;
-            x++;
-        }
-        return imageData;
-    }
-}
-
-export class HtmlRenderer {
-
-    constructor(canvas) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext("2d");
-
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
-
-        this.mousePos = { x: 0, y: 0 };
-        this.setupMousePosListening();
-
-        this.fontUtil = new FontUtil(this.ctx);
-    }
-
-    setupMousePosListening() {
-        this.canvas.addEventListener('mousemove', event => {
-            let rect = this.canvas.getBoundingClientRect();
-            let scaleFactor = rect.width / this.canvas.width;
-            this.mousePos.x = Math.floor((event.clientX - rect.left) / scaleFactor);
-            this.mousePos.y = Math.floor((event.clientY - rect.top) / scaleFactor);
-        });
-    }
-
-    upscaleCanvas(width, height) {
-        this.canvas.style.width = width + 'px';
-        this.canvas.style.height = height + 'px';
-    }
-
-    setCripsPixel() {
-        this.canvas.style.imageRendering = '-moz-crisp-edges';
-        this.canvas.style.imageRendering = '-webkit-crisp-edges';
-        this.canvas.style.imageRendering = 'pixelated';
-        this.canvas.style.imageRendering = 'crisp-edges';
-    }
-
-    setBackgroundColor(color) {
-        this.canvas.style.backgroundColor = color;
-    }
-
-    clear() {
-        this.ctx.clearRect(0, 0, this.width, this.height);
-    }
-
-    drawPixel(x, y, color) {
-        this.ctx.beginPath();
-        this.ctx.rect(Math.round(x), Math.round(y), 1, 1);
-        this.ctx.fillStyle = color;
-        this.ctx.fill();
-        this.ctx.closePath();
-    }
-
-    drawImage(x, y, image) {
-        this.ctx.putImageData(image, x, y);
-    }
-
-    drawRect(x, y, width, height, color) {
-        this.ctx.beginPath();
-        this.ctx.rect(x, y, width, height);
-        this.ctx.fillStyle = color != null ? color : '#ff00fb';
-        this.ctx.fill();
-        this.ctx.closePath();
-    }
-
-    drawEclipse(x, y, radius, color) {
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-        this.ctx.fillStyle = color != null ? color : '#ff00fb';
-        this.ctx.fill();
-        this.ctx.closePath();
-    }
-
-    drawText(text, x, y, size, color) {
-        for (let i = 0; i < text.length; i++) {
-            let img = this.fontUtil.getImage(text[i]);
-            if (img != null)
-                this.drawImage(x + (4 * i), y, img);
-        }
-    }
-
-    drawLine(x0, y0, x1, y1) {
-        this.setPixel(x0, y0);
-        const handle = (x, y, dx, dy, absdx, absdy, setPixel) => {
-            let d = 2 * absdy - absdx;
-            for (let i = 0; i < absdx; i++) {
-                x = dx < 0 ? x - 1 : x + 1;
-                if (d < 0) {
-                    d = d + 2 * absdy
-                } else {
-                    y = dy < 0 ? y - 1 : y + 1;
-                    d = d + (2 * absdy - 2 * absdx);
-                }
-                setPixel(x, y);
-            }
-        }
-
-        const dx = x1 - x0;
-        const dy = y1 - y0;
-        const absdx = Math.abs(dx);
-        const absdy = Math.abs(dy);
-
-        // slope < 1
-        if (absdx > absdy) {
-            handle(x0, y0, dx, dy, absdx, absdy, (x, y) => this.setPixel(x, y));
-        } else { // case when slope is greater than or equals to 1
-            handle(y0, x0, dy, dx, absdy, absdx, (y, x) => this.setPixel(x, y));
-        }
-    }
-}
-
-export class Physics2D {
-
-    constructor() {
-    }
-
-    doRectsCollides(rect_a, rect_b) {
-        let a = { x1: rect_a.x, x2: rect_a.x + rect_a.width, y1: rect_a.y, y2: rect_a.y + rect_a.height };
-        let b = { x1: rect_b.x, x2: rect_b.x + rect_b.width, y1: rect_b.y, y2: rect_b.y + rect_b.height };
-        return this.contains(a, b) || this.overlaps(a, b);
-    }
-
-    // Check if rectangle a contains rectangle b
-    contains(a, b) {
-        return !(
-            b.x1 < a.x1 ||
-            b.y1 < a.y1 ||
-            b.x2 > a.x2 ||
-            b.y2 > a.y2
-        );
-    }
-
-    // Check if rectangle a overlaps rectangle b
-    overlaps(a, b) {
-        // no horizontal overlap
-        if (a.x1 >= b.x2 || b.x1 >= a.x2) return false;
-        // no vertical overlap
-        if (a.y1 >= b.y2 || b.y1 >= a.y2) return false;
-        return true;
-    }
-
-    // Check if rectangle a touches rectangle b
-    touches(a, b) {
-        // has horizontal gap
-        if (a.x1 > b.x2 || b.x1 > a.x2) return false;
-        // has vertical gap
-        if (a.y1 > b.y2 || b.y1 > a.y2) return false;
-        return true;
-    }
-
-    doRectCircleCollides(circle, rect) {
-        let x = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
-        let y = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
-        let dx = x - circle.x;
-        let dy = y - circle.y;
-        return (dx * dx + dy * dy) <= circle.radius * circle.radius;
-    }
-
-    doCirclesCollides(circle_a, circle_b) {
-        let max = circle_a.radius + circle_b.radius;
-        let dx = circle_a.x - circle_b.x;
-        let dy = circle_a.y - circle_b.y;
-        return ((dx * dx) + (dy * dy)) <= (max * max);
-    }
-}
-
-export class HtmlSynth {
-
-    constructor(audioContext) {
-        this.FREQUENCIES = {
-            'C': 16.35,
-            'C#': 17.32,
-            'D': 18.35,
-            'E#': 19.45,
-            'E': 20.60,
-            'F': 21.83,
-            'F#': 23.12,
-            'G': 24.50,
-            'G#': 25.96,
-            'A': 27.50,
-            'A#': 29.14,
-            'B': 30.87,
-        };
-
-        this.audioCtx = audioContext;
-
-        this.mainGainNode = this.audioCtx.createGain();
-        this.mainGainNode.gain.value = 0.2;
-        this.mainGainNode.connect(this.audioCtx.destination);
-
-        this.playingNotes = {};
-    }
-
-    setVolume(volume) {
-        this.mainGainNode.gain.value = volume;
-    }
-
-    playSound(sound) {
-        this.playMelody(sound.melody, sound.instrument, sound.volume, sound.bpm);
-    }
-
-    playMelody(melody, instrument, volume, bpm) {
-        let n = 1 / (bpm / 60);
-        Object.values(melody.notes).forEach(note => {
-            let time = n * Math.max(0.00000001, note.time);
-            let length = n * note.length;
-            this.getInstument(instrument).playNote(note.octave, note.key, time, length);
-        });
-    }
-
-    getInstument(instrumentData) {
-        let previousNode = this.mainGainNode;
-        let instrument = {
-            nodes: [],
-            oscillators: [],
-        };
-
-        instrumentData.nodes.forEach(nodeData => {
-            let node = null;
-
-            if (nodeData.type == 'oscillator') {
-                node = this.__createOscillatorNode(nodeData);
-                instrument.oscillators.push(node);
-            } else if (nodeData.type == 'filter') {
-                node = this.__createFilter(nodeData);
-            }
-
-            instrument.nodes.push(node);
-
-            if (previousNode != null)
-                node.connect(previousNode)
-            previousNode = node;
-        });
-
-        instrument.playNote = (octave, note, time, length) => {
-            instrument.oscillators.forEach(osc => {
-                osc.playNote(octave + 3, note, time, length);
-            })
-        };
-
-        return instrument;
-    }
-
-    __createOscillatorNode({ waveForm, attack, decay, sustain, release }) {
-        let gainNode = this.audioCtx.createGain();
-        let osc = this.audioCtx.createOscillator();
-
-        osc.playNote = (octave, note, time, length) => {
-            if (octave <= 0) octave = 0.5;
-            osc.frequency.value = this.FREQUENCIES[note] * (octave * 2);
-
-            time = this.audioCtx.currentTime + time;
-
-            gainNode.gain.cancelScheduledValues(time);
-            gainNode.gain.setValueAtTime(0, time);
-            gainNode.gain.linearRampToValueAtTime(1, time + attack);
-            // gainNode.gain.setTargetAtTime(sustain, time + attack, decay);
-
-            // gainNode.gain.setValueAtTime(gainNode.gain.value, time + length);
-            gainNode.gain.linearRampToValueAtTime(0, time + length + release);
-
-            osc.start(time);
-            osc.stop(time + length + release);
-        }
-
-        osc.type = waveForm;
-        osc.gainNode = gainNode;
-        osc.connect(gainNode);
-        osc.connect = (node) => gainNode.connect(node);
-        return osc;
-    }
-
-    __createFilter({ type, frequency, resonance }) {
-        let filterNode = this.audioCtx.createBiquadFilter();
-        filterNode.type = type;
-        filterNode.frequency.value = frequency;
-        filterNode.Q.value = resonance;
-        return filterNode;
-    }
-}
+import { EngineCore, HtmlInputManager, HtmlRenderer, Physics2D, HtmlSynth } from "./core.js";
 
 export class Engine {
 
-    constructor(renderer, inputManager, audioPlayer) {
-        this.renderer = renderer;
-        this.inputManager = inputManager;
-        this.audioPlayer = audioPlayer;
-        this.gameLoop = null;
-        this.entities = [];
-        this.sounds = [];
-        this.sprites = [];
-        this.mousePos = renderer.mousePos;
-
-        this.isRunning = false;
-        this.update = () => {};
-        this.draw = () => {};
-
-        this.previousTime = 0.0;
-        const gameloop = (time) => {
-            const deltaTime = time - this.previousTime;
-            this.previousTime = time;
-
-            if (this.isRunning) {
-                this.update(deltaTime);
-                this.renderer.clear();
-                this.__drawEntities();
-                this.draw();
-            }
-            window.requestAnimationFrame(gameloop);
+    constructor(canvas) {
+        this.GameData = {
+            gameCode: '',
+            palette: [
+                '#ffffff',
+                '#ff0000',
+                '#00ff00',
+                '#0000ff',
+                '#ff00ff',
+                '#ffff00',
+                '#00ffff',
+                '#aaaaaa',
+                '#aabb2e',
+            ],
+            sounds: [
+                {
+                    bpm: 120,
+                    volume: 0.8,
+                    melody: {
+                        notes: {},
+                        beatCount: 8,
+                    },
+                    instrument: {
+                        nodes: [{
+                            type: 'oscillator',
+                            waveForm: 'sawtooth',
+                            attack: 0.01,
+                            decay: 0,
+                            sustain: 1,
+                            release: 1,
+                        }]
+                    },
+                }
+            ]
         }
 
-        window.requestAnimationFrame(time => {
-            this.previousTime = time;
-            window.requestAnimationFrame(gameloop);
+        this.CANVAS = canvas;
+
+        // this.CANVAS.style.width = this.CANVAS.width + "px";
+        // this.CANVAS.style.height = this.CANVAS.height + "px";
+        
+        this.CANVAS.width /= 12;
+        this.CANVAS.height /= 12;
+
+        this.RENDERER = new HtmlRenderer(this.CANVAS);
+        this.RENDERER.setCripsPixel();
+
+        this.SPRITE_MANAGER = new SpritesManager(this.GameData.palette, 16, 8);
+        this.GameData.sprites = this.SPRITE_MANAGER.sprites;
+
+        this.INPUT_MANAGER = new HtmlInputManager(document);
+        this.AUDIO_PLAYER = new HtmlSynth(new AudioContext());
+        this.PHYSICS = new Physics2D();
+
+        this.CORE = new EngineCore(this.RENDERER, this.INPUT_MANAGER, this.AUDIO_PLAYER);
+
+        this.gameDataListener = [];
+
+        this.context = {
+            PRINT: {
+                f: (a) => console.log(a),
+            },
+            SCREEN_WIDTH: {
+                f: this.CANVAS.width
+            },
+            SCREEN_HEIGHT: { 
+                f: this.CANVAS.height
+            },
+            MOUSE_POS: {
+                f: this.CORE.mousePos
+            },
+            STOP: {
+                f: () => this.CORE.stop(),
+                description: 'Stops the engine',
+            },
+            DRAW_RECT: {
+                f: (x, y, width, height, color) => this.CORE.drawRect(x, y, width, height, color),
+                description: 'Draws a rectangle to the screen',
+            },
+            DRAW_CIRCLE: {
+                f: (x, y, radius, color) => this.CORE.drawElipse(x, y, radius, color),
+                description: 'Draws a circle to the screen',
+            },
+            DRAW_PIXEL: {
+                f: (x, y, color) => this.CORE.drawPixel(x, y, color),
+                description: 'Draws a pixel at a specific position',
+            },
+            TEXT: {
+                f: (text, x, y, size, color) => this.CORE.drawText(text, x, y, size, color),
+                description: 'Draws a pixel at a specific position',
+            },
+            SET_BACKGROUND: {
+                f: (color) => this.CORE.setBackgroundColor(color),
+                description: 'Draws a pixel at a specific position',
+            },
+            KEY_DOWN: {
+                f: (key) => this.CORE.isKeyDown(key),
+                description: 'Returns true if a key is pressed down',
+            },
+            KEY_PRESSED: {
+                f: (key) => this.CORE.isKeyPressed(key),
+                description: 'Returns true if a key has been pressed down',
+            },
+            KEY_UP: {
+                f: (key) => this.CORE.isKeyUp(key),
+                description: 'Stops the engine',
+            },
+            CREATE_RECT: {
+                f: (obj = { x, y, width, height, color }) => this.CORE.createObjectRect(obj),
+                description: 'Stops the engine',
+            },
+            CREATE_CIRCLE: {
+                f: (obj = { x, y, width, height, color }) => this.CORE.createObjectCircle(obj),
+                description: 'Stops the engine',
+            },
+            CREATE_SPRITE: {
+                f: (obj = { x, y, spriteIndex }) => this.CORE.createObjectSprite(obj),
+                description: 'Stops the engine',
+            },
+            REMOVE: {
+                f: (obj = { x, y, width, height, color }) => this.CORE.deleteObject(obj),
+                description: 'Stops the engine',
+            },
+            IS_MOUSE_OVER: {
+                f: (rect) => this.CORE.isMouseOverRect(rect),
+                description: 'Stops the engine',
+            },
+            DO_RECT_COLLIDES: {
+                f: (rect_a, rect_b) => this.PHYSICS.doRectsCollides(rect_a, rect_b),
+                description: 'Stops the engine',
+            },
+            DO_RECT_CIRCLE_COLLIDES: {
+                f: (rect, circle) => this.PHYSICS.doRectCircleCollides(circle, rect),
+                description: 'Stops the engine',
+            },
+            DO_CIRCLES_COLLIDES: {
+                f: (circle_a, circle_b) => this.PHYSICS.doCirclesCollides(circle_a, circle_b),
+                description: 'Stops the engine',
+            },
+            RANDOM: {
+                f: () => this.CORE.random(),
+                description: 'Stops the engine',
+            },
+            RANDOM_RANGE: {
+                f: (min, max) => this.CORE.randomRange(min, max),
+                description: 'Stops the engine',
+            },
+            PLAY_SOUND: {
+                f:  (id) => this.CORE.playSound(id),
+                description: 'Plays a sound',
+            },
+            COLOR: {
+                f: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
+                description: 'Draws a rectangle to the screen',
+            },
+            COLOR_HSL: {
+                f:  (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
+                description: 'Draws a rectangle to the screen',
+            },
+        }
+    }
+
+    run() {
+        try {
+            this.CORE.setup(this.SPRITE_MANAGER.imageDatas, this.GameData.sounds);
+    
+            let gameContext = this.__getGameContext();
+            let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
+            let f = new Function(...Object.keys(gameContext), runCode);
+            let [update_f, draw_f] = f(...Object.values(gameContext));
+    
+            // if (!update_f)
+            //     throw (new Error('No "UPDATE" function found.'));
+            if (update_f && !draw_f) {
+                this.CORE.start(update_f, null);
+            } if (update_f && draw_f) {
+                this.CORE.start(update_f, draw_f);
+            }
+        } catch (error) {
+            this.CORE.clear();
+            console.warn("There are code errors, fix them before running the code", error);
+        }
+    }
+
+    onGameDataUpdate() {
+        this.gameDataListener.forEach(listener => listener(this.GameData));
+    }
+
+    addGameDataListener(listener) {
+        this.gameDataListener.push(listener);
+    }
+
+    setGameCode(gameCode) {
+        this.GameData.gameCode = gameCode;
+        this.onGameDataUpdate();
+    }
+    
+    loadGameData(gameData) {
+        if (gameData.settings != null)
+            this.GameData.settings = gameData.settings;
+
+        this.GameData.gameCode = gameData.gameCode;
+        this.onGameDataUpdate();
+    }
+
+    getSpriteImg(spriteId) {
+        return this.SPRITE_MANAGER.getSpriteImg(spriteId);
+    }
+
+    getPalette() {
+        return this.SPRITE_MANAGER.getPalette();
+    }
+
+    setPixel(spriteId, x, y, colorId) {
+        console.log(spriteId, x, y, colorId);
+        this.SPRITE_MANAGER.setPixel(spriteId, x, y, colorId);
+        this.onGameDataUpdate();
+    }
+
+    __getGameContext() {
+        Array.prototype.add = function(obj) {
+            return this.push(obj);
+        };
+
+        let gameContext = {};
+        Object.keys(this.context).forEach(key => {
+            gameContext[key] = this.context[key].f;
         });
+        return gameContext;
     }
+}
 
-    setup(sprites, sounds) {
-        this.sprites = sprites;
-        this.sounds = sounds;
-        this.clear();
-    }
+export class SpritesManager {
 
-    clear() {
-        if (this.gameLoop != null) {
-            clearInterval(this.gameLoop);
-            this.gameLoop = null;
-            this.entities = [];
+    constructor(palette, spritesCount, spriteSize = 8) {
+        this.sprites = [];
+        this.imageDatas = [];
+        this.spriteSize = spriteSize;
+        this.palette = palette;
+
+        for (let i = 0; i < spritesCount; i++) {
+            this.sprites.push(this.__createEmptySprite());
+            this.imageDatas.push(new ImageData(this.spriteSize, this.spriteSize));
         }
-        this.renderer.clear();
     }
 
-    start(update, draw = null) {
-        if (draw != null) {
-            this.draw = draw;
-        } else {
-            this.draw = () => {};
-        }
-
-        if (update != null) {
-            this.update = update;
-        } else {
-            this.update = () => {};
-        }
-
-        this.isRunning = true;
+    loadSprites(sprites) {
+        this.__setSprites(sprites);
     }
 
-    stop() {
-        this.isRunning = false;
+    getSprite(spriteId) {
+        return this.sprites[spriteId];
     }
 
-    drawPixel(x, y, color) {
-        this.renderer.drawPixel(x, y, color);
+    getSpriteImg(spriteId) {
+        return this.imageDatas[spriteId];
     }
 
-    drawSprite(x, y, spriteId) {
-        this.renderer.drawImage(x, y, this.sprites[spriteId]);
+    getPalette() {
+        return palette;
     }
 
-    drawImage(x, y, image) {
-        this.renderer.drawImage(x, y, image);
+    setPalette(palette) {
+        this.palette = palette;
     }
 
-    drawRect(x, y, width, height, color) {
-        this.renderer.drawRect(x, y, width, height, color);
+    setPixel(spriteId, x, y, colorId) {
+        this.sprites[spriteId][y][x] = colorId;
+
+        let [r, g, b, a] = colorId != -1 ? this.__hexToRGB(this.palette[colorId]) : [0, 0, 0, 0];
+        let i = ((y * this.spriteSize) + x) * 4;
+        this.imageDatas[spriteId][i + 0] = r;
+        this.imageDatas[spriteId][i + 1] = g;
+        this.imageDatas[spriteId][i + 2] = b;
+        this.imageDatas[spriteId][i + 3] = a;
     }
 
-    drawElipse(x, y, radius, color) {
-        this.renderer.drawEclipse(x, y, radius, color);
-    }
-
-    drawText(text, x, y, size, color) {
-        this.renderer.drawText(text, x, y, size, color);
-    }
-
-    setBackgroundColor(color) {
-        this.renderer.setBackgroundColor(color);
-    }
-
-    isKeyDown(key) {
-        return this.inputManager.isKeyDown(key);
-    }
-
-    isKeyPressed(key) {
-        return this.inputManager.isKeyPressed(key);
-    }
-
-    isKeyUp(key) {
-        return this.inputManager.isKeyUp(key);
-    }
-
-    random() {
-        return Math.random();
-    }
-
-    randomRange(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    createObjectSprite(obj = { x, y, spriteIndex }) {
-        obj.__id = this.entities.length;
-        obj.__type = 'sprite';
-        this.entities.push(obj);
-        return obj;
-    }
-
-    createObjectRect(obj = { x, y, width, height, color }) {
-        obj.__id = this.entities.length;
-        obj.__type = 'rect';
-        this.entities.push(obj);
-        return obj;
-    }
-
-    createObjectCircle(obj = { x, y, radius, color }) {
-        obj.__id = this.entities.length;
-        obj.__type = 'elipse';
-        this.entities.push(obj);
-        return obj;
-    }
-
-    deleteObject(obj) {
-        let i = this.entities.findIndex(e => e.__id == obj.__id);
-        this.entities.splice(i, 1);
-    }
-
-    isMouseOverRect(rect) {
-        if (this.mousePos.x < rect.x || this.mousePos.x > (rect.x + rect.width)) return false;
-        if (this.mousePos.y < rect.y || this.mousePos.y > (rect.y + rect.height)) return false;
-        return true;
-    }
-
-    playSound(id) {
-        this.audioPlayer.playSound(this.sounds[id]);
-    }
-
-    // ================= PRIVATE METHODS ================= 
-    __drawEntities() {
-        this.entities.forEach(obj => {
-            if (obj.__type == 'rect')
-                this.drawRect(obj.x, obj.y, obj.width, obj.height, obj.color);
-            else if (obj.__type == 'elipse')
-                this.drawElipse(obj.x, obj.y, obj.radius, obj.color);
-            else if (obj.__type == 'sprite') {
-                this.drawImage(obj.x, obj.y, this.sprites[obj.spriteIndex])
+    __createEmptySprite() {
+        let sprite = [];
+        for (let i = 0; i < this.spriteSize; i++) {
+            sprite.push([]);
+            for (let j = 0; j < this.spriteSize; j++) {
+                sprite[i].push(-1);
             }
+        }
+        return sprite;
+    }
+
+    __hexToRGB(hex) {
+        let bigint = parseInt(hex.substring(1), 16);
+        let r = (bigint >> 16) & 255;
+        let g = (bigint >> 8) & 255;
+        let b = bigint & 255;
+        return [r, g, b, 255];
+    }
+
+    __setSprites(sprites) {
+        sprites.forEach((sprite, index) => {
+           for (let y = 0; y < this.spriteSize; y++) {
+               for (let x = 0; x < this.spriteSize; x++) {
+                   this.setPixel(index, x, y, sprite[y][x]);
+               }
+           } 
         });
     }
 }

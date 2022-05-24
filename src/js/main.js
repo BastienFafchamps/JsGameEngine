@@ -1,305 +1,241 @@
-import { HtmlInputManager, HtmlRenderer, Engine, Physics2D, HtmlSynth } from "./engine.js";
+import { Engine } from "./engine.js";
 
-export class App {
-
-    constructor(canvas) {
-
-        this.GameData = {
-            gameCode: '',
-            palette: [
-                '#ffffff',
-                '#ff0000',
-                '#00ff00',
-                '#0000ff',
-                '#ff00ff',
-                '#ffff00',
-                '#00ffff',
-                '#aaaaaa',
-                '#aabb2e',
-            ],
-            sounds: [
-                {
-                    bpm: 120,
-                    volume: 0.8,
-                    melody: {
-                        notes: {},
-                        beatCount: 8,
-                    },
-                    instrument: {
-                        nodes: [{
-                            type: 'oscillator',
-                            waveForm: 'sawtooth',
-                            attack: 0.01,
-                            decay: 0,
-                            sustain: 1,
-                            release: 1,
-                        }]
-                    },
-                }
-            ]
-        }
-
-        this.CANVAS = canvas;
-
-        this.CANVAS.style.width = this.CANVAS.width + "px";
-        this.CANVAS.style.height = this.CANVAS.height + "px";
-
-        this.CANVAS.width /= 12;
-        this.CANVAS.height /= 12;
-
-        this.RENDERER = new HtmlRenderer(this.CANVAS);
-        this.RENDERER.setCripsPixel();
-
-        this.SPRITE_MANAGER = new SpritesManager(this.GameData.palette, 16, 8);
-        this.GameData.sprites = this.SPRITE_MANAGER.sprites;
-
-        this.INPUT_MANAGER = new HtmlInputManager(document);
-        this.AUDIO_PLAYER = new HtmlSynth(new AudioContext());
-        this.PHYSICS = new Physics2D();
-
-        this.ENGINE = new Engine(this.RENDERER, this.INPUT_MANAGER, this.AUDIO_PLAYER);
-
-        this.onGameDataUpdate = (gameData) => {};
-
-        this.context = {
-            PRINT: {
-                f: (a) => console.log(a),
-            },
-            SCREEN_WIDTH: {
-                f: this.CANVAS.width
-            },
-            SCREEN_HEIGHT: { 
-                f: this.CANVAS.height
-            },
-            MOUSE_POS: {
-                f: this.ENGINE.mousePos
-            },
-            STOP: {
-                f: () => this.ENGINE.stop(),
-                description: 'Stops the engine',
-            },
-            DRAW_RECT: {
-                f: (x, y, width, height, color) => this.ENGINE.drawRect(x, y, width, height, color),
-                description: 'Draws a rectangle to the screen',
-            },
-            DRAW_CIRCLE: {
-                f: (x, y, radius, color) => this.ENGINE.drawElipse(x, y, radius, color),
-                description: 'Draws a circle to the screen',
-            },
-            DRAW_PIXEL: {
-                f: (x, y, color) => this.ENGINE.drawPixel(x, y, color),
-                description: 'Draws a pixel at a specific position',
-            },
-            TEXT: {
-                f: (text, x, y, size, color) => this.ENGINE.drawText(text, x, y, size, color),
-                description: 'Draws a pixel at a specific position',
-            },
-            SET_BACKGROUND: {
-                f: (color) => this.ENGINE.setBackgroundColor(color),
-                description: 'Draws a pixel at a specific position',
-            },
-            KEY_DOWN: {
-                f: (key) => this.ENGINE.isKeyDown(key),
-                description: 'Returns true if a key is pressed down',
-            },
-            KEY_PRESSED: {
-                f: (key) => this.ENGINE.isKeyPressed(key),
-                description: 'Returns true if a key has been pressed down',
-            },
-            KEY_UP: {
-                f: (key) => this.ENGINE.isKeyUp(key),
-                description: 'Stops the engine',
-            },
-            CREATE_RECT: {
-                f: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectRect(obj),
-                description: 'Stops the engine',
-            },
-            CREATE_CIRCLE: {
-                f: (obj = { x, y, width, height, color }) => this.ENGINE.createObjectCircle(obj),
-                description: 'Stops the engine',
-            },
-            CREATE_SPRITE: {
-                f: (obj = { x, y, spriteIndex }) => this.ENGINE.createObjectSprite(obj),
-                description: 'Stops the engine',
-            },
-            REMOVE: {
-                f: (obj = { x, y, width, height, color }) => this.ENGINE.deleteObject(obj),
-                description: 'Stops the engine',
-            },
-            IS_MOUSE_OVER: {
-                f: (rect) => this.ENGINE.isMouseOverRect(rect),
-                description: 'Stops the engine',
-            },
-            DO_RECT_COLLIDES: {
-                f: (rect_a, rect_b) => this.PHYSICS.doRectsCollides(rect_a, rect_b),
-                description: 'Stops the engine',
-            },
-            DO_RECT_CIRCLE_COLLIDES: {
-                f: (rect, circle) => this.PHYSICS.doRectCircleCollides(circle, rect),
-                description: 'Stops the engine',
-            },
-            DO_CIRCLES_COLLIDES: {
-                f: (circle_a, circle_b) => this.PHYSICS.doCirclesCollides(circle_a, circle_b),
-                description: 'Stops the engine',
-            },
-            RANDOM: {
-                f: () => this.ENGINE.random(),
-                description: 'Stops the engine',
-            },
-            RANDOM_RANGE: {
-                f: (min, max) => this.ENGINE.randomRange(min, max),
-                description: 'Stops the engine',
-            },
-            PLAY_SOUND: {
-                f:  (id) => this.ENGINE.playSound(id),
-                description: 'Plays a sound',
-            },
-            COLOR: {
-                f: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
-                description: 'Draws a rectangle to the screen',
-            },
-            COLOR_HSL: {
-                f:  (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
-                description: 'Draws a rectangle to the screen',
-            },
-        }
-    }
-
-    run() {
-        try {
-            this.ENGINE.setup(this.SPRITE_MANAGER.imageDatas, this.GameData.sounds);
-    
-            let gameContext = this.__getGameContext();
-            let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
-            let f = new Function(...Object.keys(gameContext), runCode);
-            let [update_f, draw_f] = f(...Object.values(gameContext));
-    
-            // if (!update_f)
-            //     throw (new Error('No "UPDATE" function found.'));
-            if (update_f && !draw_f) {
-                this.ENGINE.start(update_f, null);
-            } if (update_f && draw_f) {
-                this.ENGINE.start(update_f, draw_f);
-            }
-        } catch (error) {
-            this.ENGINE.clear();
-            console.warn("There are code errors, fix them before running the code", error);
-        }
-    }
-
-    updatedGameData() {
-        this.onGameDataUpdate(this.GameData);
-    }
-
-    setGameCode(gameCode) {
-        this.GameData.gameCode = gameCode;
-        this.updatedGameData();
-    }
-    
-    loadGameData(gameData) {
-        if (gameData.settings != null)
-            this.GameData.settings = gameData.settings;
-        this.GameData.gameCode = gameData.gameCode;
-    }
-
-    getSpriteImg(spriteId) {
-        return this.SPRITE_MANAGER.getSpriteImg(spriteId);
-    }
-
-    getPalette() {
-        return this.SPRITE_MANAGER.getPalette();
-    }
-
-    setPixel(spriteId, x, y, colorId) {
-        console.log(spriteId, x, y, colorId);
-        this.SPRITE_MANAGER.setPixel(spriteId, x, y, colorId);
-        this.updatedGameData();
-    }
-
-    __getGameContext() {
-        Array.prototype.add = function(obj) {
-            return this.push(obj);
-        };
-
-        let gameContext = {};
-        Object.keys(this.context).forEach(key => {
-            gameContext[key] = this.context[key].f;
-        });
-        return gameContext;
-    }
+// ==================================== UTIL =============================================
+export function addEventListener(id, type, method) {
+    document.getElementById(id).addEventListener(type, method);
 }
 
-export class SpritesManager {
+export function createElement(tag, data, parent = null) {
+    let el = document.createElement(tag);
+    for (let key in data) {
+        el[key] = data[key];
+    }
 
-    constructor(palette, spritesCount, spriteSize = 8) {
-        this.sprites = [];
-        this.imageDatas = [];
-        this.spriteSize = spriteSize;
-        this.palette = palette;
+    if (parent != null)
+        parent.appendChild(el);
 
-        for (let i = 0; i < spritesCount; i++) {
-            this.sprites.push(this.__createEmptySprite());
-            this.imageDatas.push(new ImageData(this.spriteSize, this.spriteSize));
+    return el;
+}
+
+let templateGame = `
+SET_BACKGROUND('black');
+
+let pixels = [];
+let particles = [];
+let blocks = [];
+let lives = 3;
+let score = 0;
+let speed = 0.5;
+let gameOver = false;
+
+function spawnParticles(x, y) {
+	for (let i=0; i < 25; i++) {
+		particles.push({
+			x: x,
+			y: y,
+			dx: RANDOM_RANGE(-1, 0),
+			dy: RANDOM_RANGE(-0.5, 0.5),
+		});
+	}
+}
+
+let timer = 0;
+function UPDATE() {
+	if (lives <= 0) {
+		gameOver = true;
+	}
+
+	timer++;
+  
+	if (gameOver == false) {
+		score += 0.1;
+  	speed += 0.0001;
+	}
+
+	if (timer > 20) {
+		timer = 0;
+
+		blocks.push({
+			speed: speed,
+			x: SCREEN_WIDTH,
+			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
+			width: 3,
+			height: 3,
+		});
+	}
+
+	blocks = blocks.filter(b => {
+		b.x -= b.speed;
+
+		if (gameOver == false && IS_MOUSE_OVER(b)) {
+			lives--;
+			spawnParticles(b.x, b.y);
+			return false;
+		}
+		return b.x > 0;
+	});
+
+	particles = particles.filter(p => {
+		p.x += p.dx;
+		p.y += p.dy;
+		p.dy += 0.02;
+		return p.x >= 0 && p.y <= SCREEN_HEIGHT;
+	});
+
+	pixels = pixels.filter(px => {
+		px.x -= 0.5;
+		px.y += px.d;
+		return px.x >= 0;
+	});
+
+	if (gameOver == false)
+		pixels.push({x: MOUSE_POS.x, y: MOUSE_POS.y, d: RANDOM_RANGE(-0.1, 0.1)});
+}
+
+let i = 0;
+function DRAW() {
+	blocks.forEach(b => {
+		DRAW_RECT(b.x, b.y, b.width, b.height, "red");
+	})
+
+	particles.forEach(p => {
+		DRAW_PIXEL(p.x, p.y, 'red');
+	})
+	
+	if (gameOver) {
+  	TEXT('GAME OVER', SCREEN_WIDTH / 2 - 17, SCREEN_HEIGHT / 2 - 3, 15, 'white');
+		TEXT(lives.toString(), SCREEN_WIDTH / 2 - 3, SCREEN_HEIGHT / 2 + 5, 15, 'white');
+	} else {
+		TEXT(lives.toString(), 1, 1, 15, 'white');
+	}
+
+	i += 0.1 % 60;
+	for (let j=0; j < pixels.length; j++) {
+		let color = COLOR_HSL((j + i % 40) / 40 * 360, 100, 50);
+		DRAW_PIXEL(pixels[j].x, pixels[j].y, color);
+	}
+}
+`;
+
+// ==================================== APP =============================================
+const CANVAS = document.getElementById("main-canvas");
+const canvasContainer = document.getElementById("game-view");
+export const APP = new Engine(CANVAS);
+
+function INIT() {
+    APP.addGameDataListener(gameData => {
+        sessionStorage.setItem('gameData', JSON.stringify(gameData))
+        console.log(gameData);
+    });
+
+    window.onresize = () => {
+        if (canvasContainer == null || CANVAS == null) return;
+        CANVAS.width = canvasContainer.clientWidth;
+        CANVAS.height = canvasContainer.clientHeight;
+    }
+
+    addEventListener('btn-reload', 'click', () => APP.run());
+
+    let gameData = null;
+    try {
+        let gameData = JSON.parse(sessionStorage.getItem('gameData'));
+    } catch (error) {
+        console.warn('Error trying to load session gameData', error);
+    }
+
+    if (gameData != null) {
+        APP.loadGameData(gameData);
+    } else {
+        APP.loadGameData({ gameCode: templateGame });
+    }
+
+    console.log("Application initialized.");
+}
+
+// ==================================== TABS =============================================
+class TabsManager {
+    constructor() {
+        this.panels = document.getElementsByClassName("tab-panel");
+        this.buttons = document.getElementsByClassName("tab-btn");
+        this.activeTab = 0;
+
+        for (let i = 0; i < this.panels.length; i++)
+            this.buttons[i].addEventListener('click', event => this.openTab(event.currentTarget, this.panels[i].id));
+
+        if (sessionStorage.getItem('activeTab'))
+            this.activeTab = sessionStorage.getItem('activeTab')
+        this.openTab(this.buttons[this.activeTab], this.panels[this.activeTab].id);
+    }
+
+    openTab(button, id) {
+        for (let i = 0; i < this.panels.length; i++) {
+            this.panels[i].classList.remove("active");
+            this.buttons[i].classList.remove("active");
         }
-    }
-
-    loadSprites(sprites) {
-        this.__setSprites(sprites);
-    }
-
-    getSprite(spriteId) {
-        return this.sprites[spriteId];
-    }
-
-    getSpriteImg(spriteId) {
-        return this.imageDatas[spriteId];
-    }
-
-    getPalette() {
-        return palette;
-    }
-
-    setPalette(palette) {
-        this.palette = palette;
-    }
-
-    setPixel(spriteId, x, y, colorId) {
-        this.sprites[spriteId][y][x] = colorId;
-
-        let [r, g, b, a] = colorId != -1 ? this.__hexToRGB(this.palette[colorId]) : [0, 0, 0, 0];
-        let i = ((y * this.spriteSize) + x) * 4;
-        this.imageDatas[spriteId][i + 0] = r;
-        this.imageDatas[spriteId][i + 1] = g;
-        this.imageDatas[spriteId][i + 2] = b;
-        this.imageDatas[spriteId][i + 3] = a;
-    }
-
-    __createEmptySprite() {
-        let sprite = [];
-        for (let i = 0; i < this.spriteSize; i++) {
-            sprite.push([]);
-            for (let j = 0; j < this.spriteSize; j++) {
-                sprite[i].push(-1);
-            }
-        }
-        return sprite;
-    }
-
-    __hexToRGB(hex) {
-        let bigint = parseInt(hex.substring(1), 16);
-        let r = (bigint >> 16) & 255;
-        let g = (bigint >> 8) & 255;
-        let b = bigint & 255;
-        return [r, g, b, 255];
-    }
-
-    __setSprites(sprites) {
-        sprites.forEach((sprite, index) => {
-           for (let y = 0; y < this.spriteSize; y++) {
-               for (let x = 0; x < this.spriteSize; x++) {
-                   this.setPixel(index, x, y, sprite[y][x]);
-               }
-           } 
-        });
+        this.activeTab = [...this.panels].findIndex(t => t.id == id);
+        document.getElementById(id).classList.add("active");
+        button.classList.add("active");
+        sessionStorage.setItem("activeTab", this.activeTab);
     }
 }
+const tabsManager = new TabsManager();
+
+// ================================= Main ==========================================
+
+class FileManager {
+    constructor() {
+        document.getElementById('download').addEventListener('click', () => this.download());
+        // document.getElementById('load').addEventListener('change', event => this.onFileLoaded(event));
+    }
+
+    static getDownloadLink(filename, url) {
+        let a = document.createElement('a');
+        a.download = filename;
+        a.href = url;
+
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+    }
+
+    download() {
+        let filename = 'game.json';
+        let file = new Blob([JSON.stringify(APP.GameData)], { type: 'json' });
+        if (window.navigator.msSaveOrOpenBlob)
+            window.navigator.msSaveOrOpenBlob(file, filename);
+        else {
+            let url = URL.createObjectURL(file);
+            FileManager.getDownloadLink(filename, url);
+        }
+    }
+
+    onFileLoaded(event) {
+        let reader = new FileReader();
+        reader.readAsText(event.target.files[0], 'UTF-8');
+        reader.onload = readerEvent => {
+            let gameData = JSON.parse(readerEvent.target.result);
+            APP.loadGameData(gameData);
+            codeInput.innerHTML = gameData.gameCode;
+            updateCode(gameData.gameCode);
+        }
+    }
+}
+const fileManager = new FileManager();
+
+class IconsManager {
+    constructor() {
+        document.getElementById('img-download').src = "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADxJREFUGJWNjsEKADAIQjX2/588dyloEmzvYmlIwA+SmCpJ6l74kc+BByt1m187q2FqiisgSQ9H+oMAcAATMRkCwVzv4QAAAABJRU5ErkJggg==";
+        document.getElementById('img-reload').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADVJREFUGJWNj7kRADAMwsD7zwxp/SUXNT5AjYGEbaPByxAARJLRynxnWPIsfgS9BG1SoX90AB3SEAQibJqJAAAAAElFTkSuQmCC";
+        document.getElementById('img-play').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD9JREFUGJV9jkEOACAIwzb+/2bnQTCwRJtwYVAgAEgiEpJCI1q4stCXwrd0YPXClc2Ga/gR/mSe5Bh4hQO3FBuVHR0I6LYF2QAAAABJRU5ErkJggg==";
+        document.getElementById('img-code').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD9JREFUGJWFjkEKACAMw9L9/82rl6FTFHsZhJYMPhGAbQEJRPEEQpI30IZRbEFJvilmoTTvwivRbjZ+/rRyqgYXgBEKwAF1CgAAAABJRU5ErkJggg==";
+        document.getElementById('img-sprites').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAENJREFUGJWFjkEOADEIAhn//2bpZdtQ02S5IQhIP0CSbCOpv1sdEbxJx1MD1nQnbN8GgOGpnVqxoaaYCY6k3PPsv+oWAogWDC/DsEQAAAAASUVORK5CYII=";
+        document.getElementById('img-instruments').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAERJREFUGJVtj0EOACEQwlrj/58se9IQV06TAZogQBIpqdn3uMy1zf2fXEoSYBzCjVVt0qimFfZHANYr3IFj9gof+HThAwCqIg/RFJxfAAAAAElFTkSuQmCC";
+        document.getElementById('img-melody').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADtJREFUGJWVj0EOACAIwzri/5/MvIgxXtBeFgohGTQIwLa2kFyzJMfyWbmWWS5o+DrIKwEYr582ZyOACWstFAAg+YsfAAAAAElFTkSuQmCC";
+    }
+}
+const iconsManager = new IconsManager();
+
+setTimeout(() => INIT(), 500);
