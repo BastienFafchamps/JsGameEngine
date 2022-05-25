@@ -96,7 +96,7 @@ button img {
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
-  height: 1.2rem;
+  height: 0.8em;
 }
 
 input {
@@ -394,13 +394,17 @@ input[type="file"] {
   display: flex;
   flex-direction: column;
   margin-right: 1rem;
-  height: 30rem;
+  /* height: 30rem; */
 }
 .sprite-editor-tool {
+  padding: .4rem 0rem;
   margin-bottom: .25rem;
-}
-button.sprite-editor-tool {
   text-align: center;
+  height: 2rem;
+  width: 2.5rem;
+}
+.sprite-editor-tool img {
+  height: 20rem;
 }
 #sprite-editor-container {
   --grid-color: rgb(0, 0, 0, 0);
@@ -410,6 +414,7 @@ button.sprite-editor-tool {
   height: 25rem;
 }
 #sprite-editor-canvas {
+  /* cursor: none; */
   background-image: 
     repeating-linear-gradient(
       -45deg, 
@@ -436,7 +441,7 @@ button.sprite-editor-tool {
   top: 0;
   left: 0;
 }
-#sprite-editor-canvas, .sprite-item {
+#sprite-editor-canvas, .sprite-item, .sprite-editor-cursor {
   image-rendering: -moz-crisp-edges;
   image-rendering: -webkit-crisp-edges;
   image-rendering: pixelated;
@@ -491,8 +496,6 @@ button.sprite-editor-tool {
   width: 3rem;
   height: 3rem;
 }
-.sprite-item.active, .sprite-color.active {
-}
 
 .sprite-color {
   width: 2rem;
@@ -502,6 +505,10 @@ button.sprite-editor-tool {
 .sprite-color.active {
   transform: scale(1.2);
   box-shadow: 0px 0px 5px 5px rgba(0, 0, 0, .5);
+}
+
+.sprite-editor-cursor {
+  
 }
 
 /* ################################ Audio ##############################*/
@@ -844,7 +851,8 @@ button.sprite-editor-tool {
         </div>
     </div>
 <script type="text/javascript">
-class HtmlInputManager {
+const _CORE = () => {
+window.HtmlInputManager = class HtmlInputManager {
 
     constructor(document) {
         this.keys = {};
@@ -879,7 +887,7 @@ class HtmlInputManager {
     }
 }
 
-class FontUtil {
+window.FontUtil = class FontUtil {
     constructor(context) {
         this.images = {};
         this.bitmap = {
@@ -980,7 +988,7 @@ class FontUtil {
     }
 }
 
-class HtmlRenderer {
+window.HtmlRenderer = class HtmlRenderer {
 
     constructor(canvas) {
         this.canvas = canvas;
@@ -1090,7 +1098,7 @@ class HtmlRenderer {
     }
 }
 
-class Physics2D {
+window.Physics2D = class Physics2D {
 
     constructor() {
     }
@@ -1145,7 +1153,7 @@ class Physics2D {
     }
 }
 
-class HtmlSynth {
+window.HtmlSynth = class HtmlSynth {
 
     constructor(audioContext) {
         this.FREQUENCIES = {
@@ -1260,7 +1268,7 @@ class HtmlSynth {
     }
 }
 
-class EngineCore {
+window.EngineCore = class EngineCore {
 
     constructor(renderer, inputManager, audioPlayer) {
         this.renderer = renderer;
@@ -1429,57 +1437,24 @@ class EngineCore {
     }
 }
 
-class Engine {
+String.prototype.replaceAt = function (index, replacement) {
+    return this.substring(0, index) + replacement + this.substring(index + replacement.length);
+}
+
+window.Engine = class Engine {
 
     constructor(canvas) {
-        this.GameData = {
-            gameCode: '',
-            palette: [
-                '#ffffff',
-                '#ff0000',
-                '#00ff00',
-                '#0000ff',
-                '#ff00ff',
-                '#ffff00',
-                '#00ffff',
-                '#aaaaaa',
-                '#aabb2e',
-            ],
-            sounds: [
-                {
-                    bpm: 120,
-                    volume: 0.8,
-                    melody: {
-                        notes: {},
-                        beatCount: 8,
-                    },
-                    instrument: {
-                        nodes: [{
-                            type: 'oscillator',
-                            waveForm: 'sawtooth',
-                            attack: 0.01,
-                            decay: 0,
-                            sustain: 1,
-                            release: 1,
-                        }]
-                    },
-                }
-            ]
-        }
+        this.SPRITE_SIZE = 8;
+        this.SPRITE_COUNT = 16;
+
+        this.GameData = {};
 
         this.CANVAS = canvas;
-
-        // this.CANVAS.style.width = this.CANVAS.width + "px";
-        // this.CANVAS.style.height = this.CANVAS.height + "px";
-        
         this.CANVAS.width /= 12;
         this.CANVAS.height /= 12;
 
         this.RENDERER = new HtmlRenderer(this.CANVAS);
         this.RENDERER.setCripsPixel();
-
-        this.SPRITE_MANAGER = new SpritesManager(this.GameData.palette, 16, 8);
-        this.GameData.sprites = this.SPRITE_MANAGER.sprites;
 
         this.INPUT_MANAGER = new HtmlInputManager(document);
         this.AUDIO_PLAYER = new HtmlSynth(new AudioContext());
@@ -1496,7 +1471,7 @@ class Engine {
             SCREEN_WIDTH: {
                 f: this.CANVAS.width
             },
-            SCREEN_HEIGHT: { 
+            SCREEN_HEIGHT: {
                 f: this.CANVAS.height
             },
             MOUSE_POS: {
@@ -1579,7 +1554,7 @@ class Engine {
                 description: 'Stops the engine',
             },
             PLAY_SOUND: {
-                f:  (id) => this.CORE.playSound(id),
+                f: (id) => this.CORE.playSound(id),
                 description: 'Plays a sound',
             },
             COLOR: {
@@ -1587,21 +1562,66 @@ class Engine {
                 description: 'Draws a rectangle to the screen',
             },
             COLOR_HSL: {
-                f:  (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
+                f: (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
                 description: 'Draws a rectangle to the screen',
             },
         }
+
+        this.initGameData();
+    }
+
+    initGameData() {
+        this.GameData.gameCode = '';
+
+        this.GameData.palette = [
+            '#ffffff',
+            '#ff0000',
+            '#00ff00',
+            '#0000ff',
+            '#ff00ff',
+            '#ffff00',
+            '#00ffff',
+            '#aaaaaa',
+            '#aabb2e',
+        ],
+
+            this.GameData.sprites = [];
+        for (let i = 0; i < this.SPRITE_COUNT; i++) {
+            this.GameData.sprites.push([]);
+            for (let y = 0; y < this.SPRITE_SIZE; y++) {
+                this.GameData.sprites[i].push("");
+                for (let x = 0; x < this.SPRITE_SIZE; x++) {
+                    this.GameData.sprites[i][y] += "-";
+                }
+            }
+        }
+
+        this.GameData.sounds = [
+            {
+                bpm: 120, volume: 0.8, melody: { notes: {}, beatCount: 8, },
+                instrument: {
+                    nodes: [{
+                        type: 'oscillator',
+                        waveForm: 'sawtooth',
+                        attack: 0.01,
+                        decay: 0,
+                        sustain: 1,
+                        release: 1,
+                    }]
+                },
+            }
+        ]
     }
 
     run() {
         try {
-            this.CORE.setup(this.SPRITE_MANAGER.imageDatas, this.GameData.sounds);
-    
+            this.CORE.setup(this.getSprites(), this.GameData.sounds);
+
             let gameContext = this.__getGameContext();
             let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
             let f = new Function(...Object.keys(gameContext), runCode);
             let [update_f, draw_f] = f(...Object.values(gameContext));
-    
+
             // if (!update_f)
             //     throw (new Error('No "UPDATE" function found.'));
             if (update_f && !draw_f) {
@@ -1623,11 +1643,6 @@ class Engine {
         this.gameDataListener.push(listener);
     }
 
-    setGameCode(gameCode) {
-        this.GameData.gameCode = gameCode;
-        this.onGameDataUpdate();
-    }
-    
     loadGameData(gameData) {
         if (gameData.settings != null)
             this.GameData.settings = gameData.settings;
@@ -1636,22 +1651,57 @@ class Engine {
         this.onGameDataUpdate();
     }
 
-    getSpriteImg(spriteId) {
-        return this.SPRITE_MANAGER.getSpriteImg(spriteId);
-    }
-
-    getPalette() {
-        return this.SPRITE_MANAGER.getPalette();
-    }
-
-    setPixel(spriteId, x, y, colorId) {
-        console.log(spriteId, x, y, colorId);
-        this.SPRITE_MANAGER.setPixel(spriteId, x, y, colorId);
+    setGameCode(gameCode) {
+        this.GameData.gameCode = gameCode;
         this.onGameDataUpdate();
     }
 
+    setPixel(spriteId, x, y, colorId) {
+        let str = this.GameData.sprites[spriteId][y];
+        this.GameData.sprites[spriteId][y] = str.substring(0, x) + colorId + str.substring(x + 1);
+        this.onGameDataUpdate();
+    }
+
+    getSprites() {
+        let images = [];
+        for (let i = 0; i < this.GameData.sprite.length; i++) {
+            images.push(this.getSpriteImg(i));
+        }
+        return images;
+    }
+
+    getPalette() {
+        return this.GameData.palette;
+    }
+
+    getSpriteImg(spriteId) {
+        const __hexToRGB = (hex) => {
+            let bigint = parseInt(hex.substring(1), 16);
+            let r = (bigint >> 16) & 255;
+            let g = (bigint >> 8) & 255;
+            let b = bigint & 255;
+            return [r, g, b, 255];
+        }
+
+        let sprite = this.GameData.sprites[spriteId];
+        let imageData = new ImageData(this.SPRITE_SIZE, this.SPRITE_SIZE);
+
+        for (let y = 0; y < sprite.length; y++) {
+            for (let x = 0; x < sprite[y].length; x++) {
+                let colorId = sprite[y][x] != '-' ? parseInt(sprite[y][x]) : -1;
+                let [r, g, b, a] = colorId != -1 ? __hexToRGB(this.GameData.palette[colorId]) : [0, 0, 0, 0];
+                let i = ((y * this.SPRITE_SIZE) + x) * 4;
+                imageData.data[i + 0] = r;
+                imageData.data[i + 1] = g;
+                imageData.data[i + 2] = b;
+                imageData.data[i + 3] = a;
+            }
+        }
+        return imageData;
+    }
+
     __getGameContext() {
-        Array.prototype.add = function(obj) {
+        Array.prototype.add = function (obj) {
             return this.push(obj);
         };
 
@@ -1663,7 +1713,7 @@ class Engine {
     }
 }
 
-class SpritesManager {
+window.SpritesManager = class SpritesManager {
 
     constructor(palette, spritesCount, spriteSize = 8) {
         this.sprites = [];
@@ -1698,7 +1748,8 @@ class SpritesManager {
     }
 
     setPixel(spriteId, x, y, colorId) {
-        this.sprites[spriteId][y][x] = colorId;
+        console.log("set px");
+        this.sprites[spriteId][y].replaceAt(x, colorId);
 
         let [r, g, b, a] = colorId != -1 ? this.__hexToRGB(this.palette[colorId]) : [0, 0, 0, 0];
         let i = ((y * this.spriteSize) + x) * 4;
@@ -1711,9 +1762,9 @@ class SpritesManager {
     __createEmptySprite() {
         let sprite = [];
         for (let i = 0; i < this.spriteSize; i++) {
-            sprite.push([]);
+            sprite.push("");
             for (let j = 0; j < this.spriteSize; j++) {
-                sprite[i].push(-1);
+                sprite[i] += "-";
             }
         }
         return sprite;
@@ -1726,258 +1777,8 @@ class SpritesManager {
         let b = bigint & 255;
         return [r, g, b, 255];
     }
-
-    __setSprites(sprites) {
-        sprites.forEach((sprite, index) => {
-           for (let y = 0; y < this.spriteSize; y++) {
-               for (let x = 0; x < this.spriteSize; x++) {
-                   this.setPixel(index, x, y, sprite[y][x]);
-               }
-           } 
-        });
-    }
 }
-
-// ==================================== UTIL =============================================
-function addEventListener(id, type, method) {
-    document.getElementById(id).addEventListener(type, method);
-}
-
-function createElement(tag, data, parent = null) {
-    let el = document.createElement(tag);
-    for (let key in data) {
-        el[key] = data[key];
-    }
-
-    if (parent != null)
-        parent.appendChild(el);
-
-    return el;
-}
-
-let templateGame = `
-SET_BACKGROUND('black');
-
-let pixels = [];
-let particles = [];
-let blocks = [];
-let lives = 3;
-let score = 0;
-let speed = 0.5;
-let gameOver = false;
-
-function spawnParticles(x, y) {
-	for (let i=0; i < 25; i++) {
-		particles.push({
-			x: x,
-			y: y,
-			dx: RANDOM_RANGE(-1, 0),
-			dy: RANDOM_RANGE(-0.5, 0.5),
-		});
-	}
-}
-
-let timer = 0;
-function UPDATE() {
-	if (lives <= 0) {
-		gameOver = true;
-	}
-
-	timer++;
-  
-	if (gameOver == false) {
-		score += 0.1;
-  	speed += 0.0001;
-	}
-
-	if (timer > 20) {
-		timer = 0;
-
-		blocks.push({
-			speed: speed,
-			x: SCREEN_WIDTH,
-			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
-			width: 3,
-			height: 3,
-		});
-	}
-
-	blocks = blocks.filter(b => {
-		b.x -= b.speed;
-
-		if (gameOver == false && IS_MOUSE_OVER(b)) {
-			lives--;
-			spawnParticles(b.x, b.y);
-			return false;
-		}
-		return b.x > 0;
-	});
-
-	particles = particles.filter(p => {
-		p.x += p.dx;
-		p.y += p.dy;
-		p.dy += 0.02;
-		return p.x >= 0 && p.y <= SCREEN_HEIGHT;
-	});
-
-	pixels = pixels.filter(px => {
-		px.x -= 0.5;
-		px.y += px.d;
-		return px.x >= 0;
-	});
-
-	if (gameOver == false)
-		pixels.push({x: MOUSE_POS.x, y: MOUSE_POS.y, d: RANDOM_RANGE(-0.1, 0.1)});
-}
-
-let i = 0;
-function DRAW() {
-	blocks.forEach(b => {
-		DRAW_RECT(b.x, b.y, b.width, b.height, "red");
-	})
-
-	particles.forEach(p => {
-		DRAW_PIXEL(p.x, p.y, 'red');
-	})
-	
-	if (gameOver) {
-  	TEXT('GAME OVER', SCREEN_WIDTH / 2 - 17, SCREEN_HEIGHT / 2 - 3, 15, 'white');
-		TEXT(lives.toString(), SCREEN_WIDTH / 2 - 3, SCREEN_HEIGHT / 2 + 5, 15, 'white');
-	} else {
-		TEXT(lives.toString(), 1, 1, 15, 'white');
-	}
-
-	i += 0.1 % 60;
-	for (let j=0; j < pixels.length; j++) {
-		let color = COLOR_HSL((j + i % 40) / 40 * 360, 100, 50);
-		DRAW_PIXEL(pixels[j].x, pixels[j].y, color);
-	}
-}
-`;
-
-// ==================================== APP =============================================
-const CANVAS = document.getElementById("main-canvas");
-const canvasContainer = document.getElementById("game-view");
-const APP = new Engine(CANVAS);
-
-function INIT() {
-    APP.addGameDataListener(gameData => {
-        sessionStorage.setItem('gameData', JSON.stringify(gameData))
-        console.log(gameData);
-    });
-
-    window.onresize = () => {
-        if (canvasContainer == null || CANVAS == null) return;
-        CANVAS.width = canvasContainer.clientWidth;
-        CANVAS.height = canvasContainer.clientHeight;
-    }
-
-    addEventListener('btn-reload', 'click', () => APP.run());
-
-    let gameData = null;
-    try {
-        let gameData = JSON.parse(sessionStorage.getItem('gameData'));
-    } catch (error) {
-        console.warn('Error trying to load session gameData', error);
-    }
-
-    if (gameData != null) {
-        APP.loadGameData(gameData);
-    } else {
-        APP.loadGameData({ gameCode: templateGame });
-    }
-
-    console.log("Application initialized.");
-}
-
-// ==================================== TABS =============================================
-class TabsManager {
-    constructor() {
-        this.panels = document.getElementsByClassName("tab-panel");
-        this.buttons = document.getElementsByClassName("tab-btn");
-        this.activeTab = 0;
-
-        for (let i = 0; i < this.panels.length; i++)
-            this.buttons[i].addEventListener('click', event => this.openTab(event.currentTarget, this.panels[i].id));
-
-        if (sessionStorage.getItem('activeTab'))
-            this.activeTab = sessionStorage.getItem('activeTab')
-        this.openTab(this.buttons[this.activeTab], this.panels[this.activeTab].id);
-    }
-
-    openTab(button, id) {
-        for (let i = 0; i < this.panels.length; i++) {
-            this.panels[i].classList.remove("active");
-            this.buttons[i].classList.remove("active");
-        }
-        this.activeTab = [...this.panels].findIndex(t => t.id == id);
-        document.getElementById(id).classList.add("active");
-        button.classList.add("active");
-        sessionStorage.setItem("activeTab", this.activeTab);
-    }
-}
-const tabsManager = new TabsManager();
-
-// ================================= Main ==========================================
-
-class FileManager {
-    constructor() {
-        document.getElementById('download').addEventListener('click', () => this.download());
-        // document.getElementById('load').addEventListener('change', event => this.onFileLoaded(event));
-    }
-
-    static getDownloadLink(filename, url) {
-        let a = document.createElement('a');
-        a.download = filename;
-        a.href = url;
-
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(function () {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 0);
-    }
-
-    download() {
-        let filename = 'game.json';
-        let file = new Blob([JSON.stringify(APP.GameData)], { type: 'json' });
-        if (window.navigator.msSaveOrOpenBlob)
-            window.navigator.msSaveOrOpenBlob(file, filename);
-        else {
-            let url = URL.createObjectURL(file);
-            FileManager.getDownloadLink(filename, url);
-        }
-    }
-
-    onFileLoaded(event) {
-        let reader = new FileReader();
-        reader.readAsText(event.target.files[0], 'UTF-8');
-        reader.onload = readerEvent => {
-            let gameData = JSON.parse(readerEvent.target.result);
-            APP.loadGameData(gameData);
-            codeInput.innerHTML = gameData.gameCode;
-            updateCode(gameData.gameCode);
-        }
-    }
-}
-const fileManager = new FileManager();
-
-class IconsManager {
-    constructor() {
-        document.getElementById('img-download').src = "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADxJREFUGJWNjsEKADAIQjX2/588dyloEmzvYmlIwA+SmCpJ6l74kc+BByt1m187q2FqiisgSQ9H+oMAcAATMRkCwVzv4QAAAABJRU5ErkJggg==";
-        document.getElementById('img-reload').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADVJREFUGJWNj7kRADAMwsD7zwxp/SUXNT5AjYGEbaPByxAARJLRynxnWPIsfgS9BG1SoX90AB3SEAQibJqJAAAAAElFTkSuQmCC";
-        document.getElementById('img-play').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD9JREFUGJV9jkEOACAIwzb+/2bnQTCwRJtwYVAgAEgiEpJCI1q4stCXwrd0YPXClc2Ga/gR/mSe5Bh4hQO3FBuVHR0I6LYF2QAAAABJRU5ErkJggg==";
-        document.getElementById('img-code').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD9JREFUGJWFjkEKACAMw9L9/82rl6FTFHsZhJYMPhGAbQEJRPEEQpI30IZRbEFJvilmoTTvwivRbjZ+/rRyqgYXgBEKwAF1CgAAAABJRU5ErkJggg==";
-        document.getElementById('img-sprites').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAENJREFUGJWFjkEOADEIAhn//2bpZdtQ02S5IQhIP0CSbCOpv1sdEbxJx1MD1nQnbN8GgOGpnVqxoaaYCY6k3PPsv+oWAogWDC/DsEQAAAAASUVORK5CYII=";
-        document.getElementById('img-instruments').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAERJREFUGJVtj0EOACEQwlrj/58se9IQV06TAZogQBIpqdn3uMy1zf2fXEoSYBzCjVVt0qimFfZHANYr3IFj9gof+HThAwCqIg/RFJxfAAAAAElFTkSuQmCC";
-        document.getElementById('img-melody').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADtJREFUGJWVj0EOACAIwzri/5/MvIgxXtBeFgohGTQIwLa2kFyzJMfyWbmWWS5o+DrIKwEYr582ZyOACWstFAAg+YsfAAAAAElFTkSuQmCC";
-    }
-}
-const iconsManager = new IconsManager();
-
-setTimeout(() => INIT(), 500);
-class CodeParser {
+window.CodeParser = class CodeParser {
     constructor() {
         this.jsTokens = [
             { regex: /^(false|true)$/, type: 'boolean', },
@@ -2261,6 +2062,309 @@ class CodeParser {
             this.tokens.push({ tags: tags, value: token, data: data });
     }
 }
+
+// ==================================== UTIL =============================================
+window.addEventListener = addEventListener = (id, type, method) => {
+    document.getElementById(id).addEventListener(type, method);
+}
+
+window.createElement = createElement = (tag, data, parent = null) => {
+    let el = document.createElement(tag);
+    for (let key in data) {
+        el[key] = data[key];
+    }
+
+    if (parent != null)
+        parent.appendChild(el);
+
+    return el;
+}
+
+window.createSpriteSrc = createSpriteSrc = (pixels) => {
+    console.log(pixels);
+    let canvas = document.createElement('canvas');
+    canvas.style.imageRendering = '-moz-crisp-edges';
+    canvas.style.imageRendering = '-webkit-crisp-edges';
+    canvas.style.imageRendering = 'pixelated';
+    canvas.style.imageRendering = 'crisp-edges';
+    canvas.width = pixels.length;
+    canvas.width = pixels[0].length;
+
+    let ctx = canvas.getContext('2d');
+    for (let y = 0; y < pixels.length; y++) {
+        for (let x = 0; x < pixels[y].length; x++) {
+            ctx.fillStyle = pixels[y][x] == "#" ? "#ffffff" : "#00000000";
+            ctx.fillRect(x, y, 1, 1);
+        }
+    }
+    return canvas.toDataURL();
+}
+
+let templateGame = `
+SET_BACKGROUND('black');
+
+let pixels = [];
+let particles = [];
+let blocks = [];
+let lives = 3;
+let score = 0;
+let speed = 0.5;
+let gameOver = false;
+
+function spawnParticles(x, y) {
+	for (let i=0; i < 25; i++) {
+		particles.push({
+			x: x,
+			y: y,
+			dx: RANDOM_RANGE(-1, 0),
+			dy: RANDOM_RANGE(-0.5, 0.5),
+		});
+	}
+}
+
+let timer = 0;
+function UPDATE() {
+	if (lives <= 0) {
+		gameOver = true;
+	}
+
+	timer++;
+  
+	if (gameOver == false) {
+		score += 0.1;
+  	speed += 0.0001;
+	}
+
+	if (timer > 20) {
+		timer = 0;
+
+		blocks.push({
+			speed: speed,
+			x: SCREEN_WIDTH,
+			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
+			width: 3,
+			height: 3,
+		});
+	}
+
+	blocks = blocks.filter(b => {
+		b.x -= b.speed;
+
+		if (gameOver == false && IS_MOUSE_OVER(b)) {
+			lives--;
+			spawnParticles(b.x, b.y);
+			return false;
+		}
+		return b.x > 0;
+	});
+
+	particles = particles.filter(p => {
+		p.x += p.dx;
+		p.y += p.dy;
+		p.dy += 0.02;
+		return p.x >= 0 && p.y <= SCREEN_HEIGHT;
+	});
+
+	pixels = pixels.filter(px => {
+		px.x -= 0.5;
+		px.y += px.d;
+		return px.x >= 0;
+	});
+
+	if (gameOver == false)
+		pixels.push({x: MOUSE_POS.x, y: MOUSE_POS.y, d: RANDOM_RANGE(-0.1, 0.1)});
+}
+
+let i = 0;
+function DRAW() {
+	blocks.forEach(b => {
+		DRAW_RECT(b.x, b.y, b.width, b.height, "red");
+	})
+
+	particles.forEach(p => {
+		DRAW_PIXEL(p.x, p.y, 'red');
+	})
+	
+	if (gameOver) {
+  	TEXT('GAME OVER', SCREEN_WIDTH / 2 - 17, SCREEN_HEIGHT / 2 - 3, 15, 'white');
+		TEXT(lives.toString(), SCREEN_WIDTH / 2 - 3, SCREEN_HEIGHT / 2 + 5, 15, 'white');
+	} else {
+		TEXT(lives.toString(), 1, 1, 15, 'white');
+	}
+
+	i += 0.1 % 60;
+	for (let j=0; j < pixels.length; j++) {
+		let color = COLOR_HSL((j + i % 40) / 40 * 360, 100, 50);
+		DRAW_PIXEL(pixels[j].x, pixels[j].y, color);
+	}
+}
+`;
+
+// ==================================== APP =============================================
+const CANVAS = document.getElementById("main-canvas");
+const canvasContainer = document.getElementById("game-view");
+window.APP = APP = new Engine(CANVAS);
+
+function INIT() {
+    APP.addGameDataListener(gameData => {
+        sessionStorage.setItem('gameData', JSON.stringify(gameData))
+        console.log(gameData);
+    });
+
+    window.onresize = () => {
+        if (canvasContainer == null || CANVAS == null) return;
+        CANVAS.width = canvasContainer.clientWidth;
+        CANVAS.height = canvasContainer.clientHeight;
+    }
+
+    addEventListener('btn-reload', 'click', () => APP.run());
+
+    let gameData = null;
+    try {
+        let gameData = JSON.parse(sessionStorage.getItem('gameData'));
+    } catch (error) {
+        console.warn('Error trying to load session gameData', error);
+    }
+
+    if (gameData != null) {
+        APP.loadGameData(gameData);
+    } else {
+        APP.loadGameData({ gameCode: templateGame });
+    }
+
+    console.log("Application initialized.");
+}
+
+// ==================================== TABS =============================================
+class TabsManager {
+    constructor() {
+        this.panels = document.getElementsByClassName("tab-panel");
+        this.buttons = document.getElementsByClassName("tab-btn");
+        this.activeTab = 0;
+
+        for (let i = 0; i < this.panels.length; i++)
+            this.buttons[i].addEventListener('click', event => this.openTab(event.currentTarget, this.panels[i].id));
+
+        if (sessionStorage.getItem('activeTab'))
+            this.activeTab = sessionStorage.getItem('activeTab')
+        this.openTab(this.buttons[this.activeTab], this.panels[this.activeTab].id);
+    }
+
+    openTab(button, id) {
+        for (let i = 0; i < this.panels.length; i++) {
+            this.panels[i].classList.remove("active");
+            this.buttons[i].classList.remove("active");
+        }
+        this.activeTab = [...this.panels].findIndex(t => t.id == id);
+        document.getElementById(id).classList.add("active");
+        button.classList.add("active");
+        sessionStorage.setItem("activeTab", this.activeTab);
+    }
+}
+const tabsManager = new TabsManager();
+
+// ================================= Main ==========================================
+
+class FileManager {
+    constructor() {
+        document.getElementById('download').addEventListener('click', () => this.download());
+        // document.getElementById('load').addEventListener('change', event => this.onFileLoaded(event));
+    }
+
+    static getDownloadLink(filename, url) {
+        let a = document.createElement('a');
+        a.download = filename;
+        a.href = url;
+
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+    }
+
+    download() {
+        let filename = 'game.json';
+        let file = new Blob([JSON.stringify(APP.GameData)], { type: 'json' });
+        if (window.navigator.msSaveOrOpenBlob)
+            window.navigator.msSaveOrOpenBlob(file, filename);
+        else {
+            let url = URL.createObjectURL(file);
+            FileManager.getDownloadLink(filename, url);
+        }
+    }
+
+    onFileLoaded(event) {
+        let reader = new FileReader();
+        reader.readAsText(event.target.files[0], 'UTF-8');
+        reader.onload = readerEvent => {
+            let gameData = JSON.parse(readerEvent.target.result);
+            APP.loadGameData(gameData);
+            codeInput.innerHTML = gameData.gameCode;
+            updateCode(gameData.gameCode);
+        }
+    }
+
+    getHtmlExport() {
+        if (_CORE == null)
+            return "ERROR";
+        let head = document.getElementsByTagName('head')[0].innerHTML;
+        let js = _CORE.toString();
+        let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+            ${head}
+            <\/head>
+            <body>
+                <div class="tab-buttons">
+                    <button class="btn tab-btn tab-push-btn contained" id="btn-reload"><img id="img-reload"></button>
+                </div>
+                <div id="game-view-panel" class="tab-panel">
+                    <canvas id="main-canvas" width="840" height="580">
+                        Your browser doesn't support WebGL, please use a more recent one.
+                    </canvas>
+                </div>
+            <script type="text/javascript">
+            _CORE = ${js}
+            _CORE();
+            <\/script>
+            <\/body>
+            <\/html>
+        `;
+        return html;
+    }
+
+    __download() {
+        let filename = 'game.html';
+        let file = new Blob([this.getHtmlExport()], { type: 'html' });
+        if (window.navigator.msSaveOrOpenBlob)
+            window.navigator.msSaveOrOpenBlob(file, filename);
+        else {
+            let url = URL.createObjectURL(file);
+            FileManager.getDownloadLink(filename, url);
+        }
+    }
+}
+const fileManager = new FileManager();
+
+class IconsManager {
+    constructor() {
+        document.getElementById('img-download').src = "data:image/png;base64, iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADxJREFUGJWNjsEKADAIQjX2/588dyloEmzvYmlIwA+SmCpJ6l74kc+BByt1m187q2FqiisgSQ9H+oMAcAATMRkCwVzv4QAAAABJRU5ErkJggg==";
+        document.getElementById('img-reload').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADVJREFUGJWNj7kRADAMwsD7zwxp/SUXNT5AjYGEbaPByxAARJLRynxnWPIsfgS9BG1SoX90AB3SEAQibJqJAAAAAElFTkSuQmCC";
+        document.getElementById('img-play').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD9JREFUGJV9jkEOACAIwzb+/2bnQTCwRJtwYVAgAEgiEpJCI1q4stCXwrd0YPXClc2Ga/gR/mSe5Bh4hQO3FBuVHR0I6LYF2QAAAABJRU5ErkJggg==";
+        document.getElementById('img-code').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD9JREFUGJWFjkEKACAMw9L9/82rl6FTFHsZhJYMPhGAbQEJRPEEQpI30IZRbEFJvilmoTTvwivRbjZ+/rRyqgYXgBEKwAF1CgAAAABJRU5ErkJggg==";
+        document.getElementById('img-sprites').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAENJREFUGJWFjkEOADEIAhn//2bpZdtQ02S5IQhIP0CSbCOpv1sdEbxJx1MD1nQnbN8GgOGpnVqxoaaYCY6k3PPsv+oWAogWDC/DsEQAAAAASUVORK5CYII=";
+        document.getElementById('img-instruments').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAERJREFUGJVtj0EOACEQwlrj/58se9IQV06TAZogQBIpqdn3uMy1zf2fXEoSYBzCjVVt0qimFfZHANYr3IFj9gof+HThAwCqIg/RFJxfAAAAAElFTkSuQmCC";
+        document.getElementById('img-melody').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADtJREFUGJWVj0EOACAIwzri/5/MvIgxXtBeFgohGTQIwLa2kFyzJMfyWbmWWS5o+DrIKwEYr582ZyOACWstFAAg+YsfAAAAAElFTkSuQmCC";
+    }
+}
+const iconsManager = new IconsManager();
+
+setTimeout(() => INIT(), 500);
+};
+_CORE();
 
 // ================================= Code Editor ==========================================
 class CodeEditor {
@@ -2546,6 +2650,10 @@ class DrawingCanvas {
     addEventListener(event, callback) {
         this.spriteEditorCanvas.addEventListener(event, callback);
     }
+
+    setIcon(iconUrl) {
+        // this.spriteEditorCanvas.style.cursor = `url(${iconUrl}), auto`;
+    }
 }
 
 class SpriteList {
@@ -2553,6 +2661,7 @@ class SpriteList {
         this.drawingCanvas = drawingCanvas;
         this.spritesContainer = document.getElementById('sprites-container');
         this.spritesItems = [];
+        this.spritesContexts = [];
 
         this.setListSize(16);
         this.selectSprite(spriteEditorTool.currentSpriteId);
@@ -2560,7 +2669,8 @@ class SpriteList {
 
     updateSelectedSprite() {
         let i = spriteEditorTool.currentSpriteId;
-        this.spritesItems[i].src = this.__getImageSrc(APP.getSpriteImg(i));;
+        let imgData = APP.getSpriteImg(i);
+        this.spritesContexts[i].putImageData(imgData, 0, 0);
         this.spritesItems[i].classList.add('active');
     }
 
@@ -2580,23 +2690,29 @@ class SpriteList {
         this.spritesContainer.innerHTML = '';
 
         for (let i = 0; i < size; i++) {
-            let element = document.createElement('img');
-            element.classList = 'sprite-item';
+            let element = document.createElement('canvas');
+            element.width = 8;
+            element.height = 8;
+            element.className = 'sprite-item';
             element.addEventListener('click', () => {
                 this.selectSprite(i);
-            })
-            element.src = this.__getImageSrc(APP.getSpriteImg(i));
+            });
+            let ctx = element.getContext('2d');
+            ctx.putImageData(APP.getSpriteImg(i), 0, 0);
+
             this.spritesContainer.appendChild(element);
             this.spritesItems.push(element);
+            this.spritesContexts.push(ctx);
         }
     }
 
     __getImageSrc(imageData) {
         let canvas = document.createElement('canvas');
-        let ctx = canvas.getContext('2d');
         canvas.width = imageData.width;
         canvas.height = imageData.height;
+        let ctx = canvas.getContext('2d');
         ctx.putImageData(imageData, 0, 0);
+
         return canvas.toDataURL();
     }
 }
@@ -2609,10 +2725,22 @@ class SpriteEditor {
 
         this.toolsContainer = document.getElementById('sprite-editor-tools');
 
-        this.tools = []
+        this.toolsBtn = []
         this.currentTool = null;
         this.isMouseDown = false;
         this.setEvents();
+        
+        // this.container = document.getElementById('sprite-editor-container');
+        // this.customCursor = document.createElement('img');
+        // this.customCursor.className = 'sprite-editor-cursor';
+        // this.customCursor.style.position = 'absolute';
+        // this.customCursor.style.width = '2rem';
+        // this.customCursor.style.zIndex = 10;
+        // this.container.addEventListener('mousemove', e => {
+        //     this.customCursor.style.left = `${e.clientX}px`;
+        //     this.customCursor.style.top = `${e.offsetY}px`;
+        // })
+        // this.container.appendChild(this.customCursor);
     }
 
     setEvents() {
@@ -2630,26 +2758,33 @@ class SpriteEditor {
     setSelectedTool(tool) {
         this.currentTool = tool;
 
-        for (let i = 0; i < this.tools.length; i++) {
-            if (this.tools[i].innerHTML == tool.name)
-                this.tools[i].classList.add('active');
+        for (let i = 0; i < this.toolsBtn.length; i++) {
+            if (this.toolsBtn[i].innerHTML == tool.name)
+                this.toolsBtn[i].classList.add('active');
             else
-                this.tools[i].classList.remove('active');
+                this.toolsBtn[i].classList.remove('active');
         }
+
+        // let iconUrl = createSpriteSrc(tool.icon);
+        // this.customCursor.src = iconUrl;
     }
 
     addTool(tool) {
         let btn = document.createElement('button');
-        btn.innerHTML = tool.name;
+        // btn.innerHTML = tool.name;
         btn.className = 'btn sprite-editor-tool';
         btn.id = `sprite-editor-${tool.name}`;
+
+        let icon = document.createElement('img');
+        icon.src = createSpriteSrc(tool.icon);
+        btn.appendChild(icon);
 
         btn.addEventListener('click', () => {
             this.setSelectedTool(tool);
         });
 
         this.toolsContainer.appendChild(btn);
-        this.tools.push(btn);
+        this.toolsBtn.push(btn);
     }
 
     handleClick(event) {
@@ -2666,16 +2801,34 @@ const spriteEditor = new SpriteEditor(drawingCanvas, colorPalette, spritesList);
 
 const pencil = {
     name: 'pencil',
+    icon: [
+        "_###____",
+        "_##_#___",
+        "_#_###__",
+        "__#####_",
+        "___####_",
+        "____##__",
+        "________",
+    ],
     canMove: true,
     callback: (drawingCanvas, x, y, color) => {
         drawingCanvas.setPixel(x, y, color, spriteEditorTool.colorId);
     }
-}
+};
 spriteEditor.addTool(pencil);
 spriteEditor.setSelectedTool(pencil);
 
 spriteEditor.addTool({
     name: 'eraser',
+    icon: [
+        "___#____",
+        "__###___",
+        "_###_#__",
+        "__#_###_",
+        "___####_",
+        "____##__",
+        "________",
+    ],
     canMove: true,
     callback: (drawingCanvas, x, y, color) => {
         drawingCanvas.setPixel(x, y, [0, 0, 0, 0], -1);
@@ -2684,6 +2837,15 @@ spriteEditor.addTool({
 
 spriteEditor.addTool({
     name: 'bucket',
+    icon: [
+        "__####__",
+        "_#____#_",
+        "_###_##_",
+        "_###_##_",
+        "_######_",
+        "__####__",
+        "________",
+    ],
     canMove: false,
     callback: (drawingCanvas, x, y, color) => {
         const areColorEquals = (a, b) => {

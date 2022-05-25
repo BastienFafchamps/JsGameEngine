@@ -31,18 +31,31 @@ function getFullHtml() {
     console.log('Css loaded.');
 
     // Add js
-    const jsFiles = [
+    const jsCoreFiles = [
         './src/js/core.js',
         './src/js/engine.js',
-        './src/js/main.js',
         './src/js/codeParser.js',
+        './src/js/main.js',
+    ];
+
+    const jsEditorFiles = [
         './src/js/modules/code.js',
         './src/js/modules/sprites.js',
         './src/js/modules/audio.js',
     ];
 
     let js = '<script type="text/javascript">\n';
-    jsFiles.forEach(file => {
+    js += "const _CORE = () => {\n";
+    jsCoreFiles.forEach(file => {
+        let content = readFile(file);
+        content = content.replace(/import ([{\w, \s}])* from ['"]([\w\/.])*['"];\r\n/g, '');
+        content = content.replace(/export class ([a-zA-Z0-9]+)/g, 'window.$1 = class $1');
+        content = content.replace(/export const ([a-zA-Z0-9]+)/g, 'window.$1 = $1');
+        content = content.replace(/export function ([a-zA-Z0-9]+)/g, 'window.$1 = $1');
+        js += content + '\n';
+    });
+    js += "};\n_CORE();\n";
+    jsEditorFiles.forEach(file => {
         let content = readFile(file);
         content = content.replace(/import ([{\w, \s}])* from ['"]([\w\/.])*['"];\r\n/g, '');
         content = content.replace(/export /g, '');

@@ -1,4 +1,4 @@
-import { APP, createElement, addEventListener } from "../main.js";
+import { APP, createElement, addEventListener, createSpriteSrc } from "../main.js";
 
 // ================================= Sprite Editor ==========================================
 const spriteEditorTool = {
@@ -141,6 +141,10 @@ class DrawingCanvas {
     addEventListener(event, callback) {
         this.spriteEditorCanvas.addEventListener(event, callback);
     }
+
+    setIcon(iconUrl) {
+        // this.spriteEditorCanvas.style.cursor = `url(${iconUrl}), auto`;
+    }
 }
 
 class SpriteList {
@@ -148,6 +152,7 @@ class SpriteList {
         this.drawingCanvas = drawingCanvas;
         this.spritesContainer = document.getElementById('sprites-container');
         this.spritesItems = [];
+        this.spritesContexts = [];
 
         this.setListSize(16);
         this.selectSprite(spriteEditorTool.currentSpriteId);
@@ -155,7 +160,8 @@ class SpriteList {
 
     updateSelectedSprite() {
         let i = spriteEditorTool.currentSpriteId;
-        this.spritesItems[i].src = this.__getImageSrc(APP.getSpriteImg(i));;
+        let imgData = APP.getSpriteImg(i);
+        this.spritesContexts[i].putImageData(imgData, 0, 0);
         this.spritesItems[i].classList.add('active');
     }
 
@@ -175,23 +181,29 @@ class SpriteList {
         this.spritesContainer.innerHTML = '';
 
         for (let i = 0; i < size; i++) {
-            let element = document.createElement('img');
-            element.classList = 'sprite-item';
+            let element = document.createElement('canvas');
+            element.width = 8;
+            element.height = 8;
+            element.className = 'sprite-item';
             element.addEventListener('click', () => {
                 this.selectSprite(i);
-            })
-            element.src = this.__getImageSrc(APP.getSpriteImg(i));
+            });
+            let ctx = element.getContext('2d');
+            ctx.putImageData(APP.getSpriteImg(i), 0, 0);
+
             this.spritesContainer.appendChild(element);
             this.spritesItems.push(element);
+            this.spritesContexts.push(ctx);
         }
     }
 
     __getImageSrc(imageData) {
         let canvas = document.createElement('canvas');
-        let ctx = canvas.getContext('2d');
         canvas.width = imageData.width;
         canvas.height = imageData.height;
+        let ctx = canvas.getContext('2d');
         ctx.putImageData(imageData, 0, 0);
+
         return canvas.toDataURL();
     }
 }
@@ -204,10 +216,22 @@ class SpriteEditor {
 
         this.toolsContainer = document.getElementById('sprite-editor-tools');
 
-        this.tools = []
+        this.toolsBtn = []
         this.currentTool = null;
         this.isMouseDown = false;
         this.setEvents();
+        
+        // this.container = document.getElementById('sprite-editor-container');
+        // this.customCursor = document.createElement('img');
+        // this.customCursor.className = 'sprite-editor-cursor';
+        // this.customCursor.style.position = 'absolute';
+        // this.customCursor.style.width = '2rem';
+        // this.customCursor.style.zIndex = 10;
+        // this.container.addEventListener('mousemove', e => {
+        //     this.customCursor.style.left = `${e.clientX}px`;
+        //     this.customCursor.style.top = `${e.offsetY}px`;
+        // })
+        // this.container.appendChild(this.customCursor);
     }
 
     setEvents() {
@@ -225,26 +249,33 @@ class SpriteEditor {
     setSelectedTool(tool) {
         this.currentTool = tool;
 
-        for (let i = 0; i < this.tools.length; i++) {
-            if (this.tools[i].innerHTML == tool.name)
-                this.tools[i].classList.add('active');
+        for (let i = 0; i < this.toolsBtn.length; i++) {
+            if (this.toolsBtn[i].innerHTML == tool.name)
+                this.toolsBtn[i].classList.add('active');
             else
-                this.tools[i].classList.remove('active');
+                this.toolsBtn[i].classList.remove('active');
         }
+
+        // let iconUrl = createSpriteSrc(tool.icon);
+        // this.customCursor.src = iconUrl;
     }
 
     addTool(tool) {
         let btn = document.createElement('button');
-        btn.innerHTML = tool.name;
+        // btn.innerHTML = tool.name;
         btn.className = 'btn sprite-editor-tool';
         btn.id = `sprite-editor-${tool.name}`;
+
+        let icon = document.createElement('img');
+        icon.src = createSpriteSrc(tool.icon);
+        btn.appendChild(icon);
 
         btn.addEventListener('click', () => {
             this.setSelectedTool(tool);
         });
 
         this.toolsContainer.appendChild(btn);
-        this.tools.push(btn);
+        this.toolsBtn.push(btn);
     }
 
     handleClick(event) {
@@ -261,16 +292,34 @@ const spriteEditor = new SpriteEditor(drawingCanvas, colorPalette, spritesList);
 
 const pencil = {
     name: 'pencil',
+    icon: [
+        "_###____",
+        "_##_#___",
+        "_#_###__",
+        "__#####_",
+        "___####_",
+        "____##__",
+        "________",
+    ],
     canMove: true,
     callback: (drawingCanvas, x, y, color) => {
         drawingCanvas.setPixel(x, y, color, spriteEditorTool.colorId);
     }
-}
+};
 spriteEditor.addTool(pencil);
 spriteEditor.setSelectedTool(pencil);
 
 spriteEditor.addTool({
     name: 'eraser',
+    icon: [
+        "___#____",
+        "__###___",
+        "_###_#__",
+        "__#_###_",
+        "___####_",
+        "____##__",
+        "________",
+    ],
     canMove: true,
     callback: (drawingCanvas, x, y, color) => {
         drawingCanvas.setPixel(x, y, [0, 0, 0, 0], -1);
@@ -279,6 +328,15 @@ spriteEditor.addTool({
 
 spriteEditor.addTool({
     name: 'bucket',
+    icon: [
+        "__####__",
+        "_#____#_",
+        "_###_##_",
+        "_###_##_",
+        "_######_",
+        "__####__",
+        "________",
+    ],
     canMove: false,
     callback: (drawingCanvas, x, y, color) => {
         const areColorEquals = (a, b) => {

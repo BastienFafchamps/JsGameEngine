@@ -1,11 +1,11 @@
 import { Engine } from "./engine.js";
 
 // ==================================== UTIL =============================================
-export function addEventListener(id, type, method) {
+export const addEventListener = (id, type, method) => {
     document.getElementById(id).addEventListener(type, method);
 }
 
-export function createElement(tag, data, parent = null) {
+export const createElement = (tag, data, parent = null) => {
     let el = document.createElement(tag);
     for (let key in data) {
         el[key] = data[key];
@@ -15,6 +15,26 @@ export function createElement(tag, data, parent = null) {
         parent.appendChild(el);
 
     return el;
+}
+
+export const createSpriteSrc = (pixels) => {
+    console.log(pixels);
+    let canvas = document.createElement('canvas');
+    canvas.style.imageRendering = '-moz-crisp-edges';
+    canvas.style.imageRendering = '-webkit-crisp-edges';
+    canvas.style.imageRendering = 'pixelated';
+    canvas.style.imageRendering = 'crisp-edges';
+    canvas.width = pixels.length;
+    canvas.width = pixels[0].length;
+
+    let ctx = canvas.getContext('2d');
+    for (let y = 0; y < pixels.length; y++) {
+        for (let x = 0; x < pixels[y].length; x++) {
+            ctx.fillStyle = pixels[y][x] == "#" ? "#ffffff" : "#00000000";
+            ctx.fillRect(x, y, 1, 1);
+        }
+    }
+    return canvas.toDataURL();
 }
 
 let templateGame = `
@@ -220,6 +240,47 @@ class FileManager {
             APP.loadGameData(gameData);
             codeInput.innerHTML = gameData.gameCode;
             updateCode(gameData.gameCode);
+        }
+    }
+
+    getHtmlExport() {
+        if (_CORE == null)
+            return "ERROR";
+        let head = document.getElementsByTagName('head')[0].innerHTML;
+        let js = _CORE.toString();
+        let html = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+            ${head}
+            <\/head>
+            <body>
+                <div class="tab-buttons">
+                    <button class="btn tab-btn tab-push-btn contained" id="btn-reload"><img id="img-reload"></button>
+                </div>
+                <div id="game-view-panel" class="tab-panel">
+                    <canvas id="main-canvas" width="840" height="580">
+                        Your browser doesn't support WebGL, please use a more recent one.
+                    </canvas>
+                </div>
+            <script type="text/javascript">
+            _CORE = ${js}
+            _CORE();
+            <\/script>
+            <\/body>
+            <\/html>
+        `;
+        return html;
+    }
+
+    __download() {
+        let filename = 'game.html';
+        let file = new Blob([this.getHtmlExport()], { type: 'html' });
+        if (window.navigator.msSaveOrOpenBlob)
+            window.navigator.msSaveOrOpenBlob(file, filename);
+        else {
+            let url = URL.createObjectURL(file);
+            FileManager.getDownloadLink(filename, url);
         }
     }
 }

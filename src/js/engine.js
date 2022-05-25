@@ -1,56 +1,23 @@
 import { EngineCore, HtmlInputManager, HtmlRenderer, Physics2D, HtmlSynth } from "./core.js";
 
+String.prototype.replaceAt = function (index, replacement) {
+    return this.substring(0, index) + replacement + this.substring(index + replacement.length);
+}
+
 export class Engine {
 
     constructor(canvas) {
-        this.GameData = {
-            gameCode: '',
-            palette: [
-                '#ffffff',
-                '#ff0000',
-                '#00ff00',
-                '#0000ff',
-                '#ff00ff',
-                '#ffff00',
-                '#00ffff',
-                '#aaaaaa',
-                '#aabb2e',
-            ],
-            sounds: [
-                {
-                    bpm: 120,
-                    volume: 0.8,
-                    melody: {
-                        notes: {},
-                        beatCount: 8,
-                    },
-                    instrument: {
-                        nodes: [{
-                            type: 'oscillator',
-                            waveForm: 'sawtooth',
-                            attack: 0.01,
-                            decay: 0,
-                            sustain: 1,
-                            release: 1,
-                        }]
-                    },
-                }
-            ]
-        }
+        this.SPRITE_SIZE = 8;
+        this.SPRITE_COUNT = 16;
+
+        this.GameData = {};
 
         this.CANVAS = canvas;
-
-        // this.CANVAS.style.width = this.CANVAS.width + "px";
-        // this.CANVAS.style.height = this.CANVAS.height + "px";
-        
         this.CANVAS.width /= 12;
         this.CANVAS.height /= 12;
 
         this.RENDERER = new HtmlRenderer(this.CANVAS);
         this.RENDERER.setCripsPixel();
-
-        this.SPRITE_MANAGER = new SpritesManager(this.GameData.palette, 16, 8);
-        this.GameData.sprites = this.SPRITE_MANAGER.sprites;
 
         this.INPUT_MANAGER = new HtmlInputManager(document);
         this.AUDIO_PLAYER = new HtmlSynth(new AudioContext());
@@ -67,7 +34,7 @@ export class Engine {
             SCREEN_WIDTH: {
                 f: this.CANVAS.width
             },
-            SCREEN_HEIGHT: { 
+            SCREEN_HEIGHT: {
                 f: this.CANVAS.height
             },
             MOUSE_POS: {
@@ -150,7 +117,7 @@ export class Engine {
                 description: 'Stops the engine',
             },
             PLAY_SOUND: {
-                f:  (id) => this.CORE.playSound(id),
+                f: (id) => this.CORE.playSound(id),
                 description: 'Plays a sound',
             },
             COLOR: {
@@ -158,21 +125,66 @@ export class Engine {
                 description: 'Draws a rectangle to the screen',
             },
             COLOR_HSL: {
-                f:  (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
+                f: (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
                 description: 'Draws a rectangle to the screen',
             },
         }
+
+        this.initGameData();
+    }
+
+    initGameData() {
+        this.GameData.gameCode = '';
+
+        this.GameData.palette = [
+            '#ffffff',
+            '#ff0000',
+            '#00ff00',
+            '#0000ff',
+            '#ff00ff',
+            '#ffff00',
+            '#00ffff',
+            '#aaaaaa',
+            '#aabb2e',
+        ],
+
+            this.GameData.sprites = [];
+        for (let i = 0; i < this.SPRITE_COUNT; i++) {
+            this.GameData.sprites.push([]);
+            for (let y = 0; y < this.SPRITE_SIZE; y++) {
+                this.GameData.sprites[i].push("");
+                for (let x = 0; x < this.SPRITE_SIZE; x++) {
+                    this.GameData.sprites[i][y] += "-";
+                }
+            }
+        }
+
+        this.GameData.sounds = [
+            {
+                bpm: 120, volume: 0.8, melody: { notes: {}, beatCount: 8, },
+                instrument: {
+                    nodes: [{
+                        type: 'oscillator',
+                        waveForm: 'sawtooth',
+                        attack: 0.01,
+                        decay: 0,
+                        sustain: 1,
+                        release: 1,
+                    }]
+                },
+            }
+        ]
     }
 
     run() {
         try {
-            this.CORE.setup(this.SPRITE_MANAGER.imageDatas, this.GameData.sounds);
-    
+            this.CORE.setup(this.getSprites(), this.GameData.sounds);
+
             let gameContext = this.__getGameContext();
             let runCode = this.GameData.gameCode + "\nreturn [typeof UPDATE === 'function' ? UPDATE : undefined, typeof DRAW === 'function' ? DRAW : undefined];";
             let f = new Function(...Object.keys(gameContext), runCode);
             let [update_f, draw_f] = f(...Object.values(gameContext));
-    
+
             // if (!update_f)
             //     throw (new Error('No "UPDATE" function found.'));
             if (update_f && !draw_f) {
@@ -194,11 +206,6 @@ export class Engine {
         this.gameDataListener.push(listener);
     }
 
-    setGameCode(gameCode) {
-        this.GameData.gameCode = gameCode;
-        this.onGameDataUpdate();
-    }
-    
     loadGameData(gameData) {
         if (gameData.settings != null)
             this.GameData.settings = gameData.settings;
@@ -207,22 +214,57 @@ export class Engine {
         this.onGameDataUpdate();
     }
 
-    getSpriteImg(spriteId) {
-        return this.SPRITE_MANAGER.getSpriteImg(spriteId);
-    }
-
-    getPalette() {
-        return this.SPRITE_MANAGER.getPalette();
-    }
-
-    setPixel(spriteId, x, y, colorId) {
-        console.log(spriteId, x, y, colorId);
-        this.SPRITE_MANAGER.setPixel(spriteId, x, y, colorId);
+    setGameCode(gameCode) {
+        this.GameData.gameCode = gameCode;
         this.onGameDataUpdate();
     }
 
+    setPixel(spriteId, x, y, colorId) {
+        let str = this.GameData.sprites[spriteId][y];
+        this.GameData.sprites[spriteId][y] = str.substring(0, x) + colorId + str.substring(x + 1);
+        this.onGameDataUpdate();
+    }
+
+    getSprites() {
+        let images = [];
+        for (let i = 0; i < this.GameData.sprite.length; i++) {
+            images.push(this.getSpriteImg(i));
+        }
+        return images;
+    }
+
+    getPalette() {
+        return this.GameData.palette;
+    }
+
+    getSpriteImg(spriteId) {
+        const __hexToRGB = (hex) => {
+            let bigint = parseInt(hex.substring(1), 16);
+            let r = (bigint >> 16) & 255;
+            let g = (bigint >> 8) & 255;
+            let b = bigint & 255;
+            return [r, g, b, 255];
+        }
+
+        let sprite = this.GameData.sprites[spriteId];
+        let imageData = new ImageData(this.SPRITE_SIZE, this.SPRITE_SIZE);
+
+        for (let y = 0; y < sprite.length; y++) {
+            for (let x = 0; x < sprite[y].length; x++) {
+                let colorId = sprite[y][x] != '-' ? parseInt(sprite[y][x]) : -1;
+                let [r, g, b, a] = colorId != -1 ? __hexToRGB(this.GameData.palette[colorId]) : [0, 0, 0, 0];
+                let i = ((y * this.SPRITE_SIZE) + x) * 4;
+                imageData.data[i + 0] = r;
+                imageData.data[i + 1] = g;
+                imageData.data[i + 2] = b;
+                imageData.data[i + 3] = a;
+            }
+        }
+        return imageData;
+    }
+
     __getGameContext() {
-        Array.prototype.add = function(obj) {
+        Array.prototype.add = function (obj) {
             return this.push(obj);
         };
 
@@ -269,7 +311,8 @@ export class SpritesManager {
     }
 
     setPixel(spriteId, x, y, colorId) {
-        this.sprites[spriteId][y][x] = colorId;
+        console.log("set px");
+        this.sprites[spriteId][y].replaceAt(x, colorId);
 
         let [r, g, b, a] = colorId != -1 ? this.__hexToRGB(this.palette[colorId]) : [0, 0, 0, 0];
         let i = ((y * this.spriteSize) + x) * 4;
@@ -282,9 +325,9 @@ export class SpritesManager {
     __createEmptySprite() {
         let sprite = [];
         for (let i = 0; i < this.spriteSize; i++) {
-            sprite.push([]);
+            sprite.push("");
             for (let j = 0; j < this.spriteSize; j++) {
-                sprite[i].push(-1);
+                sprite[i] += "-";
             }
         }
         return sprite;
@@ -296,15 +339,5 @@ export class SpritesManager {
         let g = (bigint >> 8) & 255;
         let b = bigint & 255;
         return [r, g, b, 255];
-    }
-
-    __setSprites(sprites) {
-        sprites.forEach((sprite, index) => {
-           for (let y = 0; y < this.spriteSize; y++) {
-               for (let x = 0; x < this.spriteSize; x++) {
-                   this.setPixel(index, x, y, sprite[y][x]);
-               }
-           } 
-        });
     }
 }
