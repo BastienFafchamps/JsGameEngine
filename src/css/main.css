@@ -60,19 +60,24 @@ hr {
 }
 
 button, .btn {
+  position: relative;
   margin: .1rem;
   padding: .5rem 1rem 1.25rem 1rem;
   cursor: pointer;
   background: var(--primary);
   height: 2rem;
   color: var(--text-main);
-  transition: .2s ease-in-out;
+  transition: filter .2s ease-in-out;
 
   border: none;
   border-bottom: 5px solid var(--primary-darker);
+  filter: brightness(0.8);
 }
-button.contained, .btn.contained {
-  /* border: solid .5px var(--background-secondary); */
+button.selected, .btn.selected {
+  height: calc(2rem - 5px);
+  top: 5px;
+  border-bottom: none;
+  filter: brightness(1);
 }
 button:hover, .btn:hover {
   filter: brightness(1.2);
@@ -153,15 +158,6 @@ input[type=number] {
 
 .tab-btn {
   width: auto;
-  filter: brightness(0.7);
-  border-bottom: transparent;
-  height: auto;
-  margin-top: .3rem;
-}
-.tab-btn.active {
-  margin-top: 0;
-  background-color: var(--primary);
-  filter: brightness(1);
 }
 .tab-select .select-list {
   display: none;
@@ -512,25 +508,25 @@ input[type="file"] {
   position: relative;
   height: calc(100% - 5rem);
   width: calc(100% - 1rem);
-  font-size: .8em;
+  /* font-size: .8em; */
 }
 
-#melody-selector {
+#melody-selector, #instrument-selector {
   position: relative;
-  height: 5rem;
+  height: auto;
   width: 100%;
-  margin-bottom: .5rem;
+  margin-bottom: .8rem;
 }
-.melody-selector-btn {
+.audio-selector-btn {
   position: relative;
-  filter: brightness(1);
-}
-.melody-selector-btn:not(.selected) {
+  border-top: none;
   filter: brightness(0.8);
 }
-.melody-selector-btn.selected {
+.audio-selector-btn.selected {
   border-bottom: none;
+  height: calc(2rem - 5px);
   top: 5px;
+  filter: brightness(1);
 }
 
 #melody-toolbar {
@@ -624,7 +620,7 @@ input[type="file"] {
 .instrument-node, .instrument-add-node {
   position: relative;
   padding: 1rem;
-  margin: 1rem;
+  margin: 0 .5rem .5rem .5rem;
 }
 .instrument-node {
   display: flex;

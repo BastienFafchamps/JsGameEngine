@@ -4,6 +4,12 @@ function readFile(path) {
     return fs.readFileSync(path, { encoding: 'utf8' });
 }
 
+function minify(str) {
+    str = str.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+    str = str.replace(/[\r\n\t]/g, '');
+    return str;
+}
+
 function getFullHtml() {
     console.log('Running build...');
     let output = '';
@@ -66,9 +72,15 @@ function getFullHtml() {
     console.log('Js loaded.');
 
     // Output file
-    const outputFilePath = './index.html';
-    fs.writeFileSync(outputFilePath, html);
-    console.log('Build finished!');
+    return html;
 }
 
-getFullHtml();
+let outputHtml = getFullHtml();
+
+const outputFilePath = './index.html';
+fs.writeFileSync(outputFilePath, outputHtml);
+
+// const minifiedOutputFilePath = './index.min.html';
+// fs.writeFileSync(minifiedOutputFilePath, minify(outputHtml));
+
+console.log('Build finished!');

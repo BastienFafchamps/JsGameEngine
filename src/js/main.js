@@ -18,7 +18,6 @@ export const createElement = (tag, data, parent = null) => {
 }
 
 export const createSpriteSrc = (pixels) => {
-    console.log(pixels);
     let canvas = document.createElement('canvas');
     canvas.style.imageRendering = '-moz-crisp-edges';
     canvas.style.imageRendering = '-webkit-crisp-edges';
@@ -36,106 +35,6 @@ export const createSpriteSrc = (pixels) => {
     }
     return canvas.toDataURL();
 }
-
-let templateGame = `
-SET_BACKGROUND('black');
-
-let pixels = [];
-let particles = [];
-let blocks = [];
-let lives = 3;
-let score = 0;
-let speed = 0.5;
-let gameOver = false;
-
-function spawnParticles(x, y) {
-	for (let i=0; i < 25; i++) {
-		particles.push({
-			x: x,
-			y: y,
-			dx: RANDOM_RANGE(-1, 0),
-			dy: RANDOM_RANGE(-0.5, 0.5),
-		});
-	}
-}
-
-let timer = 0;
-function UPDATE() {
-	if (lives <= 0) {
-		gameOver = true;
-	}
-
-	timer++;
-  
-	if (gameOver == false) {
-		score += 0.1;
-  	speed += 0.0001;
-	}
-
-	if (timer > 20) {
-		timer = 0;
-
-		blocks.push({
-			speed: speed,
-			x: SCREEN_WIDTH,
-			y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
-			width: 3,
-			height: 3,
-		});
-	}
-
-	blocks = blocks.filter(b => {
-		b.x -= b.speed;
-
-		if (gameOver == false && IS_MOUSE_OVER(b)) {
-			lives--;
-			spawnParticles(b.x, b.y);
-			return false;
-		}
-		return b.x > 0;
-	});
-
-	particles = particles.filter(p => {
-		p.x += p.dx;
-		p.y += p.dy;
-		p.dy += 0.02;
-		return p.x >= 0 && p.y <= SCREEN_HEIGHT;
-	});
-
-	pixels = pixels.filter(px => {
-		px.x -= 0.5;
-		px.y += px.d;
-		return px.x >= 0;
-	});
-
-	if (gameOver == false)
-		pixels.push({x: MOUSE_POS.x, y: MOUSE_POS.y, d: RANDOM_RANGE(-0.1, 0.1)});
-}
-
-let i = 0;
-function DRAW() {
-	blocks.forEach(b => {
-		DRAW_RECT(b.x, b.y, b.width, b.height, "red");
-	})
-
-	particles.forEach(p => {
-		DRAW_PIXEL(p.x, p.y, 'red');
-	})
-	
-	if (gameOver) {
-  	TEXT('GAME OVER', SCREEN_WIDTH / 2 - 17, SCREEN_HEIGHT / 2 - 3, 15, 'white');
-		TEXT(lives.toString(), SCREEN_WIDTH / 2 - 3, SCREEN_HEIGHT / 2 + 5, 15, 'white');
-	} else {
-		TEXT(lives.toString(), 1, 1, 15, 'white');
-	}
-
-	i += 0.1 % 60;
-	for (let j=0; j < pixels.length; j++) {
-		let color = COLOR_HSL((j + i % 40) / 40 * 360, 100, 50);
-		DRAW_PIXEL(pixels[j].x, pixels[j].y, color);
-	}
-}
-`;
 
 // ==================================== APP =============================================
 const CANVAS = document.getElementById("main-canvas");
@@ -156,17 +55,17 @@ function INIT() {
 
     addEventListener('btn-reload', 'click', () => APP.run());
 
-    let gameData = null;
-    try {
-        let gameData = JSON.parse(sessionStorage.getItem('gameData'));
-    } catch (error) {
-        console.warn('Error trying to load session gameData', error);
-    }
+    if (sessionStorage.getItem('gameData') != null) {
+        let gameData = null;
+        try {
+            gameData = JSON.parse(sessionStorage.getItem('gameData'));
+        } catch (error) {
+            console.warn('Error trying to load session gameData', error);
+        }
 
-    if (gameData != null) {
-        APP.loadGameData(gameData);
-    } else {
-        APP.loadGameData({ gameCode: templateGame });
+        if (gameData != null) {
+            APP.loadGameData(gameData);
+        }
     }
 
     console.log("Application initialized.");
@@ -190,11 +89,11 @@ class TabsManager {
     openTab(button, id) {
         for (let i = 0; i < this.panels.length; i++) {
             this.panels[i].classList.remove("active");
-            this.buttons[i].classList.remove("active");
+            this.buttons[i].classList.remove("selected");
         }
         this.activeTab = [...this.panels].findIndex(t => t.id == id);
         document.getElementById(id).classList.add("active");
-        button.classList.add("active");
+        button.classList.add("selected");
         sessionStorage.setItem("activeTab", this.activeTab);
     }
 }

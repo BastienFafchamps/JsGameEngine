@@ -74,59 +74,59 @@ export class Engine {
             },
             KEY_UP: {
                 f: (key) => this.CORE.isKeyUp(key),
-                description: 'Stops the engine',
+                description: 'Returns true if he key is not pressed',
             },
             CREATE_RECT: {
                 f: (obj = { x, y, width, height, color }) => this.CORE.createObjectRect(obj),
-                description: 'Stops the engine',
+                description: 'Creates a rectangle game object',
             },
             CREATE_CIRCLE: {
                 f: (obj = { x, y, width, height, color }) => this.CORE.createObjectCircle(obj),
-                description: 'Stops the engine',
+                description: 'Creates a cirlce game object',
             },
             CREATE_SPRITE: {
                 f: (obj = { x, y, spriteIndex }) => this.CORE.createObjectSprite(obj),
-                description: 'Stops the engine',
+                description: 'Creates a sprite game object',
             },
             REMOVE: {
                 f: (obj = { x, y, width, height, color }) => this.CORE.deleteObject(obj),
-                description: 'Stops the engine',
+                description: 'Destroy a game object',
             },
             IS_MOUSE_OVER: {
                 f: (rect) => this.CORE.isMouseOverRect(rect),
-                description: 'Stops the engine',
+                description: 'Returns true if the mouse is over the object',
             },
             DO_RECT_COLLIDES: {
                 f: (rect_a, rect_b) => this.PHYSICS.doRectsCollides(rect_a, rect_b),
-                description: 'Stops the engine',
+                description: 'Returns true if the rects collides',
             },
             DO_RECT_CIRCLE_COLLIDES: {
                 f: (rect, circle) => this.PHYSICS.doRectCircleCollides(circle, rect),
-                description: 'Stops the engine',
+                description: 'Returns true if the rects and the circle collides',
             },
             DO_CIRCLES_COLLIDES: {
                 f: (circle_a, circle_b) => this.PHYSICS.doCirclesCollides(circle_a, circle_b),
-                description: 'Stops the engine',
+                description: 'Returns true if the circle collides',
             },
             RANDOM: {
                 f: () => this.CORE.random(),
-                description: 'Stops the engine',
+                description: 'Returns a random number between 0 and 1',
             },
             RANDOM_RANGE: {
                 f: (min, max) => this.CORE.randomRange(min, max),
-                description: 'Stops the engine',
+                description: 'Returns a random number between min and max',
             },
             PLAY_SOUND: {
-                f: (id) => this.CORE.playSound(id),
+                f: (melody, instrument) => this.CORE.playSound(melody, instrument),
                 description: 'Plays a sound',
             },
             COLOR: {
                 f: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
-                description: 'Draws a rectangle to the screen',
+                description: 'Return the color from red, green and blue components',
             },
             COLOR_HSL: {
                 f: (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
-                description: 'Draws a rectangle to the screen',
+                description: 'Return the color from hue, saturation and light components',
             },
         }
 
@@ -134,7 +134,104 @@ export class Engine {
     }
 
     initGameData() {
-        this.GameData.gameCode = '';
+        this.GameData.gameCode = `SET_BACKGROUND('black');
+        
+        let pixels = [];
+        let particles = [];
+        let blocks = [];
+        let lives = 3;
+        let score = 0;
+        let speed = 0.5;
+        let gameOver = false;
+        
+        function spawnParticles(x, y) {
+            for (let i=0; i < 25; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    dx: RANDOM_RANGE(-1, 0),
+                    dy: RANDOM_RANGE(-0.5, 0.5),
+                });
+            }
+        }
+        
+        let timer = 0;
+        function UPDATE() {
+            if (lives <= 0) {
+                gameOver = true;
+            }
+        
+            timer++;
+          
+            if (gameOver == false) {
+                score += 0.1;
+              speed += 0.0001;
+            }
+        
+            if (timer > 20) {
+                timer = 0;
+        
+                blocks.push({
+                    speed: speed,
+                    x: SCREEN_WIDTH,
+                    y: Math.round(RANDOM_RANGE(0, SCREEN_HEIGHT)),
+                    width: 3,
+                    height: 3,
+                });
+            }
+        
+            blocks = blocks.filter(b => {
+                b.x -= b.speed;
+        
+                if (gameOver == false && IS_MOUSE_OVER(b)) {
+                    lives--;
+                    spawnParticles(b.x, b.y);
+                    return false;
+                }
+                return b.x > 0;
+            });
+        
+            particles = particles.filter(p => {
+                p.x += p.dx;
+                p.y += p.dy;
+                p.dy += 0.02;
+                return p.x >= 0 && p.y <= SCREEN_HEIGHT;
+            });
+        
+            pixels = pixels.filter(px => {
+                px.x -= 0.5;
+                px.y += px.d;
+                return px.x >= 0;
+            });
+        
+            if (gameOver == false)
+                pixels.push({x: MOUSE_POS.x, y: MOUSE_POS.y, d: RANDOM_RANGE(-0.1, 0.1)});
+        }
+        
+        let i = 0;
+        function DRAW() {
+            blocks.forEach(b => {
+                DRAW_RECT(b.x, b.y, b.width, b.height, "red");
+            })
+        
+            particles.forEach(p => {
+                DRAW_PIXEL(p.x, p.y, 'red');
+            })
+            
+            if (gameOver) {
+              TEXT('GAME OVER', SCREEN_WIDTH / 2 - 17, SCREEN_HEIGHT / 2 - 3, 15, 'white');
+                TEXT(lives.toString(), SCREEN_WIDTH / 2 - 3, SCREEN_HEIGHT / 2 + 5, 15, 'white');
+            } else {
+                TEXT(lives.toString(), 1, 1, 15, 'white');
+            }
+        
+            i += 0.1 % 60;
+            for (let j=0; j < pixels.length; j++) {
+                let color = COLOR_HSL((j + i % 40) / 40 * 360, 100, 50);
+                DRAW_PIXEL(pixels[j].x, pixels[j].y, color);
+            }
+        }
+        `;
 
         this.GameData.palette = [
             '#ffffff',
@@ -159,21 +256,29 @@ export class Engine {
             }
         }
 
-        this.GameData.sounds = [
+        this.GameData.melodies = [
             {
-                bpm: 120, volume: 0.8, melody: { notes: {}, beatCount: 8, },
-                instrument: {
-                    nodes: [{
-                        type: 'oscillator',
-                        waveForm: 'sawtooth',
-                        attack: 0.01,
-                        decay: 0,
-                        sustain: 1,
-                        release: 1,
-                    }]
-                },
+                bpm: 120,
+                volume: 0.8,
+                melody: { notes: {}, beatCount: 8, },
+                instrument: 0,
             }
         ]
+
+        this.GameData.instruments = [
+            {
+                nodes: [{
+                    type: 'oscillator',
+                    waveForm: 'sawtooth',
+                    attack: 0.01,
+                    decay: 0,
+                    sustain: 1,
+                    release: 1,
+                }]
+            },
+        ]
+
+        setTimeout(() => this.onGameDataUpdate(), 250);
     }
 
     run() {
@@ -222,12 +327,11 @@ export class Engine {
     setPixel(spriteId, x, y, colorId) {
         let str = this.GameData.sprites[spriteId][y];
         this.GameData.sprites[spriteId][y] = str.substring(0, x) + colorId + str.substring(x + 1);
-        this.onGameDataUpdate();
     }
 
     getSprites() {
         let images = [];
-        for (let i = 0; i < this.GameData.sprite.length; i++) {
+        for (let i = 0; i < this.GameData.sprites.length; i++) {
             images.push(this.getSpriteImg(i));
         }
         return images;
@@ -311,7 +415,6 @@ export class SpritesManager {
     }
 
     setPixel(spriteId, x, y, colorId) {
-        console.log("set px");
         this.sprites[spriteId][y].replaceAt(x, colorId);
 
         let [r, g, b, a] = colorId != -1 ? this.__hexToRGB(this.palette[colorId]) : [0, 0, 0, 0];

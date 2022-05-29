@@ -282,6 +282,7 @@ class SpriteEditor {
         let pos = this.drawingCanvas.getClickPosition(event);
         this.currentTool.callback(this.drawingCanvas, pos[0], pos[1], spriteEditorTool.color);
         this.spritesList.updateSelectedSprite();
+        this.onGameDataUpdate();
     }
 }
 

@@ -330,8 +330,8 @@ export class HtmlSynth {
         this.mainGainNode.gain.value = volume;
     }
 
-    playSound(sound) {
-        this.playMelody(sound.melody, sound.instrument, sound.volume, sound.bpm);
+    playSound(melody, instrument) {
+        this.playMelody(melody, instrument, melody.volume, melody.bpm);
     }
 
     playMelody(melody, instrument, volume, bpm) {
@@ -450,9 +450,10 @@ export class EngineCore {
         });
     }
 
-    setup(sprites, sounds) {
+    setup(sprites, melodies, instruments) {
         this.sprites = sprites;
-        this.sounds = sounds;
+        this.melodies = melodies;
+        this.instruments = instruments;
         this.clear();
     }
 
@@ -565,8 +566,8 @@ export class EngineCore {
         return true;
     }
 
-    playSound(id) {
-        this.audioPlayer.playSound(this.sounds[id]);
+    playSound(melodyIndex, instrumentIndex) {
+        this.audioPlayer.playSound(this.sounds[melodyIndex], this.instruments[instrumentIndex]);
     }
 
     // ================= PRIVATE METHODS ================= 

@@ -63,6 +63,8 @@ class InstrumentBuilder {
     constructor() {
         this.maxs = { attack: 3, decay: 3, sustain: 1, release: 10, total: 17 }
         this.container = document.getElementById('instrument-nodes');
+
+        this.instruments = APP.GameData.instruments;
         this.instrument = {
             volume: 0.6,
             nodes: [{
@@ -75,8 +77,10 @@ class InstrumentBuilder {
             }]
         };
 
+        this.selectorContainer = document.getElementById('instrument-selector');
+        this.setSelectors();
+
         this.container.innerHTML = '';
-        this.selectInstrument(this.instrument);
 
         this.inputVolume = document.getElementById('melody-volume');
         this.inputBpm = document.getElementById('melody-bpm');
@@ -85,16 +89,44 @@ class InstrumentBuilder {
         this.inputVolume.addEventListener('input', event => {
             let min = 0, max = 1;
             this.instrument.volume = parseFloat(event.target.value) / 100.0 * max - min;
-            console.log(this.instrument.volume);
         });
-
     }
 
-    selectInstrument(instrument) {
-        this.instrument = instrument;
+    setSelectors() {
+        this.btns = [];
+        for (let i = 0; i < 16; i++) {
+            let btn = createElement('button', { className: 'audio-selector-btn', innerText: i });
+            this.selectorContainer.appendChild(btn);
+            this.btns.push(btn);
+
+            btn.addEventListener('click', () => {
+                this.selectInstrument(i);
+
+                for (let j = 0; j < this.btns.length; j++)
+                    this.btns[j].classList.remove('selected');
+                this.btns[i].classList.add('selected');
+            });
+        }
+    }
+
+    selectInstrument(instrumentIndex) {
+        if (APP.GameData.instruments[instrumentIndex] == null) {
+            APP.GameData.instruments[instrumentIndex] = {
+                nodes: [{
+                    type: 'oscillator',
+                    waveForm: 'sawtooth',
+                    attack: 0.01,
+                    decay: 0,
+                    sustain: 1,
+                    release: 1,
+                }]
+            };
+        }
+
+        this.instrument = APP.GameData.instruments[instrumentIndex];
         this.container.innerHTML = '';
         this.container.appendChild(createElement('button', { innerText: '+', className: 'instrument-add-node' }));
-        instrument.nodes.forEach(node => {
+        this.instrument.nodes.forEach(node => {
             if (node.type == 'oscillator') {
                 let nodeElement = this.__createOscillatorNode(node);
                 this.container.appendChild(nodeElement);
@@ -185,7 +217,7 @@ class MelodyWriter {
             'f#-major': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
         }
         this.NOTES_DATA = [];
-        
+
         this.octaveCount = 6;
 
         this.rows = {};
@@ -199,7 +231,7 @@ class MelodyWriter {
         this.__setRows();
 
         this.container.addEventListener('dragover', (event) => this.__dragNoteX(event));
-        this.onMelodyChange = () => { console.log(this.melody) };
+        this.onMelodyChange = () => { };
 
         this.inputBpm = document.getElementById('melody-bpm');
         this.inputBpm.addEventListener('input', event => this.melody.bpm = parseInt(event.target.value));
@@ -218,7 +250,6 @@ class MelodyWriter {
         this.inputBeats.value = this.melody.beatCount;
         this.__setRows();
 
-        console.log(this.melody.notes);
         Object.values(this.melody.notes).forEach(note => {
             let noteData = this.__addNote(note);
             this.setNote(noteData.id);
@@ -381,7 +412,7 @@ class AudioPanel {
         this.melodyWriter = melodyWriter;
         this.instrumentBuilder = instrumentBuilder;
 
-        this.sounds = APP.GameData.sounds;
+        this.sounds = APP.GameData.melodies;
         this.selectedSound = {};
         this.btns = [];
 
@@ -411,8 +442,8 @@ class AudioPanel {
     }
 
     selectSound(index) {
-        if (APP.GameData.sounds[index] == null) {
-            APP.GameData.sounds[index] = {
+        if (APP.GameData.melodies[index] == null) {
+            APP.GameData.melodies[index] = {
                 bpm: 120,
                 volume: 0.8,
                 melody: {
@@ -432,9 +463,8 @@ class AudioPanel {
             };
         }
 
-        this.selectedSound = APP.GameData.sounds[index];
+        this.selectedSound = APP.GameData.melodies[index];
         this.melodyWriter.setMelody(this.selectedSound.melody);
-        this.instrumentBuilder.selectInstrument(this.selectedSound.instrument);
 
         for (let j = 0; j < this.btns.length; j++)
             this.btns[j].classList.remove('selected');
@@ -443,7 +473,7 @@ class AudioPanel {
 
     setSelectors() {
         for (let i = 0; i < 16; i++) {
-            let btn = createElement('button', { className: 'melody-selector-btn', innerText: i });
+            let btn = createElement('button', { className: 'audio-selector-btn', innerText: i });
             this.selectorContainer.appendChild(btn);
             this.btns.push(btn);
 
