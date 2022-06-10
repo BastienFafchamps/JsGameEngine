@@ -131,7 +131,54 @@ input[type=number] {
   margin-top: 5rem;
   position: relative;
   width: 90%;
-  max-width: 50rem;
+  max-width: 40rem;
+}
+
+#game-buttons {
+  position: absolute;
+  bottom: 0;
+  width: 90%;
+  height: 20rem;
+  max-width: 40rem;
+}
+.game-btn {
+  position: absolute;
+  border: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  vertical-align: middle;
+  padding: 0;
+}
+#game-buttons-axis {
+  position: relative;
+  left: 10%;
+  top: 2rem;
+  width: 9rem;
+  height: 9rem;
+}
+#game-btn-axis-n, #game-btn-axis-s {
+  left: calc(50% - 1.55rem);
+}
+#game-btn-axis-s {
+  bottom: 0;
+}
+#game-btn-axis-w, #game-btn-axis-e {
+  top: calc(50% - 1.55rem);
+}
+#game-btn-axis-e {
+  right: 0;
+}
+#game-buttons-ab {
+  position: absolute;
+  height: 20%;
+  right: 10%;
+  top: 20%;
+  width: 7rem;
+}
+#game-btn-b {
+  top: 1.5rem;
+  right: 0;
 }
 
 .tab-panel {
