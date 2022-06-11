@@ -379,13 +379,13 @@ input[type="file"] {
   color: darksalmon;
 }
 .token.boolean {
-  color: darksalmon;
+  color: rgb(233, 192, 122);
 }
 .token.comparator {
-  color: darksalmon;
+  color: rgb(233, 192, 122);
 }
 .token.identifier {
-  color: rgb(235, 235, 235);
+  color: rgb(210, 202, 193);
 }
 .token.identifier.upper {
   color: rgb(157, 124, 233);

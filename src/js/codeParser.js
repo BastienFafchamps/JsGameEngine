@@ -1,200 +1,75 @@
 export class CodeParser {
     constructor() {
-        this.jsTokens = [
-            { regex: /^(false|true)$/, type: 'boolean', },
-            { regex: /^"[^"\\]*"$/, type: 'string', },
-            { regex: /^'[^'\\]*'$/, type: 'string', },
-            { regex: /^[0-9]+(.[0-9]+)?$/, type: 'number', },
-            { regex: /\/\/[^\n\r]+$/, type: 'comment', },
-            { regex: /\/\*(\*\/)*\*\/$/, type: 'comment', },
-            { regex: /\./, type: 'punctuation', value: '.' },
-            { regex: /,/, type: 'punctuation', value: ',' },
-            { regex: /:/, type: 'punctuation', value: ':' },
-            { regex: /;/, type: 'punctuation', value: ';' },
-            { regex: /!/, type: 'punctuation', value: '!' },
-            { regex: /\(/, type: 'separator', value: '(' },
-            { regex: /\)/, type: 'separator', value: ')' },
-            { regex: /\{/, type: 'separator', value: '{' },
-            { regex: /\}/, type: 'separator', value: '}' },
-            { regex: /\[/, type: 'separator', value: '[' },
-            { regex: /\]/, type: 'separator', value: ']' },
-            { regex: /let /, type: 'keyword', value: 'let', },
-            { regex: /var /, type: 'keyword', value: 'var', },
-            { regex: /const /, type: 'keyword', value: 'const', },
-            { regex: /if( )*\(/, type: 'keyword', value: 'if', },
-            { regex: /else( )*[{\n]/, type: 'keyword', value: 'else', },
-            { regex: /for( )*\(/, type: 'keyword', value: 'for', },
-            { regex: /do( )*\(/, type: 'keyword', value: 'do', },
-            { regex: /while( )*\(/, type: 'keyword', value: 'while', },
-            { regex: /function( )*\(/, type: 'keyword', value: 'function', },
-            { regex: /return( |;)/, type: 'keyword', value: 'return', },
-            { regex: /class /, type: 'keyword', value: 'class', },
-            { regex: /null/, type: 'keyword', value: 'null', },
-            { regex: /=/, type: 'operator', value: '=', },
-            { regex: /\+/, type: 'operator', value: '+', },
-            { regex: /-/, type: 'operator', value: '-', },
-            { regex: /\//, type: 'operator', value: '/', },
-            { regex: /\*/, type: 'operator', value: '*', },
-            { regex: /==/, type: 'comparator', value: '==', },
-            { regex: />/, type: 'comparator', value: '>', },
-            { regex: /</, type: 'comparator', value: '<', },
-            { regex: />=/, type: 'comparator', value: '>=', },
-            { regex: /<=/, type: 'comparator', value: '<=', },
-            { regex: /!=/, type: 'comparator', value: '!=', },
-            { regex: /&&/, type: 'comparator', value: '&&', },
-            { regex: /\|\|/, type: 'comparator', value: '||', },
-        ]
+        this.TOKENS = [
+            { regex: /"[^"\\]*"/, type: 'string_0', tags: ['string'] },
+            { regex: /'[^'\\]*'/, type: 'string_1', tags: ['string'] },
+            { regex: /\s+/, type: 'whitespace', tags: ['whitespace'] },
+            { regex: /(false|true)/, type: 'boolean', tags: ['boolean']},
+            { regex: /[0-9]+(.[0-9]+)?/, type: 'number', tags: ['number'] },
+            { regex: /\/\/[^\n\r]+/, type: 'comment_0', tags: ['comment'] },
+            { regex: /\/\*(\*\/)*\*\//, type: 'comment_1', tags: ['comment'] },
+            { regex: /\./, type: 'punctuation_dot', tags: ['punctuation', 'dot'] },
+            { regex: /,/, type: 'punctuation_comma', tags: ['punctuation'] },
+            { regex: /:/, type: 'punctuation_doubledot', tags: ['punctuation'] },
+            { regex: /;/, type: 'punctuation_dotcomma', tags: ['punctuation'] },
+            { regex: /!/, type: 'punctuation_exclamation', tags: ['punctuation'] },
+            { regex: /\(/, type: 'separator_parentheseopen', tags: ['separator'] },
+            { regex: /\)/, type: 'separator_parentheseclose', tags: ['separator'] },
+            { regex: /\{/, type: 'separator_braceopen', tags: ['separator'] },
+            { regex: /\}/, type: 'separator_braceclose', tags: ['separator'] },
+            { regex: /\[/, type: 'separator_xopen', tags: ['separator'] },
+            { regex: /\]/, type: 'separator_xclose', tags: ['separator'] },
+            { regex: /let/, type: 'keyword_let', tags: ['keyword'] },
+            { regex: /var/, type: 'keyword_var', tags: ['keyword'] },
+            { regex: /const/, type: 'keyword_const', tags: ['keyword'] },
+            { regex: /if/, type: 'keyword_if', tags: ['keyword'] },
+            { regex: /else/, type: 'keyword_else', tags: ['keyword'] },
+            { regex: /for/, type: 'keyword_for', tags: ['keyword'] },
+            { regex: /do/, type: 'keyword_do', tags: ['keyword'] },
+            { regex: /while/, type: 'keyword_while', tags: ['keyword'] },
+            { regex: /function/, type: 'keyword_function', tags: ['keyword'] },
+            { regex: /return/, type: 'keyword_return', tags: ['keyword'] },
+            { regex: /class /, type: 'keyword_class', tags: ['keyword'] },
+            { regex: /null/, type: 'keyword_null', tags: ['keyword'] },
+            { regex: /\>\=/, type: 'comparator_greaterequals', tags: ['comparator'] },
+            { regex: /\<\=/, type: 'comparator_smallerequals', tags: ['comparator']},
+            { regex: /\!=/, type: 'comparator_notequals', tags: ['comparator'] },
+            { regex: /\&\&/, type: 'comparator_and', tags: ['comparator'] },
+            { regex: /\|\|/, type: 'comparator_or', tags: ['comparator'] },
+            { regex: /\=\=/, type: 'comparator_equals', tags: ['comparator'] },
+            { regex: /\>/, type: 'comparator_greater', tags: ['comparator'] },
+            { regex: /\</, type: 'comparator_smaller', tags: ['comparator'] },
+            { regex: /=/, type: 'operator_equals', tags: ['operator'] },
+            { regex: /\+/, type: 'operator_add', tags: ['operator'] },
+            { regex: /_/, type: 'operator_minus', tags: ['operator'] },
+            { regex: /\//, type: 'operator_divide', tags: ['operator'] },
+            { regex: /\*/, type: 'operator_multiply', tags: ['operator'] },
+            { regex: /[a-zA-Z_][a-zA-Z_0-9]*/, type: 'identifier', tags: ['identifier'] },
+        ];
 
-        this.punctuations = {
-            '.': { type: 'punctuation', },
-            ':': { type: 'punctuation', },
-            ';': { type: 'punctuation', },
-            '!': { type: 'punctuation', },
-            '(': { type: 'separator', },
-            ')': { type: 'separator', },
-            '{': { type: 'separator', },
-            '}': { type: 'separator', },
-            '[': { type: 'separator', },
-            ']': { type: 'separator', },
-        }
-
-        this.literals = {
-            'boolean': {
-                type: 'boolean',
-                regex: /^(false|true)$/,
-            },
-            'quotationString': {
-                type: 'string',
-                bounding: '',
-                regex: /^"[^"\\]*"$/,
-            },
-            'apostopheString': {
-                type: 'string',
-                regex: /^'[^'\\]*'$/,
-            },
-            'number': {
-                type: 'number',
-                regex: /^[0-9]+(.[0-9]+)?$/,
-            },
-            'singleLineComment': {
-                type: 'comment',
-                regex: /^\/\/[^\n\r]+$/,
-            },
-            'multiLineComment': {
-                type: 'comment',
-                regex: /^\/\*(\*\/)*\*\/$/,
-            },
-        }
-
-        this.operators = {
-            '=': { type: 'operator', },
-            '+': { type: 'operator', },
-            '-': { type: 'operator', },
-            '/': { type: 'operator', },
-            '*': { type: 'operator', },
-            '==': { type: 'comparator', },
-            '>': { type: 'comparator', },
-            '<': { type: 'comparator', },
-            '>=': { type: 'comparator', },
-            '<=': { type: 'comparator', },
-            '!=': { type: 'comparator', },
-            '&&': { type: 'comparator', },
-            '||': { type: 'comparator', },
-        }
-
-        this.keywords = {
-            'let': { type: 'keyword', },
-            'var': { type: 'keyword', },
-            'const': { type: 'keyword', },
-            'if': { type: 'keyword', },
-            'else': { type: 'keyword', },
-            'for': { type: 'keyword', },
-            'do': { type: 'keyword', },
-            'while': { type: 'keyword', },
-            'function': { type: 'keyword', },
-            'return': { type: 'keyword', },
-            'class': { type: 'keyword', },
-            'null': { type: 'keyword', },
-        }
-
-        this.litteralMatches = [
-            /^"[^"\\]*$/,
-            /^'[^'\\]*$/,
-            /^\/\/(?!\n)$/,
-        ]
-
-        this.espaceTokens = {
-            ';': 0,
-            '.': 0,
-        }
-
-        this.espaceChars = {
-            '\n': 0,
-            '\t': 0,
-        }
-
-        this.whiteSpaces = {
-            ' ': 0,
-        }
-    }
-
-    getFullRegex() {
-        let regex = '';
-        this.jsTokens.forEach((t, index) => {
-            if (index < this.jsTokens.length - 1)
-                regex += `(?<${t.type}>${t.regex.source})|`;
-            else
-                regex += `(?<${t.type}>${t.regex.source})`;
-        });
-        return regex;
+        let regex = this.__getFullRegex();
+        this.matcher = new RegExp(regex, 'g');
     }
 
     parseTokens(code) {
-        // let regex = this.getFullRegex();
-        // let matcher = new RegExp(regex);
-        // console.log(matcher);
-        // return;
+        let matches = code.matchAll(this.matcher);
+        let results = [];
 
-        this.tokens = [];
-        let currentToken = { value: '', tags: [] };
-        let char = '';
-
-        const addToken = () => {
-            currentToken.tags = this.__handleToken(currentToken.value);
-            if (currentToken.tags !== null)
-                this.__addToken(currentToken.value, currentToken.tags);
-            currentToken.value = '';
-            currentToken.tags = ['none'];
-            currentToken.data = {};
-        }
-            
-        for (let i = 0; i < code.length; i++) {
-            char = code[i];
-
-            let isInLitteral = this.__isInLitteral(currentToken.value);
-
-            if (this.espaceChars[char] == 0) {
-                addToken();
-                this.__addToken(char, ['whitespace']);
-            } else if (!isInLitteral && this.whiteSpaces[char] == 0) {
-                addToken();
-                this.__addToken(char, ['whitespace']);
-            } else if (!isInLitteral && this.punctuations[char] != null) {
-                addToken();
-                let escapeTokenType = this.__handleToken(char);
-                this.__addToken(char, escapeTokenType);
-            } else if (!isInLitteral && currentToken.tags[0] == 'none' && !this.__isAlphabetic(char)) {
-                addToken();
-                currentToken.value += char;
-            } else {
-                currentToken.value += char;
-            }
-
-            if (i == code.length - 1) {
-                addToken();
+        for (const match of matches) {
+            let groups = match.groups
+            for (const key in groups) {
+                if (groups[key] != null)
+                {
+                    results.push({
+                        'value': groups[key],
+                        'identifier': key,
+                        'tags': this.TOKENS_MAP[key].tags,
+                    });
+                    break;
+                }
             }
         }
-        return this.tokens;
+        return results;
     }
 
     translate(tokens) {
@@ -205,6 +80,7 @@ export class CodeParser {
     }
 
     generateHtml(tokens) {
+        console.log(tokens);
         let htmlString = '';
         tokens.forEach(token => {
             if (token.tags[0] != 'whitespace')
@@ -219,66 +95,16 @@ export class CodeParser {
     // #                                  - PRIVATES -                                      #
     // ######################################################################################
 
-    __isInLitteral(token) {
-        return this.litteralMatches.some(l => token.match(l));
-    }
-
-    __isInteger(token) {
-        return token.match(/(?![0-9])[0-9]*/) != null;
-    }
-
-    __isAlphabetic(token) {
-        return token.match(/[a-zA-Z_]/) != null;
-    }
-
-    __isUpperAlphabetic(token) {
-        return token.match(/[A-Z_]/) != null;
-    }
-
-    __isFunctionParam(token) {
-        if (token.tags[0] != 'identifier') return false;
-
-
-    }
-
-    __handleToken(token) {
-        if (token.length <= 0) return null;
-
-        let tags = ['none'];
-        if (token in this.keywords)
-            tags = [this.keywords[token].type];
-        else if (token in this.punctuations)
-            tags = [this.punctuations[token].type];
-        else if (token in this.operators)
-            tags = [this.operators[token].type];
-
-        for (const l in this.literals) {
-            if (token.match(this.literals[l].regex))
-                tags = [this.literals[l].type];
-        }
-
-        if (tags[0] == 'none') {
-            if (this.__isUpperAlphabetic(token))
-                tags = ['identifier', 'upper'];
-            else if (this.__isAlphabetic(token))
-                tags = ['identifier'];
-        }
-
-        if (tags[0] == 'identifier' && this.tokens.length >= 2) {
-            let i = this.tokens.length - 1;
-            if (this.tokens[i].value == '.' && this.tokens[i - 1].tags[0] == 'identifier') {
-                tags.push('sub-identifier');
-            }
-        }
-
-        return tags;
-    }
-
-    __addToken(token, tags, data = {}) {
-        // If last token was a whitespace, concatenate token it.
-        if (tags[0] == 'whitespace' && this.tokens.length >= 1 && this.tokens[this.tokens.length - 1].tags[0] == 'whitespace')
-            this.tokens[this.tokens.length - 1].value += token;
-        else
-            this.tokens.push({ tags: tags, value: token, data: data });
+    __getFullRegex() {
+        let regex = '';
+        this.TOKENS_MAP = {};
+        this.TOKENS.forEach((t, index) => {
+            this.TOKENS_MAP[t.type] = t;
+            if (index < this.TOKENS.length - 1) {
+                regex += `(?<${t.type}>${t.regex.source})|`;
+            } else
+                regex += `(?<${t.type}>${t.regex.source})`;
+        });
+        return regex;
     }
 }

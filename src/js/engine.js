@@ -136,13 +136,13 @@ export class Engine {
     initGameData() {
         this.GameData.gameCode = `SET_BACKGROUND('black');
         
-        let pixels = [];
-        let particles = [];
-        let blocks = [];
-        let lives = 3;
-        let score = 0;
-        let speed = 0.5;
-        let gameOver = false;
+let pixels = [];
+let particles = [];
+let blocks = [];
+let lives = 3;
+let score = 0;
+let speed = 0.5;
+let gameOver = false;
         
         function spawnParticles(x, y) {
             for (let i=0; i < 25; i++) {
