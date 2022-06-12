@@ -357,6 +357,9 @@ input[type="file"] {
 .token {
   height: var(--font-line-height);
 }
+.token.identifier {
+  color: rgb(243, 239, 234);
+}
 .token.keyword {
   color: rgb(250, 170, 77);
 }
@@ -384,11 +387,16 @@ input[type="file"] {
 .token.comparator {
   color: rgb(233, 192, 122);
 }
-.token.identifier {
-  color: rgb(210, 202, 193);
-}
-.token.identifier.upper {
+.token.identifier.function_call {
   color: rgb(157, 124, 233);
+  font-style: italic;
+}
+.token.identifier.function {
+  color: rgb(157, 124, 233);
+}
+.token.identifier.object {
+  color: rgb(223, 192, 133);
+  font-style: italic;
 }
 .token.identifier.sub-identifier {
   font-style: italic;

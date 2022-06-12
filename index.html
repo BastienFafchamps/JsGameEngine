@@ -68,19 +68,24 @@ hr {
 }
 
 button, .btn {
+  position: relative;
   margin: .1rem;
   padding: .5rem 1rem 1.25rem 1rem;
   cursor: pointer;
   background: var(--primary);
   height: 2rem;
   color: var(--text-main);
-  transition: .2s ease-in-out;
+  transition: filter .2s ease-in-out;
 
   border: none;
   border-bottom: 5px solid var(--primary-darker);
+  filter: brightness(0.8);
 }
-button.contained, .btn.contained {
-  /* border: solid .5px var(--background-secondary); */
+button.selected, .btn.selected {
+  height: calc(2rem - 5px);
+  top: 5px;
+  border-bottom: none;
+  filter: brightness(1);
 }
 button:hover, .btn:hover {
   filter: brightness(1.2);
@@ -134,7 +139,54 @@ input[type=number] {
   margin-top: 5rem;
   position: relative;
   width: 90%;
-  max-width: 50rem;
+  max-width: 40rem;
+}
+
+#game-buttons {
+  position: absolute;
+  bottom: 0;
+  width: 90%;
+  height: 20rem;
+  max-width: 40rem;
+}
+.game-btn {
+  position: absolute;
+  border: none;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  vertical-align: middle;
+  padding: 0;
+}
+#game-buttons-axis {
+  position: relative;
+  left: 10%;
+  top: 2rem;
+  width: 9rem;
+  height: 9rem;
+}
+#game-btn-axis-n, #game-btn-axis-s {
+  left: calc(50% - 1.55rem);
+}
+#game-btn-axis-s {
+  bottom: 0;
+}
+#game-btn-axis-w, #game-btn-axis-e {
+  top: calc(50% - 1.55rem);
+}
+#game-btn-axis-e {
+  right: 0;
+}
+#game-buttons-ab {
+  position: absolute;
+  height: 20%;
+  right: 10%;
+  top: 20%;
+  width: 7rem;
+}
+#game-btn-b {
+  top: 1.5rem;
+  right: 0;
 }
 
 .tab-panel {
@@ -161,15 +213,6 @@ input[type=number] {
 
 .tab-btn {
   width: auto;
-  filter: brightness(0.7);
-  border-bottom: transparent;
-  height: auto;
-  margin-top: .3rem;
-}
-.tab-btn.active {
-  margin-top: 0;
-  background-color: var(--primary);
-  filter: brightness(1);
 }
 .tab-select .select-list {
   display: none;
@@ -322,6 +365,9 @@ input[type="file"] {
 .token {
   height: var(--font-line-height);
 }
+.token.identifier {
+  color: rgb(243, 239, 234);
+}
 .token.keyword {
   color: rgb(250, 170, 77);
 }
@@ -344,16 +390,21 @@ input[type="file"] {
   color: darksalmon;
 }
 .token.boolean {
-  color: darksalmon;
+  color: rgb(233, 192, 122);
 }
 .token.comparator {
-  color: darksalmon;
+  color: rgb(233, 192, 122);
 }
-.token.identifier {
-  color: rgb(235, 235, 235);
-}
-.token.identifier.upper {
+.token.identifier.function_call {
   color: rgb(157, 124, 233);
+  font-style: italic;
+}
+.token.identifier.function {
+  color: rgb(157, 124, 233);
+}
+.token.identifier.object {
+  color: rgb(223, 192, 133);
+  font-style: italic;
 }
 .token.identifier.sub-identifier {
   font-style: italic;
@@ -520,25 +571,25 @@ input[type="file"] {
   position: relative;
   height: calc(100% - 5rem);
   width: calc(100% - 1rem);
-  font-size: .8em;
+  /* font-size: .8em; */
 }
 
-#melody-selector {
+#melody-selector, #instrument-selector {
   position: relative;
-  height: 5rem;
+  height: auto;
   width: 100%;
-  margin-bottom: .5rem;
+  margin-bottom: .8rem;
 }
-.melody-selector-btn {
+.audio-selector-btn {
   position: relative;
-  filter: brightness(1);
-}
-.melody-selector-btn:not(.selected) {
+  border-top: none;
   filter: brightness(0.8);
 }
-.melody-selector-btn.selected {
+.audio-selector-btn.selected {
   border-bottom: none;
+  height: calc(2rem - 5px);
   top: 5px;
+  filter: brightness(1);
 }
 
 #melody-toolbar {
@@ -632,7 +683,7 @@ input[type="file"] {
 .instrument-node, .instrument-add-node {
   position: relative;
   padding: 1rem;
-  margin: 1rem;
+  margin: 0 .5rem .5rem .5rem;
 }
 .instrument-node {
   display: flex;
@@ -770,6 +821,18 @@ input[type="file"] {
         <canvas id="main-canvas" width="840" height="580">
             Your browser doesn't support WebGL, please use a more recent one.
         </canvas>
+        <div id="game-buttons">
+            <div id="game-buttons-axis">
+                <button id="game-btn-axis-n" class="game-btn"></button>
+                <button id="game-btn-axis-s" class="game-btn"></button>
+                <button id="game-btn-axis-w" class="game-btn"></button>
+                <button id="game-btn-axis-e" class="game-btn"></button>
+            </div>
+            <div id="game-buttons-ab">
+                <button id="game-btn-a" class="game-btn">A</button>
+                <button id="game-btn-b" class="game-btn">B</button>
+            </div>
+        </div>
     </div>
     <div id="code-editor-panel" class="tab-panel center">
         <div class="code-editor">
@@ -811,6 +874,8 @@ input[type="file"] {
     </div>
     <div id="instrument-panel" class="tab-panel center">
         <div id="instrument-selector">
+        </div>
+        <div id="instrument-nodes-library">
         </div>
         <div id="instrument-nodes">
             <div class="instrument-node">
@@ -1184,8 +1249,8 @@ window.HtmlSynth = class HtmlSynth {
         this.mainGainNode.gain.value = volume;
     }
 
-    playSound(sound) {
-        this.playMelody(sound.melody, sound.instrument, sound.volume, sound.bpm);
+    playSound(melody, instrument) {
+        this.playMelody(melody, instrument, melody.volume, melody.bpm);
     }
 
     playMelody(melody, instrument, volume, bpm) {
@@ -1304,9 +1369,10 @@ window.EngineCore = class EngineCore {
         });
     }
 
-    setup(sprites, sounds) {
+    setup(sprites, melodies, instruments) {
         this.sprites = sprites;
-        this.sounds = sounds;
+        this.melodies = melodies;
+        this.instruments = instruments;
         this.clear();
     }
 
@@ -1419,8 +1485,8 @@ window.EngineCore = class EngineCore {
         return true;
     }
 
-    playSound(id) {
-        this.audioPlayer.playSound(this.sounds[id]);
+    playSound(melodyIndex, instrumentIndex) {
+        this.audioPlayer.playSound(this.sounds[melodyIndex], this.instruments[instrumentIndex]);
     }
 
     // ================= PRIVATE METHODS ================= 
@@ -1511,59 +1577,59 @@ window.Engine = class Engine {
             },
             KEY_UP: {
                 f: (key) => this.CORE.isKeyUp(key),
-                description: 'Stops the engine',
+                description: 'Returns true if he key is not pressed',
             },
             CREATE_RECT: {
                 f: (obj = { x, y, width, height, color }) => this.CORE.createObjectRect(obj),
-                description: 'Stops the engine',
+                description: 'Creates a rectangle game object',
             },
             CREATE_CIRCLE: {
                 f: (obj = { x, y, width, height, color }) => this.CORE.createObjectCircle(obj),
-                description: 'Stops the engine',
+                description: 'Creates a cirlce game object',
             },
             CREATE_SPRITE: {
                 f: (obj = { x, y, spriteIndex }) => this.CORE.createObjectSprite(obj),
-                description: 'Stops the engine',
+                description: 'Creates a sprite game object',
             },
             REMOVE: {
                 f: (obj = { x, y, width, height, color }) => this.CORE.deleteObject(obj),
-                description: 'Stops the engine',
+                description: 'Destroy a game object',
             },
             IS_MOUSE_OVER: {
                 f: (rect) => this.CORE.isMouseOverRect(rect),
-                description: 'Stops the engine',
+                description: 'Returns true if the mouse is over the object',
             },
             DO_RECT_COLLIDES: {
                 f: (rect_a, rect_b) => this.PHYSICS.doRectsCollides(rect_a, rect_b),
-                description: 'Stops the engine',
+                description: 'Returns true if the rects collides',
             },
             DO_RECT_CIRCLE_COLLIDES: {
                 f: (rect, circle) => this.PHYSICS.doRectCircleCollides(circle, rect),
-                description: 'Stops the engine',
+                description: 'Returns true if the rects and the circle collides',
             },
             DO_CIRCLES_COLLIDES: {
                 f: (circle_a, circle_b) => this.PHYSICS.doCirclesCollides(circle_a, circle_b),
-                description: 'Stops the engine',
+                description: 'Returns true if the circle collides',
             },
             RANDOM: {
                 f: () => this.CORE.random(),
-                description: 'Stops the engine',
+                description: 'Returns a random number between 0 and 1',
             },
             RANDOM_RANGE: {
                 f: (min, max) => this.CORE.randomRange(min, max),
-                description: 'Stops the engine',
+                description: 'Returns a random number between min and max',
             },
             PLAY_SOUND: {
-                f: (id) => this.CORE.playSound(id),
+                f: (melody, instrument) => this.CORE.playSound(melody, instrument),
                 description: 'Plays a sound',
             },
             COLOR: {
                 f: (r, g, b) => `rgb(${r}, ${g}, ${b})`,
-                description: 'Draws a rectangle to the screen',
+                description: 'Return the color from red, green and blue components',
             },
             COLOR_HSL: {
                 f: (h, s, l) => `hsl(${h}, ${s}%, ${l}%)`,
-                description: 'Draws a rectangle to the screen',
+                description: 'Return the color from hue, saturation and light components',
             },
         }
 
@@ -1573,13 +1639,13 @@ window.Engine = class Engine {
     initGameData() {
         this.GameData.gameCode = `SET_BACKGROUND('black');
         
-        let pixels = [];
-        let particles = [];
-        let blocks = [];
-        let lives = 3;
-        let score = 0;
-        let speed = 0.5;
-        let gameOver = false;
+let pixels = [];
+let particles = [];
+let blocks = [];
+let lives = 3;
+let score = 0;
+let speed = 0.5;
+let gameOver = false;
         
         function spawnParticles(x, y) {
             for (let i=0; i < 25; i++) {
@@ -1682,7 +1748,7 @@ window.Engine = class Engine {
             '#aabb2e',
         ],
 
-        this.GameData.sprites = [];
+            this.GameData.sprites = [];
         for (let i = 0; i < this.SPRITE_COUNT; i++) {
             this.GameData.sprites.push([]);
             for (let y = 0; y < this.SPRITE_SIZE; y++) {
@@ -1693,21 +1759,29 @@ window.Engine = class Engine {
             }
         }
 
-        this.GameData.sounds = [
+        this.GameData.melodies = [
             {
-                bpm: 120, volume: 0.8, melody: { notes: {}, beatCount: 8, },
-                instrument: {
-                    nodes: [{
-                        type: 'oscillator',
-                        waveForm: 'sawtooth',
-                        attack: 0.01,
-                        decay: 0,
-                        sustain: 1,
-                        release: 1,
-                    }]
-                },
+                bpm: 120,
+                volume: 0.8,
+                melody: { notes: {}, beatCount: 8, },
+                instrument: 0,
             }
         ]
+
+        this.GameData.instruments = [
+            {
+                nodes: [{
+                    type: 'oscillator',
+                    waveForm: 'sawtooth',
+                    attack: 0.01,
+                    decay: 0,
+                    sustain: 1,
+                    release: 1,
+                }]
+            },
+        ]
+
+        setTimeout(() => this.onGameDataUpdate(), 250);
     }
 
     run() {
@@ -1875,201 +1949,127 @@ window.SpritesManager = class SpritesManager {
 }
 window.CodeParser = class CodeParser {
     constructor() {
-        this.jsTokens = [
-            { regex: /^(false|true)$/, type: 'boolean', },
-            { regex: /^"[^"\\]*"$/, type: 'string', },
-            { regex: /^'[^'\\]*'$/, type: 'string', },
-            { regex: /^[0-9]+(.[0-9]+)?$/, type: 'number', },
-            { regex: /\/\/[^\n\r]+$/, type: 'comment', },
-            { regex: /\/\*(\*\/)*\*\/$/, type: 'comment', },
-            { regex: /\./, type: 'punctuation', value: '.' },
-            { regex: /,/, type: 'punctuation', value: ',' },
-            { regex: /:/, type: 'punctuation', value: ':' },
-            { regex: /;/, type: 'punctuation', value: ';' },
-            { regex: /!/, type: 'punctuation', value: '!' },
-            { regex: /\(/, type: 'separator', value: '(' },
-            { regex: /\)/, type: 'separator', value: ')' },
-            { regex: /\{/, type: 'separator', value: '{' },
-            { regex: /\}/, type: 'separator', value: '}' },
-            { regex: /\[/, type: 'separator', value: '[' },
-            { regex: /\]/, type: 'separator', value: ']' },
-            { regex: /let /, type: 'keyword', value: 'let', },
-            { regex: /var /, type: 'keyword', value: 'var', },
-            { regex: /const /, type: 'keyword', value: 'const', },
-            { regex: /if( )*\(/, type: 'keyword', value: 'if', },
-            { regex: /else( )*[{\n]/, type: 'keyword', value: 'else', },
-            { regex: /for( )*\(/, type: 'keyword', value: 'for', },
-            { regex: /do( )*\(/, type: 'keyword', value: 'do', },
-            { regex: /while( )*\(/, type: 'keyword', value: 'while', },
-            { regex: /function( )*\(/, type: 'keyword', value: 'function', },
-            { regex: /return( |;)/, type: 'keyword', value: 'return', },
-            { regex: /class /, type: 'keyword', value: 'class', },
-            { regex: /null/, type: 'keyword', value: 'null', },
-            { regex: /=/, type: 'operator', value: '=', },
-            { regex: /\+/, type: 'operator', value: '+', },
-            { regex: /-/, type: 'operator', value: '-', },
-            { regex: /\//, type: 'operator', value: '/', },
-            { regex: /\*/, type: 'operator', value: '*', },
-            { regex: /==/, type: 'comparator', value: '==', },
-            { regex: />/, type: 'comparator', value: '>', },
-            { regex: /</, type: 'comparator', value: '<', },
-            { regex: />=/, type: 'comparator', value: '>=', },
-            { regex: /<=/, type: 'comparator', value: '<=', },
-            { regex: /!=/, type: 'comparator', value: '!=', },
-            { regex: /&&/, type: 'comparator', value: '&&', },
-            { regex: /\|\|/, type: 'comparator', value: '||', },
+        this.TOKENS = [
+            { regex: /"[^"\\]*"/, type: 'string_0', tags: ['string'] },
+            { regex: /'[^'\\]*'/, type: 'string_1', tags: ['string'] },
+            { regex: /\s+/, type: 'whitespace', tags: ['whitespace'] },
+            { regex: /(false|true)/, type: 'boolean', tags: ['boolean'] },
+            { regex: /[0-9]+(.[0-9]+)?/, type: 'number', tags: ['number'] },
+            { regex: /\/\/[^\n\r]+/, type: 'comment_0', tags: ['comment'] },
+            { regex: /\/\*(\*\/)*\*\//, type: 'comment_1', tags: ['comment'] },
+            { regex: /\./, type: 'punctuation_dot', tags: ['punctuation', 'dot'] },
+            { regex: /,/, type: 'punctuation_comma', tags: ['punctuation'] },
+            { regex: /:/, type: 'punctuation_doubledot', tags: ['punctuation'] },
+            { regex: /;/, type: 'punctuation_dotcomma', tags: ['punctuation'] },
+            { regex: /!/, type: 'punctuation_exclamation', tags: ['punctuation'] },
+            { regex: /\(/, type: 'separator_parentheseopen', tags: ['separator'] },
+            { regex: /\)/, type: 'separator_parentheseclose', tags: ['separator'] },
+            { regex: /\{/, type: 'separator_braceopen', tags: ['separator'] },
+            { regex: /\}/, type: 'separator_braceclose', tags: ['separator'] },
+            { regex: /\[/, type: 'separator_xopen', tags: ['separator'] },
+            { regex: /\]/, type: 'separator_xclose', tags: ['separator'] },
+            { regex: /let/, type: 'keyword_let', tags: ['keyword'] },
+            { regex: /var/, type: 'keyword_var', tags: ['keyword'] },
+            { regex: /const/, type: 'keyword_const', tags: ['keyword'] },
+            { regex: /if/, type: 'keyword_if', tags: ['keyword'] },
+            { regex: /else/, type: 'keyword_else', tags: ['keyword'] },
+            { regex: /for/, type: 'keyword_for', tags: ['keyword'] },
+            { regex: /do/, type: 'keyword_do', tags: ['keyword'] },
+            { regex: /while/, type: 'keyword_while', tags: ['keyword'] },
+            { regex: /function/, type: 'keyword_function', tags: ['keyword'] },
+            { regex: /return/, type: 'keyword_return', tags: ['keyword'] },
+            { regex: /class /, type: 'keyword_class', tags: ['keyword'] },
+            { regex: /null/, type: 'keyword_null', tags: ['keyword'] },
+            { regex: /\>\=/, type: 'comparator_greaterequals', tags: ['comparator'] },
+            { regex: /\<\=/, type: 'comparator_smallerequals', tags: ['comparator'] },
+            { regex: /\!=/, type: 'comparator_notequals', tags: ['comparator'] },
+            { regex: /\&\&/, type: 'comparator_and', tags: ['comparator'] },
+            { regex: /\|\|/, type: 'comparator_or', tags: ['comparator'] },
+            { regex: /\=\=/, type: 'comparator_equals', tags: ['comparator'] },
+            { regex: /\>/, type: 'comparator_greater', tags: ['comparator'] },
+            { regex: /\</, type: 'comparator_smaller', tags: ['comparator'] },
+            { regex: /=/, type: 'operator_equals', tags: ['operator'] },
+            { regex: /\+/, type: 'operator_add', tags: ['operator'] },
+            { regex: /_/, type: 'operator_minus', tags: ['operator'] },
+            { regex: /\//, type: 'operator_divide', tags: ['operator'] },
+            { regex: /\*/, type: 'operator_multiply', tags: ['operator'] },
+            { regex: /[a-zA-Z_][a-zA-Z_0-9]*/, type: 'identifier', tags: ['identifier'] },
+        ];
+
+        this.RULES = [
+            {
+                'type': 'identifier',
+                'previous': [],
+                'next': ['separator_parentheseopen'],
+                'result': 'function_call'
+            },
+            {
+                'type': 'identifier',
+                'previous': ['keyword_function'],
+                'next': ['separator_parentheseopen'],
+                'result': 'function',
+                remove: ['function_call']
+            },
+            {
+                'type': 'identifier',
+                'previous': [],
+                'next': ['punctuation_doubledot'],
+                'result': 'object'
+            }
         ]
 
-        this.punctuations = {
-            '.': { type: 'punctuation', },
-            ':': { type: 'punctuation', },
-            ';': { type: 'punctuation', },
-            '!': { type: 'punctuation', },
-            '(': { type: 'separator', },
-            ')': { type: 'separator', },
-            '{': { type: 'separator', },
-            '}': { type: 'separator', },
-            '[': { type: 'separator', },
-            ']': { type: 'separator', },
-        }
-
-        this.literals = {
-            'boolean': {
-                type: 'boolean',
-                regex: /^(false|true)$/,
-            },
-            'quotationString': {
-                type: 'string',
-                bounding: '',
-                regex: /^"[^"\\]*"$/,
-            },
-            'apostopheString': {
-                type: 'string',
-                regex: /^'[^'\\]*'$/,
-            },
-            'number': {
-                type: 'number',
-                regex: /^[0-9]+(.[0-9]+)?$/,
-            },
-            'singleLineComment': {
-                type: 'comment',
-                regex: /^\/\/[^\n\r]+$/,
-            },
-            'multiLineComment': {
-                type: 'comment',
-                regex: /^\/\*(\*\/)*\*\/$/,
-            },
-        }
-
-        this.operators = {
-            '=': { type: 'operator', },
-            '+': { type: 'operator', },
-            '-': { type: 'operator', },
-            '/': { type: 'operator', },
-            '*': { type: 'operator', },
-            '==': { type: 'comparator', },
-            '>': { type: 'comparator', },
-            '<': { type: 'comparator', },
-            '>=': { type: 'comparator', },
-            '<=': { type: 'comparator', },
-            '!=': { type: 'comparator', },
-            '&&': { type: 'comparator', },
-            '||': { type: 'comparator', },
-        }
-
-        this.keywords = {
-            'let': { type: 'keyword', },
-            'var': { type: 'keyword', },
-            'const': { type: 'keyword', },
-            'if': { type: 'keyword', },
-            'else': { type: 'keyword', },
-            'for': { type: 'keyword', },
-            'do': { type: 'keyword', },
-            'while': { type: 'keyword', },
-            'function': { type: 'keyword', },
-            'return': { type: 'keyword', },
-            'class': { type: 'keyword', },
-            'null': { type: 'keyword', },
-        }
-
-        this.litteralMatches = [
-            /^"[^"\\]*$/,
-            /^'[^'\\]*$/,
-            /^\/\/(?!\n)$/,
-        ]
-
-        this.espaceTokens = {
-            ';': 0,
-            '.': 0,
-        }
-
-        this.espaceChars = {
-            '\n': 0,
-            '\t': 0,
-        }
-
-        this.whiteSpaces = {
-            ' ': 0,
-        }
-    }
-
-    getFullRegex() {
-        let regex = '';
-        this.jsTokens.forEach((t, index) => {
-            if (index < this.jsTokens.length - 1)
-                regex += `(?<${t.type}>${t.regex.source})|`;
-            else
-                regex += `(?<${t.type}>${t.regex.source})`;
-        });
-        return regex;
+        let regex = this.__getFullRegex();
+        this.matcher = new RegExp(regex, 'g');
     }
 
     parseTokens(code) {
-        // let regex = this.getFullRegex();
-        // let matcher = new RegExp(regex);
-        // console.log(matcher);
-        // return;
+        let matches = code.matchAll(this.matcher);
+        let tokens_all = [];
+        let tokens = [];
 
-        this.tokens = [];
-        let currentToken = { value: '', tags: [] };
-        let char = '';
+        for (const match of matches) {
+            let groups = match.groups
+            for (const key in groups) {
+                if (groups[key] != null) {
+                    let token ={
+                        value: groups[key],
+                        type: key,
+                        tags: [...this.TOKENS_MAP[key].tags],
+                    };
 
-        const addToken = () => {
-            currentToken.tags = this.__handleToken(currentToken.value);
-            if (currentToken.tags !== null)
-                this.__addToken(currentToken.value, currentToken.tags);
-            currentToken.value = '';
-            currentToken.tags = ['none'];
-            currentToken.data = {};
-        }
-            
-        for (let i = 0; i < code.length; i++) {
-            char = code[i];
-
-            let isInLitteral = this.__isInLitteral(currentToken.value);
-
-            if (this.espaceChars[char] == 0) {
-                addToken();
-                this.__addToken(char, ['whitespace']);
-            } else if (!isInLitteral && this.whiteSpaces[char] == 0) {
-                addToken();
-                this.__addToken(char, ['whitespace']);
-            } else if (!isInLitteral && this.punctuations[char] != null) {
-                addToken();
-                let escapeTokenType = this.__handleToken(char);
-                this.__addToken(char, escapeTokenType);
-            } else if (!isInLitteral && currentToken.tags[0] == 'none' && !this.__isAlphabetic(char)) {
-                addToken();
-                currentToken.value += char;
-            } else {
-                currentToken.value += char;
-            }
-
-            if (i == code.length - 1) {
-                addToken();
+                    tokens_all.push(token);
+                    if (key != 'whitespace')
+                        tokens.push(token);
+                    
+                    break;
+                }
             }
         }
-        return this.tokens;
+
+        for (let i = 0; i < tokens.length; i++) {
+            let token = tokens[i];
+
+            this.RULES.forEach(rule => {
+                if (token.type != rule.type)
+                    return;
+
+                for (let j = 0; j < rule.next.length && i + j + 1 < tokens.length; j++) {
+                    if (tokens[i + j + 1].type != rule.next[j])
+                        return;
+                }
+
+                for (let j = 0; j < rule.previous.length && i - j - 1 >= 0; j++) {
+                    if (tokens[i - j - 1].type != rule.previous[j])
+                        return;
+                }
+                token.tags.push(rule.result);
+
+                if (rule.remove != null)
+                    token.tags = token.tags.filter(tag => !rule.remove.includes(tag));
+            });
+        }
+
+        return tokens_all;
     }
 
     translate(tokens) {
@@ -2080,6 +2080,7 @@ window.CodeParser = class CodeParser {
     }
 
     generateHtml(tokens) {
+        console.log(tokens);
         let htmlString = '';
         tokens.forEach(token => {
             if (token.tags[0] != 'whitespace')
@@ -2094,67 +2095,17 @@ window.CodeParser = class CodeParser {
     // #                                  - PRIVATES -                                      #
     // ######################################################################################
 
-    __isInLitteral(token) {
-        return this.litteralMatches.some(l => token.match(l));
-    }
-
-    __isInteger(token) {
-        return token.match(/(?![0-9])[0-9]*/) != null;
-    }
-
-    __isAlphabetic(token) {
-        return token.match(/[a-zA-Z_]/) != null;
-    }
-
-    __isUpperAlphabetic(token) {
-        return token.match(/[A-Z_]/) != null;
-    }
-
-    __isFunctionParam(token) {
-        if (token.tags[0] != 'identifier') return false;
-
-
-    }
-
-    __handleToken(token) {
-        if (token.length <= 0) return null;
-
-        let tags = ['none'];
-        if (token in this.keywords)
-            tags = [this.keywords[token].type];
-        else if (token in this.punctuations)
-            tags = [this.punctuations[token].type];
-        else if (token in this.operators)
-            tags = [this.operators[token].type];
-
-        for (const l in this.literals) {
-            if (token.match(this.literals[l].regex))
-                tags = [this.literals[l].type];
-        }
-
-        if (tags[0] == 'none') {
-            if (this.__isUpperAlphabetic(token))
-                tags = ['identifier', 'upper'];
-            else if (this.__isAlphabetic(token))
-                tags = ['identifier'];
-        }
-
-        if (tags[0] == 'identifier' && this.tokens.length >= 2) {
-            let i = this.tokens.length - 1;
-            if (this.tokens[i].value == '.' && this.tokens[i - 1].tags[0] == 'identifier') {
-                tags.push('sub-identifier');
-            }
-        }
-
-        return tags;
-    }
-
-    __addToken(token, tags, data = {}) {
-        // If last token was a whitespace, concatenate token it.
-        if (tags[0] == 'whitespace' && this.tokens.length >= 1 && this.tokens[this.tokens.length - 1].tags[0] == 'whitespace')
-            this.tokens[this.tokens.length - 1].value += token;
-        else
-            this.tokens.push({ tags: tags, value: token, data: data });
+    __getFullRegex() {
+        let regex = '';
+        this.TOKENS_MAP = {};
+        this.TOKENS.forEach((t, index) => {
+            this.TOKENS_MAP[t.type] = t;
+            if (index < this.TOKENS.length - 1) {
+                regex += `(?<${t.type}>${t.regex.source})|`;
+            } else
+                regex += `(?<${t.type}>${t.regex.source})`;
+        });
+        return regex;
     }
 }
 
@@ -2213,17 +2164,17 @@ function INIT() {
 
     addEventListener('btn-reload', 'click', () => APP.run());
 
-    let gameData = null;
     if (sessionStorage.getItem('gameData') != null) {
+        let gameData = null;
         try {
             gameData = JSON.parse(sessionStorage.getItem('gameData'));
         } catch (error) {
             console.warn('Error trying to load session gameData', error);
         }
-    }
 
-    if (gameData != null) {
-        APP.loadGameData(gameData);
+        if (gameData != null) {
+            APP.loadGameData(gameData);
+        }
     }
 
     console.log("Application initialized.");
@@ -2247,11 +2198,11 @@ class TabsManager {
     openTab(button, id) {
         for (let i = 0; i < this.panels.length; i++) {
             this.panels[i].classList.remove("active");
-            this.buttons[i].classList.remove("active");
+            this.buttons[i].classList.remove("selected");
         }
         this.activeTab = [...this.panels].findIndex(t => t.id == id);
         document.getElementById(id).classList.add("active");
-        button.classList.add("active");
+        button.classList.add("selected");
         sessionStorage.setItem("activeTab", this.activeTab);
     }
 }
@@ -2349,7 +2300,7 @@ class IconsManager {
         document.getElementById('img-reload').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADVJREFUGJWNj7kRADAMwsD7zwxp/SUXNT5AjYGEbaPByxAARJLRynxnWPIsfgS9BG1SoX90AB3SEAQibJqJAAAAAElFTkSuQmCC";
         document.getElementById('img-play').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD9JREFUGJV9jkEOACAIwzb+/2bnQTCwRJtwYVAgAEgiEpJCI1q4stCXwrd0YPXClc2Ga/gR/mSe5Bh4hQO3FBuVHR0I6LYF2QAAAABJRU5ErkJggg==";
         document.getElementById('img-code').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAD9JREFUGJWFjkEKACAMw9L9/82rl6FTFHsZhJYMPhGAbQEJRPEEQpI30IZRbEFJvilmoTTvwivRbjZ+/rRyqgYXgBEKwAF1CgAAAABJRU5ErkJggg==";
-        // document.getElementById('img-sprites').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAENJREFUGJWFjkEOADEIAhn//2bpZdtQ02S5IQhIP0CSbCOpv1sdEbxJx1MD1nQnbN8GgOGpnVqxoaaYCY6k3PPsv+oWAogWDC/DsEQAAAAASUVORK5CYII=";
+        document.getElementById('img-sprites').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAENJREFUGJWFjkEOADEIAhn//2bpZdtQ02S5IQhIP0CSbCOpv1sdEbxJx1MD1nQnbN8GgOGpnVqxoaaYCY6k3PPsv+oWAogWDC/DsEQAAAAASUVORK5CYII=";
         document.getElementById('img-instruments').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAERJREFUGJVtj0EOACEQwlrj/58se9IQV06TAZogQBIpqdn3uMy1zf2fXEoSYBzCjVVt0qimFfZHANYr3IFj9gof+HThAwCqIg/RFJxfAAAAAElFTkSuQmCC";
         document.getElementById('img-melody').src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAADtJREFUGJWVj0EOACAIwzri/5/MvIgxXtBeFgohGTQIwLa2kFyzJMfyWbmWWS5o+DrIKwEYr582ZyOACWstFAAg+YsfAAAAAElFTkSuQmCC";
     }
@@ -2933,6 +2884,8 @@ class InstrumentBuilder {
     constructor() {
         this.maxs = { attack: 3, decay: 3, sustain: 1, release: 10, total: 17 }
         this.container = document.getElementById('instrument-nodes');
+
+        this.instruments = APP.GameData.instruments;
         this.instrument = {
             volume: 0.6,
             nodes: [{
@@ -2945,8 +2898,10 @@ class InstrumentBuilder {
             }]
         };
 
+        this.selectorContainer = document.getElementById('instrument-selector');
+        this.setSelectors();
+
         this.container.innerHTML = '';
-        this.selectInstrument(this.instrument);
 
         this.inputVolume = document.getElementById('melody-volume');
         this.inputBpm = document.getElementById('melody-bpm');
@@ -2956,14 +2911,43 @@ class InstrumentBuilder {
             let min = 0, max = 1;
             this.instrument.volume = parseFloat(event.target.value) / 100.0 * max - min;
         });
-
     }
 
-    selectInstrument(instrument) {
-        this.instrument = instrument;
+    setSelectors() {
+        this.btns = [];
+        for (let i = 0; i < 16; i++) {
+            let btn = createElement('button', { className: 'audio-selector-btn', innerText: i });
+            this.selectorContainer.appendChild(btn);
+            this.btns.push(btn);
+
+            btn.addEventListener('click', () => {
+                this.selectInstrument(i);
+
+                for (let j = 0; j < this.btns.length; j++)
+                    this.btns[j].classList.remove('selected');
+                this.btns[i].classList.add('selected');
+            });
+        }
+    }
+
+    selectInstrument(instrumentIndex) {
+        if (APP.GameData.instruments[instrumentIndex] == null) {
+            APP.GameData.instruments[instrumentIndex] = {
+                nodes: [{
+                    type: 'oscillator',
+                    waveForm: 'sawtooth',
+                    attack: 0.01,
+                    decay: 0,
+                    sustain: 1,
+                    release: 1,
+                }]
+            };
+        }
+
+        this.instrument = APP.GameData.instruments[instrumentIndex];
         this.container.innerHTML = '';
         this.container.appendChild(createElement('button', { innerText: '+', className: 'instrument-add-node' }));
-        instrument.nodes.forEach(node => {
+        this.instrument.nodes.forEach(node => {
             if (node.type == 'oscillator') {
                 let nodeElement = this.__createOscillatorNode(node);
                 this.container.appendChild(nodeElement);
@@ -3054,7 +3038,7 @@ class MelodyWriter {
             'f#-major': ['F#', 'G#', 'A#', 'B', 'C#', 'D#', 'E#'],
         }
         this.NOTES_DATA = [];
-        
+
         this.octaveCount = 6;
 
         this.rows = {};
@@ -3249,7 +3233,7 @@ class AudioPanel {
         this.melodyWriter = melodyWriter;
         this.instrumentBuilder = instrumentBuilder;
 
-        this.sounds = APP.GameData.sounds;
+        this.sounds = APP.GameData.melodies;
         this.selectedSound = {};
         this.btns = [];
 
@@ -3279,8 +3263,8 @@ class AudioPanel {
     }
 
     selectSound(index) {
-        if (APP.GameData.sounds[index] == null) {
-            APP.GameData.sounds[index] = {
+        if (APP.GameData.melodies[index] == null) {
+            APP.GameData.melodies[index] = {
                 bpm: 120,
                 volume: 0.8,
                 melody: {
@@ -3300,9 +3284,8 @@ class AudioPanel {
             };
         }
 
-        this.selectedSound = APP.GameData.sounds[index];
+        this.selectedSound = APP.GameData.melodies[index];
         this.melodyWriter.setMelody(this.selectedSound.melody);
-        this.instrumentBuilder.selectInstrument(this.selectedSound.instrument);
 
         for (let j = 0; j < this.btns.length; j++)
             this.btns[j].classList.remove('selected');
@@ -3311,7 +3294,7 @@ class AudioPanel {
 
     setSelectors() {
         for (let i = 0; i < 16; i++) {
-            let btn = createElement('button', { className: 'melody-selector-btn', innerText: i });
+            let btn = createElement('button', { className: 'audio-selector-btn', innerText: i });
             this.selectorContainer.appendChild(btn);
             this.btns.push(btn);
 
