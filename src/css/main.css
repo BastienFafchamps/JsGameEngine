@@ -135,6 +135,7 @@ input[type=number] {
 }
 
 #game-buttons {
+  display: none;
   position: absolute;
   bottom: 0;
   width: 90%;
